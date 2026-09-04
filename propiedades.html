@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propiedades en San Salvador de Jujuy — Patricia Daadin</title>
+<meta name="description" content="Casas, departamentos y locales comerciales en venta, alquiler y alquiler temporario en San Salvador de Jujuy.">
+<link rel="icon" type="image/svg+xml" href="img/daadin-icon-placeholder.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <img src="img/daadin-icon-placeholder.svg" alt="Patricia Daadin" class="brand-mark-img">
+      <span class="brand-text">Patricia Daadin<small>Martillera · San Salvador de Jujuy</small></span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html" data-page="index.html">Inicio</a>
+      <a href="propiedades.html" data-page="propiedades.html">Propiedades</a>
+      <a href="nosotros.html" data-page="nosotros.html">Nosotros</a>
+      <a href="contacto.html" data-page="contacto.html">Contacto</a>
+      <a href="admin.html" data-page="admin.html" class="nav-admin">🔒 Panel admin</a>
+    </nav>
+    <div class="header-actions">
+      <a href="https://wa.me/5493885839785" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm"><svg class="ico-wsp" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.82L2 22l5.42-1.42a9.87 9.87 0 0 0 4.62 1.17h.01c5.46 0 9.9-4.45 9.9-9.9C21.96 6.45 17.5 2 12.04 2Zm5.86 14.02c-.25.7-1.24 1.28-1.99 1.44-.53.11-1.22.2-3.55-.76-2.98-1.23-4.9-4.24-5.05-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.53.25.61.85 2.1.92 2.25.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.3.75 1.24 1.62 2 1.11.99 2.05 1.3 2.35 1.44.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.68-.15.28.1 1.76.83 2.06.98.3.15.5.22.57.35.08.13.08.75-.17 1.45Z"/></svg>WhatsApp</a>
+      <button class="nav-toggle" aria-label="Abrir menú" type="button"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<div class="header-seam" aria-hidden="true"></div>
+
+<!-- ===================== PAGE HERO ===================== -->
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Catálogo</span>
+    <h1>Propiedades en San Salvador de Jujuy</h1>
+    <p>Filtrá por operación, tipo, zona y dormitorios para encontrar la propiedad que buscás.</p>
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / Propiedades</div>
+  </div>
+</section>
+
+<!-- ===================== LISTADO + FILTROS ===================== -->
+<section class="section">
+  <div class="container">
+    <form class="filters-bar" id="filters-form">
+      <div class="filters-grid">
+        <div class="field">
+          <label for="f-operation">Operación</label>
+          <select id="f-operation" name="operation">
+            <option value="todas">Todas</option>
+            <option value="venta">Venta</option>
+            <option value="alquiler">Alquiler</option>
+            <option value="temporal">Alquiler temporario</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-type">Tipo</label>
+          <select id="f-type" name="type">
+            <option value="todos">Todos</option>
+            <option value="casa">Casa</option>
+            <option value="departamento">Departamento</option>
+            <option value="terreno">Terreno</option>
+            <option value="local">Local comercial</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-zone">Zona</label>
+          <select id="f-zone" name="zone">
+            <option value="todas">Todas</option>
+            <option value="Centro">Centro</option>
+            <option value="Barrio Balcón">Barrio Balcón</option>
+            <option value="El Ceibal">El Ceibal</option>
+            <option value="Countries / Barrios cerrados">Countries / Barrios cerrados</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-bedrooms">Dormitorios</label>
+          <select id="f-bedrooms" name="bedrooms">
+            <option value="todos">Todos</option>
+            <option value="1">1+</option>
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-currency">Moneda</label>
+          <select id="f-currency" name="currency">
+            <option value="todas">Todas</option>
+            <option value="USD">USD</option>
+            <option value="ARS">ARS ($)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-price-min">Precio mínimo</label>
+          <input type="number" id="f-price-min" name="priceMin" min="0" step="1" placeholder="Sin mínimo">
+        </div>
+        <div class="field">
+          <label for="f-price-max">Precio máximo</label>
+          <input type="number" id="f-price-max" name="priceMax" min="0" step="1" placeholder="Sin máximo">
+        </div>
+      </div>
+      <div class="filters-actions">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <button type="button" id="filters-reset" class="btn btn-dark">Limpiar filtros</button>
+        <span style="font-size:0.78rem; color:var(--color-text-light);">Tip: elegí la moneda para que el precio mínimo/máximo compare correctamente.</span>
+      </div>
+    </form>
+
+    <div class="results-bar">
+      <span><strong id="results-count">0</strong> propiedades encontradas</span>
+    </div>
+
+    <div class="property-grid" id="results-grid"></div>
+
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <h3>No encontramos propiedades con esos filtros</h3>
+      <p>Probá modificar la búsqueda o escribime y te ayudo a encontrar algo a medida.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CALCULADORA DE ACTUALIZACIÓN DE ALQUILERES ===================== -->
+<section class="section section-alt" id="calculadora">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Herramienta gratuita</span>
+      <h2>Calculadora de actualización de alquileres</h2>
+      <p>Estimá el nuevo valor de tu alquiler según el índice y la frecuencia de actualización pactada en el contrato.</p>
+    </div>
+    <div class="calc-wrap">
+      <form class="calc-form" id="calc-form">
+        <div class="field">
+          <label for="calc-amount">Monto actual del alquiler (ARS)</label>
+          <input type="number" id="calc-amount" name="amount" min="0" step="1" placeholder="Ej: 150000" required>
+        </div>
+        <div class="field">
+          <label for="calc-index">Índice de actualización</label>
+          <select id="calc-index" name="index">
+            <option value="icl">ICL (Índice para Contratos de Locación)</option>
+            <option value="ipc">IPC (Índice de Precios al Consumidor)</option>
+            <option value="fijo">Porcentaje fijo pactado</option>
+          </select>
+        </div>
+        <div class="field" id="calc-fixed-wrap" style="display:none;">
+          <label for="calc-fixed">Porcentaje anual fijo (%)</label>
+          <input type="number" id="calc-fixed" name="fixedPct" min="0" step="0.1" placeholder="Ej: 40">
+        </div>
+        <div class="field">
+          <label for="calc-frequency">Frecuencia de actualización</label>
+          <select id="calc-frequency" name="frequency">
+            <option value="3">Trimestral</option>
+            <option value="4">Cuatrimestral</option>
+            <option value="6">Semestral</option>
+            <option value="12">Anual</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Calcular actualización</button>
+      </form>
+
+      <div class="calc-result">
+        <h3>Resultado</h3>
+        <p class="calc-note">Cargá los datos del contrato para ver la actualización estimada.</p>
+
+        <div id="calc-result-empty" style="color:rgba(245,247,250,0.6); font-size:0.9rem;">
+          Todavía no calculaste ningún valor.
+        </div>
+
+        <div id="calc-result-filled" style="display:none;">
+          <div class="calc-output">
+            <div class="calc-output-row"><span>Porcentaje de actualización</span><strong id="calc-out-percent">—</strong></div>
+            <div class="calc-output-row"><span>Incremento en pesos</span><strong id="calc-out-increase">—</strong></div>
+            <div class="calc-output-row"><span>Nuevo monto del alquiler</span><strong id="calc-out-new">—</strong></div>
+          </div>
+          <p id="calc-out-source" style="color:rgba(245,247,250,0.65); font-size:0.78rem; margin-top:10px;"></p>
+        </div>
+
+        <p id="calc-result-error" style="display:none; color:#ffd9d0; font-size:0.9rem; font-weight:600;"></p>
+
+        <p class="calc-disclaimer">
+          El ICL y el IPC se consultan en vivo desde la API pública del BCRA. Esta herramienta tiene fines orientativos y no constituye asesoramiento legal — para el valor exacto de tu contrato, consultame.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA CONTACTO ===================== -->
+<section class="section">
+  <div class="container">
+    <div class="cta-band cta-band--rose">
+      <div>
+        <h3>¿No encontrás lo que buscás?</h3>
+        <p>Contame qué necesitás y te aviso apenas tenga una propiedad que coincida.</p>
+      </div>
+      <div class="cta-band-actions">
+        <a href="contacto.html" class="btn btn-primary">Dejar mi consulta</a>
+        <a href="https://wa.me/5493885839785" target="_blank" rel="noopener" class="btn btn-outline"><svg class="ico-wsp" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.82L2 22l5.42-1.42a9.87 9.87 0 0 0 4.62 1.17h.01c5.46 0 9.9-4.45 9.9-9.9C21.96 6.45 17.5 2 12.04 2Zm5.86 14.02c-.25.7-1.24 1.28-1.99 1.44-.53.11-1.22.2-3.55-.76-2.98-1.23-4.9-4.24-5.05-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.53.25.61.85 2.1.92 2.25.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.3.75 1.24 1.62 2 1.11.99 2.05 1.3 2.35 1.44.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.68-.15.28.1 1.76.83 2.06.98.3.15.5.22.57.35.08.13.08.75-.17 1.45Z"/></svg>WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand"><img src="img/daadin-icon-placeholder.svg" alt="Patricia Daadin" class="brand-mark-img"><span class="brand-text">Patricia Daadin</span></div>
+        <p>Venta, alquiler, tasaciones y administración de propiedades en San Salvador de Jujuy. Atención cercana y de confianza.</p>
+        <!-- Redes sociales: pendiente que la clienta cree/comparta los perfiles de Facebook e Instagram. Descomentar y completar los href cuando estén listas. -->
+        <!--
+        <div class="social-row">
+          <a href="#" aria-label="Facebook" target="_blank" rel="noopener">f</a>
+          <a href="#" aria-label="Instagram" target="_blank" rel="noopener">ig</a>
+        </div>
+        -->
+      </div>
+      <div class="footer-col">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="index.html">Inicio</a></li>
+          <li><a href="propiedades.html">Propiedades</a></li>
+          <li><a href="nosotros.html">Nosotros</a></li>
+          <li><a href="contacto.html">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Propiedades</h4>
+        <ul>
+          <li><a href="propiedades.html?operation=venta">En venta</a></li>
+          <li><a href="propiedades.html?operation=alquiler">En alquiler</a></li>
+          <li><a href="propiedades.html?operation=temporal">Alquiler temporario</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <address>
+          <span>📍 San Salvador de Jujuy</span>
+          <a href="tel:+5493885839785">📞 +54 9 388 583-9785</a>
+        </address>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Patricia Daadin — Martillera, San Salvador de Jujuy. Todos los derechos reservados.</span>
+      <span class="footer-credit">Diseñada por <a href="https://commitsystem.com.ar" target="_blank" rel="noopener">Commit System</a> · commitsystem.com.ar · 3813528234 / 3815350991</span>
+    </div>
+  </div>
+</footer>
+
+<a class="whatsapp-float" href="https://wa.me/5493885839785" target="_blank" rel="noopener" aria-label="Chatear por WhatsApp"><svg class="ico-wsp" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.82L2 22l5.42-1.42a9.87 9.87 0 0 0 4.62 1.17h.01c5.46 0 9.9-4.45 9.9-9.9C21.96 6.45 17.5 2 12.04 2Zm5.86 14.02c-.25.7-1.24 1.28-1.99 1.44-.53.11-1.22.2-3.55-.76-2.98-1.23-4.9-4.24-5.05-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.53.25.61.85 2.1.92 2.25.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.3.75 1.24 1.62 2 1.11.99 2.05 1.3 2.35 1.44.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.68-.15.28.1 1.76.83 2.06.98.3.15.5.22.57.35.08.13.08.75-.17 1.45Z"/></svg></a>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/properties-data.js"></script>
+<script src="js/properties.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
