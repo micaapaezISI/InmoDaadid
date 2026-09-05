@@ -9,7 +9,7 @@
    final.
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
   /* --- Color: paleta provisoria rojo / blanco / negro --- */
@@ -46,14 +46,14 @@
 
   /* --- Tipografía provisoria: Poppins para títulos (moderna, con
      peso); Inter para textos (clara, cercana). --- */
-  --font-heading: 'Poppins', 'Segoe UI', sans-serif;
+  --font-heading: 'Fraunces', Georgia, serif;
   --font-body: 'Inter', 'Segoe UI', sans-serif;
 
   /* --- Layout --- */
   --max-width: 1180px;
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
   --shadow-sm: 0 2px 8px rgba(16, 24, 32, 0.08);
   --shadow-md: 0 8px 24px rgba(16, 24, 32, 0.12);
   --shadow-lg: 0 16px 40px rgba(16, 24, 32, 0.16);
@@ -139,13 +139,23 @@ h1, h2, h3, h4 {
 }
 
 .section-head .eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-secondary-dark);
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.section-head .eyebrow::before,
+.section-head .eyebrow::after {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: currentColor;
 }
 
 .section-head h2 {
@@ -410,12 +420,25 @@ h1, h2, h3, h4 {
 .hero::before {
   content: '';
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  background-image:
-    linear-gradient(180deg, rgba(42, 33, 28, 0.72) 0%, rgba(42, 33, 28, 0.55) 45%, rgba(42, 33, 28, 0.88) 100%),
-    radial-gradient(circle at 15% 20%, rgba(217, 164, 65, 0.18), transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(217, 164, 65, 0.12), transparent 45%);
+  top: 0;
+  right: -8%;
+  width: 58%;
+  height: 100%;
+  z-index: 0;
+  background: var(--color-primary);
+  clip-path: polygon(38% 0, 100% 0, 100% 100%, 8% 100%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 22%;
+  width: 6px;
+  height: 100%;
+  z-index: 0;
+  background: var(--color-secondary);
   pointer-events: none;
 }
 
@@ -441,15 +464,21 @@ h1, h2, h3, h4 {
 }
 
 .hero-tag {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(248, 244, 236, 0.14);
-  border: 1px solid rgba(248, 244, 236, 0.28);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   margin-bottom: 22px;
+}
+
+.hero-tag::before {
+  content: '';
+  width: 28px;
+  height: 3px;
+  background: var(--color-secondary);
 }
 
 .hero h1 {
@@ -808,13 +837,17 @@ h1, h2, h3, h4 {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(217, 164, 65, 0.18);
+  background: rgba(200, 16, 46, 0.14);
   color: var(--color-secondary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  font-weight: 700;
+}
+
+.check-ico svg {
+  width: 13px;
+  height: 13px;
 }
 
 /* ===== Testimonios ===== */
@@ -1095,13 +1128,18 @@ h1, h2, h3, h4 {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(31, 58, 95, 0.08);
+  background: rgba(200, 16, 46, 0.1);
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+.contact-info-ico svg {
+  width: 20px;
+  height: 20px;
 }
 
 .contact-info-item:nth-child(4n+1) { border-left: 4px solid var(--color-accent-magenta); }
@@ -1361,13 +1399,18 @@ h1, h2, h3, h4 {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(217, 164, 65, 0.15);
+  background: rgba(200, 16, 46, 0.12);
   color: var(--color-secondary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
   margin-bottom: 16px;
+}
+
+.value-card .value-ico svg {
+  width: 22px;
+  height: 22px;
 }
 
 /* Variedad de color por tarjeta, no solo como línea */
@@ -1396,11 +1439,21 @@ h1, h2, h3, h4 {
 }
 
 .page-hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--color-secondary);
   font-weight: 700;
   font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.page-hero .eyebrow::before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: currentColor;
 }
 
 .page-hero h1 {
