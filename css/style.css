@@ -801,8 +801,8 @@ h1, h2, h3, h4 {
 
 .about-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 50px;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 56px;
   align-items: center;
 }
 
@@ -1454,6 +1454,146 @@ h1, h2, h3, h4 {
   width: 20px;
   height: 2px;
   background: currentColor;
+}
+
+/* ===== Eyebrow plana (secciones no centradas) ===== */
+.eyebrow-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-secondary-dark);
+}
+
+.eyebrow-plain::before {
+  content: '';
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+}
+
+/* ===== Credenciales en línea (reemplaza la fila de stat-cards) ===== */
+.credentials-row {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 28px;
+  row-gap: 8px;
+  margin: 22px 0 26px;
+  padding: 18px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.92rem;
+  color: var(--color-text-light);
+}
+
+.credentials-row strong {
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  margin-right: 4px;
+}
+
+/* ===== Testimonios en formato de cita editorial ===== */
+.quote-stack {
+  max-width: 660px;
+  margin-bottom: 8px;
+}
+
+.quote-stack .eyebrow-plain {
+  margin-bottom: 26px;
+}
+
+.quote-block {
+  padding: 26px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.quote-block:last-of-type {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.quote-block p {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.quote-block--lead p {
+  font-size: 1.45rem;
+}
+
+.quote-block cite {
+  display: block;
+  font-style: normal;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-secondary-dark);
+}
+
+.quote-disclaimer {
+  margin-top: 18px;
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+}
+
+/* ===== Lista de principios numerada (reemplaza grid de 3 tarjetas iguales) ===== */
+.principles-list {
+  max-width: 740px;
+}
+
+.principles-list > .eyebrow-plain {
+  margin-bottom: 28px;
+}
+
+.principle-row {
+  display: flex;
+  gap: 26px;
+  padding: 26px 0;
+  border-top: 1px solid var(--color-border);
+  align-items: flex-start;
+}
+
+.principle-row:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.principle-num {
+  flex-shrink: 0;
+  width: 52px;
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(156, 28, 51, 0.35);
+}
+
+.principle-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.principle-heading svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.principle-heading h3 {
+  font-size: 1.1rem;
+}
+
+.principle-row p {
+  color: var(--color-text-light);
 }
 
 .page-hero h1 {
