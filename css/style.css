@@ -16,8 +16,8 @@
   --color-primary: #c8102e;        /* rojo — marca institucional */
   --color-primary-dark: #171717;   /* negro — fondos oscuros (footer, hero) */
   --color-primary-light: #f8d7dc;  /* rojo pálido */
-  --color-secondary: #171717;      /* negro — acento secundario, CTAs alternativos */
-  --color-secondary-dark: #000000;
+  --color-secondary: #9c1c33;      /* rojo oscuro — acento secundario, CTAs alternativos */
+  --color-secondary-dark: #6e0e22;
   --color-olive: #6b6b6b;          /* gris — variación neutra de acento */
   --color-olive-dark: #404040;
 
@@ -179,7 +179,7 @@ h1, h2, h3, h4 {
 
 .btn-primary {
   background: var(--color-secondary);
-  color: var(--color-primary-dark);
+  color: var(--color-text-inverse);
 }
 
 .btn-primary:hover {

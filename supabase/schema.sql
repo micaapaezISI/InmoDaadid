@@ -115,7 +115,7 @@ values
   ('Casa en Country Las Delicias', 'venta', 'casa', 'Country Las Delicias', 'Country Las Delicias, El Ceibal, San Salvador de Jujuy', 95000, 'USD', 3, 2, 210, true,
    'EJEMPLO — reemplazar por una propiedad real. Casa en barrio cerrado con amenities, patio y cochera doble.',
    array['Barrio cerrado','Cochera doble','Patio','Seguridad 24 hs']),
-  ('Departamento en alquiler, Barrio Balcón', 'alquiler', 'departamento', 'Barrio Balcón', 'Nicolás Repetto 1975, Barrio Balcón, San Salvador de Jujuy', 180000, 'ARS', 2, 1, 58, true,
+  ('Departamento en alquiler, Barrio Balcón', 'alquiler', 'departamento', 'Barrio Balcón', 'Barrio Balcón, San Salvador de Jujuy', 180000, 'ARS', 2, 1, 58, true,
    'EJEMPLO — reemplazar por una propiedad real. Departamento luminoso, cerca de comercios y transporte.',
    array['Balcón','Cocina integrada','Cerca de comercios']),
   ('Local comercial en alquiler', 'alquiler', 'local', 'Centro', 'San Salvador de Jujuy', 220000, 'ARS', 0, 1, 45, false,
