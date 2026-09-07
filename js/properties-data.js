@@ -1,20 +1,50 @@
 /* =====================================================================
    PATRICIA DAADIN — datos de propiedades (Supabase)
    ---------------------------------------------------------------------
-   PROPERTIES se llena en tiempo de ejecución consultando la tabla
-   "properties" de Supabase (ver supabase/schema.sql). Las páginas que
-   necesitan la lista deben llamar a `await fetchProperties()` antes de
-   renderizar.
+   Desde la Fase 1 del panel CRM, la tabla real es "propiedades" (esquema
+   en español, heredado de InmoGestion — ver supabase/migrations/002_*.sql),
+   no la vieja "properties". fetchProperties() traduce cada fila al mismo
+   formato que ya usaban properties.js/property-detail.js (title, operation,
+   type, price, currency, address, zone...) para no tener que reescribir
+   esas páginas en esta fase.
    ===================================================================== */
 
 let PROPERTIES = [];
 
+function mapPropiedad(row) {
+  const esVenta = row.operacion === "venta";
+  const fotos = (row.propiedad_foto || []).slice().sort((a, b) => a.orden - b.orden);
+
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    title: row.titulo_publico || `${typeLabel(row.tipo)} en ${row.barrio || row.localidad || "San Salvador de Jujuy"}`,
+    operation: row.operacion,
+    type: row.tipo,
+    zone: row.barrio,
+    address: row.ocultar_direccion
+      ? (row.barrio || row.localidad || "")
+      : [row.calle, row.numero].filter(Boolean).join(" ") || row.barrio || "",
+    price: Dinero.aPesos(esVenta ? row.precio_venta : row.precio_alquiler) || 0,
+    currency: (esVenta ? row.moneda_venta : row.moneda_alquiler) || "USD",
+    bedrooms: row.dormitorios || 0,
+    bathrooms: row.banos || 0,
+    area: row.superficie_total || 0,
+    featured: row.featured,
+    active: row.activo,
+    description: row.descripcion_publica || row.descripcion || "",
+    amenities: row.amenities || [],
+    images: fotos.map((f) => f.url),
+  };
+}
+
 async function fetchProperties() {
   const { data, error } = await supabaseClient
-    .from("properties")
-    .select("*")
-    .eq("active", true)
-    .order("created_at", { ascending: false });
+    .from("propiedades")
+    .select("*, propiedad_foto(url, orden, es_portada)")
+    .eq("publicar_web", true)
+    .eq("activo", true)
+    .order("creado_en", { ascending: false });
 
   if (error) {
     console.error("No se pudieron cargar las propiedades:", error);
@@ -22,42 +52,33 @@ async function fetchProperties() {
     return PROPERTIES;
   }
 
-  PROPERTIES = data || [];
+  PROPERTIES = (data || []).map(mapPropiedad);
   return PROPERTIES;
 }
 
 /* ---------------------------------------------------------------------
-   Helper: genera una "foto" placeholder en SVG (gradiente + ícono) para
-   las propiedades que todavía no tienen fotos cargadas.
-   seed determina el color; label es el texto que se muestra.
+   Helper: genera una "foto" placeholder en SVG para las propiedades que
+   todavía no tienen fotos cargadas. seed determina el color; label es el
+   texto que se muestra.
    --------------------------------------------------------------------- */
 const PH_PALETTES = [
-  ["#ddc2a4", "#b98a68"], // arcilla / adobe al sol
-  ["#dbb8b4", "#a67d79"], // rosa polvoroso (flamencos de Pozuelos)
-  ["#d3c6a6", "#a3987a"], // piedra / arena del altiplano
-  ["#c3c7ab", "#a9ad8f"], // salvia pálida (yareta y tola)
-  ["#cbbabd", "#a08e91"], // malva pálido (cielo puneño al atardecer)
-  ["#e0cba3", "#b89c73"], // arena tostada clara
+  "#b98a68", // arcilla / adobe al sol
+  "#a67d79", // rosa polvoroso (flamencos de Pozuelos)
+  "#a3987a", // piedra / arena del altiplano
+  "#a9ad8f", // salvia pálida (yareta y tola)
+  "#a08e91", // malva pálido (cielo puneño al atardecer)
+  "#b89c73", // arena tostada clara
 ];
 
 function placeholderPhotoSVG(seed, label) {
-  const pal = PH_PALETTES[seed % PH_PALETTES.length];
-  const gid = `g${seed}-${Math.random().toString(36).slice(2, 7)}`;
+  const fill = PH_PALETTES[seed % PH_PALETTES.length];
   return `
   <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="${pal[0]}"/>
-        <stop offset="100%" stop-color="${pal[1]}"/>
-      </linearGradient>
-    </defs>
-    <rect width="400" height="300" fill="url(#${gid})"/>
-    <g opacity="0.85" transform="translate(200,128)">
-      <path d="M-38 8 L0 -28 L38 8 L38 42 L-38 42 Z" fill="none" stroke="#faf3ea" stroke-width="4" stroke-linejoin="round"/>
-      <rect x="-10" y="16" width="20" height="26" fill="#faf3ea" opacity="0.9"/>
-    </g>
-    <text x="200" y="200" text-anchor="middle" fill="#faf3ea" font-family="Poppins, sans-serif" font-size="15" opacity="0.9">${label}</text>
-    <text x="200" y="222" text-anchor="middle" fill="#faf3ea" font-family="Inter, sans-serif" font-size="11" opacity="0.6">Sin fotos cargadas todavía</text>
+    <rect width="400" height="300" fill="${fill}"/>
+    <line x1="0" y1="0" x2="400" y2="300" stroke="#f6f3ea" stroke-opacity="0.25" stroke-width="1"/>
+    <line x1="400" y1="0" x2="0" y2="300" stroke="#f6f3ea" stroke-opacity="0.25" stroke-width="1"/>
+    <text x="24" y="264" fill="#f6f3ea" font-family="IBM Plex Mono, monospace" font-size="13" letter-spacing="0.5">${label}</text>
+    <text x="24" y="282" fill="#f6f3ea" fill-opacity="0.65" font-family="IBM Plex Mono, monospace" font-size="10">Sin fotos cargadas todavía</text>
   </svg>`;
 }
 
@@ -69,17 +90,20 @@ function propertyMediaHTML(p, label) {
 }
 
 function operationLabel(op) {
-  return { venta: "Venta", alquiler: "Alquiler", temporal: "Temporario" }[op] || op;
+  return { venta: "Venta", alquiler: "Alquiler", temporal: "Temporario", ambas: "Venta / Alquiler" }[op] || op;
 }
 
 function typeLabel(t) {
   return (
-    { casa: "Casa", departamento: "Departamento", terreno: "Terreno", local: "Local comercial" }[t] || t
+    {
+      casa: "Casa", departamento: "Departamento", terreno: "Terreno", local: "Local comercial",
+      oficina: "Oficina", galpon: "Galpón", cochera: "Cochera", campo: "Campo", otro: "Propiedad",
+    }[t] || t
   );
 }
 
 function formatPrice(p) {
-  const amount = p.currency === "USD" ? p.price.toLocaleString("es-AR") : p.price.toLocaleString("es-AR");
+  const amount = p.price.toLocaleString("es-AR");
   const suffix = p.operation === "temporal" ? " / noche" : p.operation === "alquiler" ? " / mes" : "";
   return `${p.currency === "USD" ? "USD" : "$"} ${amount}${suffix}`;
 }

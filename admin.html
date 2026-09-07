@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel admin — Cargar propiedad — Patricia Daadin</title>
-<meta name="description" content="Panel interno para cargar una nueva propiedad, con carga de fotos por selección múltiple o .zip.">
+<title>Panel admin — Patricia Daadin</title>
+<meta name="description" content="Panel interno para gestionar inmuebles, personas y consultas.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="img/daadin-logo.png">
 <link rel="stylesheet" href="css/style.css">
@@ -38,7 +38,7 @@
   <div class="container">
     <span class="eyebrow">Uso interno</span>
     <h1>Panel de administración</h1>
-    <p>Gestioná las propiedades y las consultas que llegan por la web, todo desde acá.</p>
+    <p>Gestioná inmuebles, personas y las consultas que llegan por la web, todo desde acá.</p>
     <div class="breadcrumb"><a href="index.html">Inicio</a> / Panel admin</div>
   </div>
 </section>
@@ -74,182 +74,361 @@
         <button type="button" id="admin-logout" class="btn btn-sm btn-dark" style="margin-left:auto;">Cerrar sesión</button>
       </div>
 
-      <div class="admin-tabs">
-        <button type="button" class="admin-tab is-active" data-tab="nueva">
-          <span class="admin-tab-icon">🏠</span>
-          <span class="admin-tab-label">Nueva propiedad</span>
-        </button>
-        <button type="button" class="admin-tab" data-tab="propiedades">
-          <span class="admin-tab-icon">✏️</span>
-          <span class="admin-tab-label">Mis propiedades</span>
-        </button>
-        <button type="button" class="admin-tab" data-tab="destacadas">
-          <span class="admin-tab-icon">⭐</span>
-          <span class="admin-tab-label">Destacadas</span>
-        </button>
-        <button type="button" class="admin-tab" data-tab="mensajes">
-          <span class="admin-tab-icon">📩</span>
-          <span class="admin-tab-label">Mensajes</span>
-        </button>
-      </div>
+      <div class="admin-shell">
+        <!-- ===================== NAV LATERAL ===================== -->
+        <nav class="admin-sidebar">
+          <button type="button" class="admin-sidebar-link is-active" data-tab="inmuebles">
+            <span class="admin-sidebar-ico">🏠</span> Inmuebles
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="nueva">
+            <span class="admin-sidebar-ico">＋</span> Nuevo inmueble
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="destacadas">
+            <span class="admin-sidebar-ico">⭐</span> Destacadas
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="personas">
+            <span class="admin-sidebar-ico">👤</span> Personas
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="mensajes">
+            <span class="admin-sidebar-ico">📩</span> Mensajes
+          </button>
 
-      <section id="tab-panel-propiedades" class="admin-tab-panel" style="display:none;">
-        <div class="admin-card">
-          <h2 class="admin-section-title">✏️ Mis propiedades</h2>
-          <p class="admin-section-help">Acá están todas las propiedades que cargaste. Tocá <strong>Editar</strong> para cambiar sus datos o fotos. Si un alquiler ya se ocupó, mejor tocá <strong>Desactivar</strong> en vez de borrarla — así la sacás del sitio sin perder los datos, y el día que se libera de nuevo la activás y solo actualizás el precio.</p>
-          <div id="admin-properties-list"></div>
-        </div>
-      </section>
+          <div class="admin-sidebar-group-label">Próximamente</div>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está — es la próxima fase del panel">Contratos y alquileres</span>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Cobranzas</span>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Liquidación a propietarios</span>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Caja diaria</span>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Ventas</span>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Agenda</span>
+          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Informes</span>
+        </nav>
 
-      <section id="tab-panel-destacadas" class="admin-tab-panel" style="display:none;">
-        <div class="admin-card">
-          <h2 class="admin-section-title">⭐ Destacadas</h2>
-          <p class="admin-section-help">Las propiedades destacadas son las primeras que ve la gente al entrar al sitio. Tildá las que querés mostrar ahí; el cambio se guarda solo, no hace falta apretar nada más.</p>
-          <div id="admin-featured-list"></div>
-        </div>
-      </section>
+        <!-- ===================== CONTENIDO ===================== -->
+        <div class="admin-content">
 
-      <section id="tab-panel-mensajes" class="admin-tab-panel" style="display:none;">
-        <div class="admin-card">
-          <h2 class="admin-section-title">📩 Mensajes de contacto</h2>
-          <p class="admin-section-help">Estas son las consultas que la gente mandó desde el formulario de "Contacto" del sitio, con la más reciente primero.</p>
-          <div id="admin-messages-list"></div>
-        </div>
-      </section>
+          <!-- ---------- Inmuebles (listado) ---------- -->
+          <section id="tab-panel-inmuebles" class="admin-tab-panel">
+            <div class="admin-card">
+              <h2 class="admin-section-title">🏠 Inmuebles</h2>
+              <p class="admin-section-help">Acá están todos los inmuebles que cargaste. Tocá <strong>Editar</strong> para cambiar sus datos, propietarios o fotos. Si un alquiler ya se ocupó, mejor tocá <strong>Desactivar</strong> en vez de borrarlo — así lo sacás del sitio sin perder los datos.</p>
+              <div id="admin-properties-list"></div>
+            </div>
+          </section>
 
-      <section id="tab-panel-nueva" class="admin-tab-panel">
-      <div class="admin-card">
-        <h2 class="admin-section-title" id="admin-form-heading">🏠 Nueva propiedad</h2>
-        <p class="admin-section-help" id="admin-form-help">Completá estos datos para publicar un aviso nuevo. Los campos con <strong>*</strong> son obligatorios, el resto podés dejarlos en blanco si no aplican.</p>
-      </div>
-      <form id="admin-property-form">
-        <div class="admin-card" id="datos-generales">
-          <h2>1. Datos generales</h2>
-          <p class="admin-card-desc">Título, tipo de propiedad y tamaño.</p>
-          <div class="admin-form-grid">
-            <div class="field field-full">
-              <label for="p-title">Título del aviso</label>
-              <input type="text" id="p-title" name="title" placeholder="Ej: Casa 3 dormitorios con patio" required>
+          <!-- ---------- Destacadas ---------- -->
+          <section id="tab-panel-destacadas" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">⭐ Destacadas</h2>
+              <p class="admin-section-help">Las propiedades destacadas son las primeras que ve la gente al entrar al sitio. Tildá las que querés mostrar ahí; el cambio se guarda solo.</p>
+              <div id="admin-featured-list"></div>
             </div>
-            <div class="field">
-              <label for="p-operation">Operación</label>
-              <select id="p-operation" name="operation" required>
-                <option value="venta">Venta</option>
-                <option value="alquiler">Alquiler</option>
-                <option value="temporal">Alquiler temporario</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="p-type">Tipo de propiedad</label>
-              <select id="p-type" name="type" required>
-                <option value="casa">Casa</option>
-                <option value="departamento">Departamento</option>
-                <option value="terreno">Terreno</option>
-                <option value="local">Local comercial</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="p-bedrooms">Dormitorios</label>
-              <input type="number" id="p-bedrooms" name="bedrooms" min="0" step="1" value="0">
-            </div>
-            <div class="field">
-              <label for="p-bathrooms">Baños</label>
-              <input type="number" id="p-bathrooms" name="bathrooms" min="0" step="1" value="0">
-            </div>
-            <div class="field">
-              <label for="p-area">Superficie (m²)</label>
-              <input type="number" id="p-area" name="area" min="0" step="1" required>
-            </div>
-          </div>
-        </div>
+          </section>
 
-        <div class="admin-card" id="ubicacion-precio">
-          <h2>2. Ubicación y precio</h2>
-          <p class="admin-card-desc">Dónde está y cuánto sale.</p>
-          <div class="admin-form-grid">
-            <div class="field">
-              <label for="p-zone">Zona / barrio</label>
-              <select id="p-zone" name="zone">
-                <option value="Centro">Centro</option>
-                <option value="Barrio Balcón">Barrio Balcón</option>
-                <option value="El Ceibal">El Ceibal</option>
-                <option value="Countries / Barrios cerrados">Countries / Barrios cerrados</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="p-address">Dirección (referencia)</label>
-              <input type="text" id="p-address" name="address" placeholder="Ej: a metros de Av. España, Centro">
-            </div>
-            <div class="field">
-              <label for="p-currency">Moneda</label>
-              <select id="p-currency" name="currency">
-                <option value="USD">USD</option>
-                <option value="ARS">ARS ($)</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="p-price">Precio</label>
-              <input type="number" id="p-price" name="price" min="0" step="1" required>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-card" id="descripcion">
-          <h2>3. Descripción y características</h2>
-          <p class="admin-card-desc">Contá los detalles que ayudan a decidir. No es obligatorio, pero ayuda a vender más rápido.</p>
-          <div class="admin-form-grid">
-            <div class="field field-full">
-              <label for="p-description">Descripción</label>
-              <textarea id="p-description" name="description" rows="4" placeholder="Describí la propiedad..."></textarea>
-            </div>
-            <div class="field field-full">
-              <label for="p-amenities">Características (separadas por coma)</label>
-              <input type="text" id="p-amenities" name="amenities" placeholder="Ej: Garage, Patio con parrilla, Calefacción a leña">
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-card" id="fotos">
-          <h2>4. Fotos de la propiedad</h2>
-          <p class="admin-card-desc">Tocá el recuadro de abajo para elegir las fotos desde tu celular o computadora (podés elegir varias a la vez). La primera foto que quede es la que se ve en la portada — se puede cambiar arrastrando o con las flechitas ◀ ▶.</p>
-
-          <div class="photo-manager" data-pm-root>
-            <div class="pm-dropzone" data-pm-dropzone tabindex="0" role="button" aria-label="Elegir fotos o un archivo zip">
-              <input type="file" data-pm-file-input accept="image/*,.zip,application/zip" multiple hidden>
-              <div class="pm-dropzone-inner">
-                <span class="pm-dropzone-ico">📷</span>
-                <strong>Arrastrá tus fotos acá o hacé clic para elegir</strong>
-                <span>Podés seleccionar varias imágenes a la vez, o subir un .zip con todas las fotos de la propiedad. Sin límite de cantidad.</span>
-                <button type="button" class="btn btn-dark btn-sm" data-pm-browse-btn>Elegir archivos</button>
+          <!-- ---------- Personas ---------- -->
+          <section id="tab-panel-personas" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">👤 Personas</h2>
+              <p class="admin-section-help">Propietarios, inquilinos y garantes. Por ahora se usan para asignar el o los dueños de cada inmueble — cuando esté el módulo de Contratos, la misma ficha va a servir para inquilinos y garantes también.</p>
+              <div class="admin-list-row" style="border:none; padding-top:0;">
+                <input type="text" id="persona-buscar" placeholder="Buscar por nombre o documento..." style="flex:1; padding:11px 14px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
+                <button type="button" id="persona-nueva-btn" class="btn btn-primary btn-sm">＋ Nueva persona</button>
               </div>
+              <div id="admin-personas-list"></div>
             </div>
+          </section>
 
-            <div class="pm-toolbar" data-pm-toolbar style="display:none;">
-              <span data-pm-count>0 fotos cargadas</span>
-              <div class="pm-bulk-actions" data-pm-bulk-actions style="display:none;">
-                <span data-pm-selected-count>0 seleccionadas</span>
-                <button type="button" class="btn btn-sm" data-pm-delete-selected style="background:var(--color-danger); color:#fff;">Eliminar seleccionadas</button>
-                <button type="button" class="btn btn-sm btn-dark" data-pm-clear-selection>Cancelar selección</button>
+          <!-- ---------- Mensajes ---------- -->
+          <section id="tab-panel-mensajes" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">📩 Mensajes de contacto</h2>
+              <p class="admin-section-help">Estas son las consultas que la gente mandó desde el formulario de "Contacto" del sitio, con la más reciente primero.</p>
+              <div id="admin-messages-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Nuevo / editar inmueble ---------- -->
+          <section id="tab-panel-nueva" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title" id="admin-form-heading">＋ Nuevo inmueble</h2>
+              <p class="admin-section-help" id="admin-form-help">Completá estos datos para publicar un aviso nuevo. Los campos con <strong>*</strong> son obligatorios, el resto podés dejarlos en blanco si no aplican.</p>
+            </div>
+            <form id="admin-property-form">
+              <div class="admin-card" id="datos-generales">
+                <h2>1. Datos generales</h2>
+                <p class="admin-card-desc">Tipo, tamaño y estado del inmueble.</p>
+                <div class="admin-form-grid">
+                  <div class="field">
+                    <label for="p-operation">Operación *</label>
+                    <select id="p-operation" name="operation" required>
+                      <option value="venta">Venta</option>
+                      <option value="alquiler">Alquiler</option>
+                      <option value="temporal">Alquiler temporario</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="p-type">Tipo de inmueble *</label>
+                    <select id="p-type" name="type" required>
+                      <option value="casa">Casa</option>
+                      <option value="departamento">Departamento</option>
+                      <option value="local">Local comercial</option>
+                      <option value="oficina">Oficina</option>
+                      <option value="terreno">Terreno</option>
+                      <option value="galpon">Galpón</option>
+                      <option value="cochera">Cochera</option>
+                      <option value="campo">Campo</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="p-estado">Estado</label>
+                    <select id="p-estado" name="estado">
+                      <option value="disponible">Disponible</option>
+                      <option value="reservada">Reservada</option>
+                      <option value="alquilada">Alquilada</option>
+                      <option value="vendida">Vendida</option>
+                      <option value="suspendida">Suspendida (fuera de oferta)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="p-codigo">Código</label>
+                    <input type="text" id="p-codigo" name="codigo" placeholder="Se genera solo si lo dejás vacío">
+                  </div>
+                  <div class="field">
+                    <label for="p-bedrooms">Dormitorios</label>
+                    <input type="number" id="p-bedrooms" name="bedrooms" min="0" step="1" value="0">
+                  </div>
+                  <div class="field">
+                    <label for="p-bathrooms">Baños</label>
+                    <input type="number" id="p-bathrooms" name="bathrooms" min="0" step="1" value="0">
+                  </div>
+                  <div class="field">
+                    <label for="p-cocheras">Cocheras</label>
+                    <input type="number" id="p-cocheras" name="cocheras" min="0" step="1" value="0">
+                  </div>
+                  <div class="field">
+                    <label for="p-ambientes">Ambientes</label>
+                    <input type="number" id="p-ambientes" name="ambientes" min="0" step="1">
+                  </div>
+                  <div class="field">
+                    <label for="p-area">Superficie total (m²) *</label>
+                    <input type="number" id="p-area" name="area" min="0" step="1" required>
+                  </div>
+                  <div class="field">
+                    <label for="p-area-cubierta">Superficie cubierta (m²)</label>
+                    <input type="number" id="p-area-cubierta" name="superficie_cubierta" min="0" step="1">
+                  </div>
+                  <div class="field">
+                    <label for="p-antiguedad">Antigüedad (años)</label>
+                    <input type="number" id="p-antiguedad" name="antiguedad" min="0" step="1">
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <p class="pm-hint" data-pm-hint style="display:none;">⭐ La primera foto es la <strong>portada</strong>. Arrastrá las miniaturas para reordenar, usá ◀ ▶ para moverlas, o ⭐ para hacer portada a otra foto.</p>
+              <div class="admin-card" id="ubicacion-precio">
+                <h2>2. Ubicación y precio</h2>
+                <p class="admin-card-desc">Dónde está y cuánto sale.</p>
+                <div class="admin-form-grid">
+                  <div class="field">
+                    <label for="p-zone">Barrio</label>
+                    <select id="p-zone" name="zone">
+                      <option value="Centro">Centro</option>
+                      <option value="Barrio Balcón">Barrio Balcón</option>
+                      <option value="El Ceibal">El Ceibal</option>
+                      <option value="Countries / Barrios cerrados">Countries / Barrios cerrados</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="p-calle">Calle</label>
+                    <input type="text" id="p-calle" name="calle" placeholder="Ej: Av. España">
+                  </div>
+                  <div class="field">
+                    <label for="p-numero">Número</label>
+                    <input type="text" id="p-numero" name="numero" placeholder="Ej: 1234">
+                  </div>
+                  <div class="field">
+                    <label for="p-ocultar-direccion" style="flex-direction:row; align-items:center; gap:8px;">
+                      <input type="checkbox" id="p-ocultar-direccion" name="ocultar_direccion" style="width:18px;height:18px;">
+                      Ocultar dirección exacta en la web pública
+                    </label>
+                  </div>
+                  <div class="field">
+                    <label for="p-currency">Moneda *</label>
+                    <select id="p-currency" name="currency">
+                      <option value="USD">USD</option>
+                      <option value="ARS">ARS ($)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="p-price">Precio *</label>
+                    <input type="number" id="p-price" name="price" min="0" step="1" required>
+                  </div>
+                  <div class="field">
+                    <label for="p-expensas">Expensas (opcional)</label>
+                    <input type="number" id="p-expensas" name="expensas" min="0" step="1">
+                  </div>
+                  <div class="field">
+                    <label for="p-comision">Comisión de administración (%)</label>
+                    <input type="number" id="p-comision" name="comision_admin_pct" min="0" max="100" step="0.1" placeholder="Deja vacío para usar la comisión general">
+                  </div>
+                </div>
+              </div>
 
-            <div class="pm-grid" data-pm-grid></div>
+              <div class="admin-card" id="propietarios">
+                <h2>3. Propietario(s)</h2>
+                <p class="admin-card-desc">Quién es el dueño del inmueble. Si hay más de uno, los porcentajes tienen que sumar 100%.</p>
+                <div id="p-propietarios-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;"></div>
+                <button type="button" id="p-propietario-agregar" class="btn btn-dark btn-sm">＋ Agregar propietario</button>
+              </div>
 
-            <p data-pm-status role="status" aria-live="polite" style="display:none; font-size:0.85rem;"></p>
-          </div>
+              <div class="admin-card" id="descripcion">
+                <h2>4. Descripción y publicación web</h2>
+                <p class="admin-card-desc">Lo que se ve en el sitio público.</p>
+                <div class="admin-form-grid">
+                  <div class="field field-full">
+                    <label for="p-publicar-web" style="flex-direction:row; align-items:center; gap:8px;">
+                      <input type="checkbox" id="p-publicar-web" name="publicar_web" checked style="width:18px;height:18px;">
+                      Publicar en la página web
+                    </label>
+                  </div>
+                  <div class="field field-full">
+                    <label for="p-titulo-publico">Título del aviso</label>
+                    <input type="text" id="p-titulo-publico" name="titulo_publico" placeholder="Ej: Casa 3 dormitorios con patio (se arma solo si lo dejás vacío)">
+                  </div>
+                  <div class="field field-full">
+                    <label for="p-description">Descripción</label>
+                    <textarea id="p-description" name="description" rows="4" placeholder="Describí la propiedad..."></textarea>
+                  </div>
+                  <div class="field field-full">
+                    <label for="p-amenities">Características (separadas por coma)</label>
+                    <input type="text" id="p-amenities" name="amenities" placeholder="Ej: Garage, Patio con parrilla, Calefacción a leña">
+                  </div>
+                  <div class="field field-full">
+                    <label for="p-notas">Notas internas (no se ven en la web)</label>
+                    <textarea id="p-notas" name="notas" rows="2" placeholder="Cualquier dato para vos, no se publica"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-card" id="fotos">
+                <h2>5. Fotos de la propiedad</h2>
+                <p class="admin-card-desc">Tocá el recuadro de abajo para elegir las fotos desde tu celular o computadora (podés elegir varias a la vez). La primera foto que quede es la que se ve en la portada — se puede cambiar arrastrando o con las flechitas ◀ ▶.</p>
+
+                <div class="photo-manager" data-pm-root>
+                  <div class="pm-dropzone" data-pm-dropzone tabindex="0" role="button" aria-label="Elegir fotos o un archivo zip">
+                    <input type="file" data-pm-file-input accept="image/*,.zip,application/zip" multiple hidden>
+                    <div class="pm-dropzone-inner">
+                      <span class="pm-dropzone-ico">📷</span>
+                      <strong>Arrastrá tus fotos acá o hacé clic para elegir</strong>
+                      <span>Podés seleccionar varias imágenes a la vez, o subir un .zip con todas las fotos de la propiedad. Sin límite de cantidad.</span>
+                      <button type="button" class="btn btn-dark btn-sm" data-pm-browse-btn>Elegir archivos</button>
+                    </div>
+                  </div>
+
+                  <div class="pm-toolbar" data-pm-toolbar style="display:none;">
+                    <span data-pm-count>0 fotos cargadas</span>
+                    <div class="pm-bulk-actions" data-pm-bulk-actions style="display:none;">
+                      <span data-pm-selected-count>0 seleccionadas</span>
+                      <button type="button" class="btn btn-sm" data-pm-delete-selected style="background:var(--color-danger); color:#fff;">Eliminar seleccionadas</button>
+                      <button type="button" class="btn btn-sm btn-dark" data-pm-clear-selection>Cancelar selección</button>
+                    </div>
+                  </div>
+
+                  <p class="pm-hint" data-pm-hint style="display:none;">⭐ La primera foto es la <strong>portada</strong>. Arrastrá las miniaturas para reordenar, usá ◀ ▶ para moverlas, o ⭐ para hacer portada a otra foto.</p>
+
+                  <div class="pm-grid" data-pm-grid></div>
+
+                  <p data-pm-status role="status" aria-live="polite" style="display:none; font-size:0.85rem;"></p>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="admin-submit-btn" style="padding:15px 34px;">Guardar inmueble</button>
+              <button type="button" id="admin-cancel-edit" class="btn btn-dark" style="padding:15px 26px; display:none;">Cancelar edición</button>
+
+              <div id="admin-result" style="display:none; margin-top:26px;"></div>
+            </form>
+          </section>
+
         </div>
-
-        <button type="submit" class="btn btn-primary" id="admin-submit-btn" style="padding:15px 34px;">Guardar propiedad</button>
-        <button type="button" id="admin-cancel-edit" class="btn btn-dark" style="padding:15px 26px; display:none;">Cancelar edición</button>
-
-        <div id="admin-result" style="display:none; margin-top:26px;"></div>
-      </form>
-      </section>
+      </div>
     </div>
   </div>
 </section>
+
+<!-- ===================== FICHA DE PERSONA (modal simple) ===================== -->
+<div id="persona-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:520px; width:100%; max-height:90vh; overflow-y:auto; margin:0;">
+    <h2 class="admin-section-title" id="persona-modal-heading">＋ Nueva persona</h2>
+    <form id="persona-form">
+      <div class="admin-form-grid">
+        <div class="field">
+          <label for="pe-tipo">Tipo</label>
+          <select id="pe-tipo" name="tipo_persona">
+            <option value="fisica">Persona física</option>
+            <option value="juridica">Persona jurídica / empresa</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pe-condicion-iva">Condición ante IVA</label>
+          <select id="pe-condicion-iva" name="condicion_iva">
+            <option value="consumidor_final">Consumidor final</option>
+            <option value="responsable_inscripto">Responsable inscripto</option>
+            <option value="monotributista">Monotributista</option>
+            <option value="exento">Exento</option>
+            <option value="no_categorizado">No categorizado</option>
+          </select>
+        </div>
+        <div class="field field-full">
+          <label for="pe-nombre">Nombre y apellido / razón social *</label>
+          <input type="text" id="pe-nombre" name="nombre" required>
+        </div>
+        <div class="field">
+          <label for="pe-documento-tipo">Documento</label>
+          <select id="pe-documento-tipo" name="documento_tipo">
+            <option value="DNI">DNI</option>
+            <option value="CUIT">CUIT</option>
+            <option value="CUIL">CUIL</option>
+            <option value="LE">LE</option>
+            <option value="LC">LC</option>
+            <option value="PAS">Pasaporte</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pe-documento">Número</label>
+          <input type="text" id="pe-documento" name="documento">
+        </div>
+        <div class="field">
+          <label for="pe-telefono">Teléfono</label>
+          <input type="text" id="pe-telefono" name="telefono">
+        </div>
+        <div class="field">
+          <label for="pe-email">Email</label>
+          <input type="email" id="pe-email" name="email">
+        </div>
+        <div class="field field-full">
+          <label for="pe-domicilio">Domicilio</label>
+          <input type="text" id="pe-domicilio" name="domicilio">
+        </div>
+        <div class="field">
+          <label for="pe-cbu">CBU / alias</label>
+          <input type="text" id="pe-cbu" name="cbu">
+        </div>
+        <div class="field">
+          <label for="pe-banco">Banco</label>
+          <input type="text" id="pe-banco" name="banco">
+        </div>
+        <div class="field field-full">
+          <label for="pe-notas">Notas</label>
+          <textarea id="pe-notas" name="notas" rows="2"></textarea>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <button type="submit" class="btn btn-primary">Guardar persona</button>
+        <button type="button" id="persona-cancelar" class="btn btn-dark">Cancelar</button>
+      </div>
+      <p id="persona-form-error" style="display:none; color:var(--color-danger); margin-top:12px;"></p>
+    </form>
+  </div>
+</div>
 
 <!-- ===================== FOOTER ===================== -->
 <footer class="site-footer">
@@ -258,13 +437,6 @@
       <div class="footer-brand">
         <div class="brand"><img src="img/daadin-logo.png" alt="Patricia Daadin" class="brand-mark-img"><span class="brand-text">Patricia Daadin</span></div>
         <p>Venta, alquiler, tasaciones y administración de propiedades en San Salvador de Jujuy. Atención cercana y de confianza.</p>
-        <!-- Redes sociales: pendiente que la clienta cree/comparta los perfiles de Facebook e Instagram. Descomentar y completar los href cuando estén listas. -->
-        <!--
-        <div class="social-row">
-          <a href="#" aria-label="Facebook" target="_blank" rel="noopener">f</a>
-          <a href="#" aria-label="Instagram" target="_blank" rel="noopener">ig</a>
-        </div>
-        -->
       </div>
       <div class="footer-col">
         <h4>Navegación</h4>
@@ -300,9 +472,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/validar.js"></script>
 <script src="js/properties-data.js"></script>
 <script src="js/vendor/zip-lite.js"></script>
 <script src="js/photo-manager.js"></script>
+<script src="js/admin-personas.js"></script>
+<script src="js/admin-inmuebles.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>
