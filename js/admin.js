@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     photoManager.setImages((property.images || []).map((url) => ({ url, name: url.split("/").pop() })));
 
-    formHeading.textContent = `Editando: ${property.title}`;
+    formHeading.textContent = `✏️ Editando: ${property.title}`;
     formHelp.textContent = "Cambiá lo que haga falta y tocá \"Actualizar propiedad\" para guardar.";
     submitBtn.textContent = "Actualizar propiedad";
     cancelEditBtn.style.display = "inline-block";
@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     editingId = null;
     form.reset();
     photoManager.reset();
-    formHeading.textContent = "Nueva propiedad";
+    formHeading.textContent = "🏠 Nueva propiedad";
     formHelp.textContent = "Completá estos datos para publicar un aviso nuevo. Los campos con * son obligatorios, el resto podés dejarlos en blanco si no aplican.";
     submitBtn.textContent = "Guardar propiedad";
     cancelEditBtn.style.display = "none";
@@ -353,8 +353,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const wasEditing = !!editingId;
       resultBox.style.display = "block";
       resultBox.innerHTML = `
-        <div class="admin-card" style="border-color: var(--color-red); background: var(--color-paper-alt);">
-          <h2>Propiedad ${wasEditing ? "actualizada" : "publicada"}</h2>
+        <div class="admin-card" style="border-color: var(--color-secondary); background: var(--color-bg-alt);">
+          <h2>✅ Propiedad ${wasEditing ? "actualizada" : "publicada"}</h2>
           <p><strong>${title}</strong> ya está guardada y visible en el sitio.</p>
         </div>`;
       resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -366,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
       resultBox.style.display = "block";
       resultBox.innerHTML = `
         <div class="admin-card" style="border-color: var(--color-danger);">
-          <h2>No se pudo guardar</h2>
+          <h2>❌ No se pudo guardar</h2>
           <p>${err.message || err}</p>
         </div>`;
     } finally {

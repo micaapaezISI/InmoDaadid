@@ -23,7 +23,7 @@
       <a href="propiedades.html" data-page="propiedades.html">Propiedades</a>
       <a href="nosotros.html" data-page="nosotros.html">Nosotros</a>
       <a href="contacto.html" data-page="contacto.html">Contacto</a>
-      <a href="admin.html" data-page="admin.html" class="nav-admin">Panel admin</a>
+      <a href="admin.html" data-page="admin.html" class="nav-admin">🔒 Panel admin</a>
     </nav>
     <div class="header-actions">
       <a href="https://wa.me/5493885839785" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm"><svg class="ico-wsp" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.82L2 22l5.42-1.42a9.87 9.87 0 0 0 4.62 1.17h.01c5.46 0 9.9-4.45 9.9-9.9C21.96 6.45 17.5 2 12.04 2Zm5.86 14.02c-.25.7-1.24 1.28-1.99 1.44-.53.11-1.22.2-3.55-.76-2.98-1.23-4.9-4.24-5.05-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.53.25.61.85 2.1.92 2.25.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.3.75 1.24 1.62 2 1.11.99 2.05 1.3 2.35 1.44.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.68-.15.28.1 1.76.83 2.06.98.3.15.5.22.57.35.08.13.08.75-.17 1.45Z"/></svg>WhatsApp</a>
@@ -66,6 +66,7 @@
 
     <div id="admin-panel" style="display:none;">
       <div class="admin-banner">
+        <span style="font-size:1.3rem;">🔒</span>
         <div>
           <strong>Estás dentro del panel.</strong>
           Todo lo que cargues, edites o borres acá se guarda de verdad y se muestra (o se saca) del sitio al instante.
@@ -74,15 +75,27 @@
       </div>
 
       <div class="admin-tabs">
-        <button type="button" class="admin-tab is-active" data-tab="nueva">Nueva propiedad</button>
-        <button type="button" class="admin-tab" data-tab="propiedades">Mis propiedades</button>
-        <button type="button" class="admin-tab" data-tab="destacadas">Destacadas</button>
-        <button type="button" class="admin-tab" data-tab="mensajes">Mensajes</button>
+        <button type="button" class="admin-tab is-active" data-tab="nueva">
+          <span class="admin-tab-icon">🏠</span>
+          <span class="admin-tab-label">Nueva propiedad</span>
+        </button>
+        <button type="button" class="admin-tab" data-tab="propiedades">
+          <span class="admin-tab-icon">✏️</span>
+          <span class="admin-tab-label">Mis propiedades</span>
+        </button>
+        <button type="button" class="admin-tab" data-tab="destacadas">
+          <span class="admin-tab-icon">⭐</span>
+          <span class="admin-tab-label">Destacadas</span>
+        </button>
+        <button type="button" class="admin-tab" data-tab="mensajes">
+          <span class="admin-tab-icon">📩</span>
+          <span class="admin-tab-label">Mensajes</span>
+        </button>
       </div>
 
       <section id="tab-panel-propiedades" class="admin-tab-panel" style="display:none;">
         <div class="admin-card">
-          <h2 class="admin-section-title">Mis propiedades</h2>
+          <h2 class="admin-section-title">✏️ Mis propiedades</h2>
           <p class="admin-section-help">Acá están todas las propiedades que cargaste. Tocá <strong>Editar</strong> para cambiar sus datos o fotos. Si un alquiler ya se ocupó, mejor tocá <strong>Desactivar</strong> en vez de borrarla — así la sacás del sitio sin perder los datos, y el día que se libera de nuevo la activás y solo actualizás el precio.</p>
           <div id="admin-properties-list"></div>
         </div>
@@ -90,7 +103,7 @@
 
       <section id="tab-panel-destacadas" class="admin-tab-panel" style="display:none;">
         <div class="admin-card">
-          <h2 class="admin-section-title">Destacadas</h2>
+          <h2 class="admin-section-title">⭐ Destacadas</h2>
           <p class="admin-section-help">Las propiedades destacadas son las primeras que ve la gente al entrar al sitio. Tildá las que querés mostrar ahí; el cambio se guarda solo, no hace falta apretar nada más.</p>
           <div id="admin-featured-list"></div>
         </div>
@@ -98,7 +111,7 @@
 
       <section id="tab-panel-mensajes" class="admin-tab-panel" style="display:none;">
         <div class="admin-card">
-          <h2 class="admin-section-title">Mensajes de contacto</h2>
+          <h2 class="admin-section-title">📩 Mensajes de contacto</h2>
           <p class="admin-section-help">Estas son las consultas que la gente mandó desde el formulario de "Contacto" del sitio, con la más reciente primero.</p>
           <div id="admin-messages-list"></div>
         </div>
@@ -106,7 +119,7 @@
 
       <section id="tab-panel-nueva" class="admin-tab-panel">
       <div class="admin-card">
-        <h2 class="admin-section-title" id="admin-form-heading">Nueva propiedad</h2>
+        <h2 class="admin-section-title" id="admin-form-heading">🏠 Nueva propiedad</h2>
         <p class="admin-section-help" id="admin-form-help">Completá estos datos para publicar un aviso nuevo. Los campos con <strong>*</strong> son obligatorios, el resto podés dejarlos en blanco si no aplican.</p>
       </div>
       <form id="admin-property-form">
@@ -273,8 +286,8 @@
       <div class="footer-col">
         <h4>Contacto</h4>
         <address>
-          <span>San Salvador de Jujuy</span>
-          <a href="tel:+5493885839785">+54 9 388 583-9785</a>
+          <span>📍 San Salvador de Jujuy</span>
+          <a href="tel:+5493885839785">📞 +54 9 388 583-9785</a>
         </address>
       </div>
     </div>
