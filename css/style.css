@@ -398,23 +398,36 @@ h1, h2, h3, h4 {
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  animation: heroSlideshowFade 35s infinite;
+  animation: heroSlideshowFade 18s infinite;
 }
+
+.hero-slideshow img:nth-child(1) { animation-delay: 0s; }
+.hero-slideshow img:nth-child(2) { animation-delay: 6s; }
+.hero-slideshow img:nth-child(3) { animation-delay: 12s; }
 
 @keyframes heroSlideshowFade {
   0%,
   100% {
     opacity: 0;
   }
-  2% {
+  4% {
     opacity: 1;
   }
-  10.5% {
+  30% {
     opacity: 1;
   }
-  12.5% {
+  34% {
     opacity: 0;
   }
+}
+
+/* Velo oscuro sobre las fotos para que el texto blanco siga siendo legible */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(100deg, rgba(15, 13, 11, 0.86) 0%, rgba(15, 13, 11, 0.62) 48%, rgba(15, 13, 11, 0.32) 100%);
+  pointer-events: none;
 }
 
 .hero::before {
@@ -424,8 +437,9 @@ h1, h2, h3, h4 {
   right: -8%;
   width: 58%;
   height: 100%;
-  z-index: 0;
+  z-index: 1;
   background: var(--color-primary);
+  opacity: 0.92;
   clip-path: polygon(38% 0, 100% 0, 100% 100%, 8% 100%);
   pointer-events: none;
 }
@@ -437,7 +451,7 @@ h1, h2, h3, h4 {
   right: 22%;
   width: 6px;
   height: 100%;
-  z-index: 0;
+  z-index: 1;
   background: var(--color-secondary);
   pointer-events: none;
 }
