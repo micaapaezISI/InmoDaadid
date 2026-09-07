@@ -11,12 +11,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Mulish:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
-  /* --- Color: rojo / negro / blanco --- */
-  --color-primary: #c8102e;        /* rojo — marca institucional */
-  --color-primary-dark: #1a1a1a;   /* negro — fondos oscuros, texto fuerte */
-  --color-primary-light: #f8d7dc;  /* rojo pálido */
-  --color-secondary: #c8102e;
-  --color-secondary-dark: #8f0b20;
+  /* --- Color: rojo / negro / blanco, extraídos del isologo real --- */
+  --color-primary: #c40202;        /* rojo del isologo */
+  --color-primary-dark: #111111;   /* negro del isologo — fondos oscuros, texto fuerte */
+  --color-primary-light: #fbdcdc;  /* rojo pálido */
+  --color-secondary: #c40202;
+  --color-secondary-dark: #8a0202;
   --color-bg: #ffffff;
   --color-bg-alt: #f5f5f5;
   --color-bg-dark: #1a1a1a;
@@ -1447,6 +1447,15 @@ h1, h2, h3, h4 {
 .footer-brand .brand {
   color: #fff;
   margin-bottom: 14px;
+}
+
+/* El isologo tiene trazos negros que se pierden sobre el footer oscuro:
+   se le da una placa blanca para que se lea completo. */
+.footer-brand .brand-mark-img {
+  background: #fff;
+  border-radius: 50%;
+  padding: 6px;
+  box-sizing: border-box;
 }
 
 .footer-brand p {
