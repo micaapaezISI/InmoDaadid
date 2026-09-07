@@ -48,11 +48,11 @@ function renderPropertyCard(p) {
     <div class="property-body">
       <div class="property-price">${formatPrice(p)}</div>
       <a href="propiedad.html?id=${p.id}" class="property-title">${p.title}</a>
-      <div class="property-location">📍 ${p.address}</div>
+      <div class="property-location">${p.address}</div>
       <div class="property-features">
-        ${p.bedrooms ? `<span>🛏️ ${p.bedrooms}</span>` : ""}
-        ${p.bathrooms ? `<span>🛁 ${p.bathrooms}</span>` : ""}
-        <span>📐 ${p.area} m²</span>
+        ${p.bedrooms ? `<span>${p.bedrooms} dorm.</span>` : ""}
+        ${p.bathrooms ? `<span>${p.bathrooms} baño${p.bathrooms === 1 ? "" : "s"}</span>` : ""}
+        <span>${p.area} m²</span>
       </div>
       <a href="propiedad.html?id=${p.id}" class="btn btn-dark btn-sm property-cta">Ver detalle</a>
     </div>

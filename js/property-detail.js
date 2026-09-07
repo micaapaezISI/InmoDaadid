@@ -46,7 +46,7 @@ async function initPropertyDetail() {
       <div class="detail-title">
         <span class="property-badge ${badgeClass}" style="position:static; display:inline-block; margin-bottom:10px;">${operationLabel(property.operation)}</span>
         <h1>${property.title}</h1>
-        <div class="property-location">📍 ${property.address} · ${property.zone}</div>
+        <div class="property-location">${property.address} · ${property.zone}</div>
       </div>
       <div class="detail-price">
         ${formatPrice(property)}
