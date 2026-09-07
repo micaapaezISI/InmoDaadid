@@ -2,8 +2,9 @@ Fotos de fondo del hero (San Salvador de Jujuy)
 ================================================
 
 Fuente: Pexels (licencia gratuita, uso comercial permitido, sin
-obligación de atribución). Redimensionadas y comprimidas para web
-(1600x900, ~80-165 KB cada una).
+obligación de atribución). Recortadas para mostrar más ciudad y menos
+cielo, y redimensionadas a 1920x1080 en buena calidad (~300-510 KB
+cada una).
 
 - jujuy-aereo.jpg     — vista aérea de la ciudad al atardecer, con cerros de fondo.
   Foto original: Gastón Toconas — https://www.pexels.com/photo/34203991/
