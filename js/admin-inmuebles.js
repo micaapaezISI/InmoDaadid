@@ -86,9 +86,10 @@ const AdminInmuebles = (() => {
 
   /* --------------------------- Alta / edición ------------------------- */
 
-  function prepararNuevo() {
+  async function prepararNuevo() {
     editingId = null;
     form.reset();
+    await AdminPersonas.loadList();
     propietariosList.innerHTML = "";
     addPropietarioRow(null, 100);
     photoManager.reset();
@@ -116,6 +117,7 @@ const AdminInmuebles = (() => {
 
     editingId = id;
     form.reset();
+    await AdminPersonas.loadList();
 
     const esVenta = propiedad.operacion === "venta";
     form.elements.operation.value = propiedad.operacion;

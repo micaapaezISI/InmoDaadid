@@ -92,7 +92,7 @@ const AdminContratos = (() => {
       `<option value="">Elegir inmueble...</option>` +
       cachePropiedades.map((p) => `<option value="${p.id}">${p.codigo || ""} — ${p.titulo_publico || p.calle || p.barrio || "sin título"}</option>`).join("");
 
-    if (!AdminPersonas.getAll().length) await AdminPersonas.loadList();
+    await AdminPersonas.loadList();
     const personas = AdminPersonas.getAll();
     inquilinoSelect.innerHTML =
       `<option value="">Elegir persona...</option>` +
