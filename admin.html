@@ -89,12 +89,20 @@
           <button type="button" class="admin-sidebar-link" data-tab="personas">
             <span class="admin-sidebar-ico">👤</span> Personas
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="contratos">
+            <span class="admin-sidebar-ico">📄</span> Contratos
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="nuevo-contrato">
+            <span class="admin-sidebar-ico">＋</span> Nuevo contrato
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="indices">
+            <span class="admin-sidebar-ico">📈</span> Índices BCRA
+          </button>
           <button type="button" class="admin-sidebar-link" data-tab="mensajes">
             <span class="admin-sidebar-ico">📩</span> Mensajes
           </button>
 
           <div class="admin-sidebar-group-label">Próximamente</div>
-          <span class="admin-sidebar-link is-disabled" title="Todavía no está — es la próxima fase del panel">Contratos y alquileres</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Cobranzas</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Liquidación a propietarios</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Caja diaria</span>
@@ -134,6 +142,184 @@
                 <button type="button" id="persona-nueva-btn" class="btn btn-primary btn-sm">＋ Nueva persona</button>
               </div>
               <div id="admin-personas-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Contratos (listado) ---------- -->
+          <section id="tab-panel-contratos" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">📄 Contratos</h2>
+              <p class="admin-section-help">Contratos de alquiler y sus cuotas. Un contrato firmado no se edita — para cambiar el monto o la fecha de fin, usá "Renovar"; para cortarlo antes de tiempo, "Rescindir".</p>
+              <div id="admin-contratos-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Nuevo contrato ---------- -->
+          <section id="tab-panel-nuevo-contrato" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title" id="contrato-form-heading">＋ Nuevo contrato</h2>
+              <p class="admin-section-help">Las cuotas se generan solas, todas por adelantado, apenas guardás el contrato.</p>
+            </div>
+            <form id="contrato-form">
+              <div class="admin-card">
+                <h2>1. Inmueble e inquilino</h2>
+                <div class="admin-form-grid">
+                  <div class="field field-full">
+                    <label for="ct-propiedad">Inmueble *</label>
+                    <select id="ct-propiedad" name="propiedad_id" required></select>
+                  </div>
+                  <div class="field field-full">
+                    <label for="ct-inquilino">Inquilino *</label>
+                    <select id="ct-inquilino" name="inquilino_id" required></select>
+                  </div>
+                  <div class="field">
+                    <label for="ct-tipo">Tipo de contrato</label>
+                    <select id="ct-tipo" name="tipo_contrato">
+                      <option value="vivienda">Vivienda</option>
+                      <option value="comercial">Comercial</option>
+                      <option value="cochera">Cochera</option>
+                      <option value="temporal">Temporal</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-card">
+                <h2>2. Fechas y monto</h2>
+                <div class="admin-form-grid">
+                  <div class="field">
+                    <label for="ct-inicio">Fecha de inicio *</label>
+                    <input type="date" id="ct-inicio" name="fecha_inicio" required>
+                  </div>
+                  <div class="field">
+                    <label for="ct-fin">Fecha de fin *</label>
+                    <input type="date" id="ct-fin" name="fecha_fin" required>
+                  </div>
+                  <div class="field">
+                    <label for="ct-dia-venc">Día de vencimiento mensual</label>
+                    <input type="number" id="ct-dia-venc" name="dia_vencimiento" min="1" max="31" value="10">
+                  </div>
+                  <div class="field">
+                    <label for="ct-moneda">Moneda</label>
+                    <select id="ct-moneda" name="moneda"><option value="ARS">ARS</option><option value="USD">USD</option></select>
+                  </div>
+                  <div class="field">
+                    <label for="ct-monto">Monto mensual inicial *</label>
+                    <input type="number" id="ct-monto" name="monto_inicial" min="0" required>
+                  </div>
+                  <div class="field">
+                    <label for="ct-deposito">Depósito</label>
+                    <input type="number" id="ct-deposito" name="deposito" min="0">
+                  </div>
+                  <div class="field">
+                    <label for="ct-comision">Comisión de administración (%)</label>
+                    <input type="number" id="ct-comision" name="comision_admin_pct" min="0" max="100" step="0.1" placeholder="Vacío = usar la general">
+                  </div>
+                  <div class="field">
+                    <label for="ct-garantizada" style="flex-direction:row; align-items:center; gap:8px;">
+                      <input type="checkbox" id="ct-garantizada" name="liquidacion_garantizada" style="width:18px;height:18px;">
+                      Liquidación garantizada al propietario
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-card">
+                <h2>3. Ajuste del monto</h2>
+                <p class="admin-card-desc">Cada cuánto y cómo se actualiza el alquiler.</p>
+                <div class="admin-form-grid">
+                  <div class="field">
+                    <label for="ct-ajuste-tipo">Tipo de ajuste</label>
+                    <select id="ct-ajuste-tipo" name="ajuste_tipo">
+                      <option value="porcentaje">Porcentaje fijo</option>
+                      <option value="indice">Índice BCRA</option>
+                      <option value="sin_ajuste">Sin ajuste</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="ct-ajuste-meses">Cada cuántos meses</label>
+                    <input type="number" id="ct-ajuste-meses" name="ajuste_meses" min="1" value="6">
+                  </div>
+                  <div class="field" id="ct-ajuste-valor-wrap">
+                    <label for="ct-ajuste-valor">Porcentaje por ajuste (%)</label>
+                    <input type="number" id="ct-ajuste-valor" name="ajuste_valor" min="0" step="0.1">
+                  </div>
+                  <div class="field" id="ct-indice-wrap" style="display:none;">
+                    <label for="ct-indice">Índice</label>
+                    <select id="ct-indice" name="indice_codigo">
+                      <option value="ICL">ICL</option>
+                      <option value="UVA">UVA</option>
+                      <option value="CER">CER</option>
+                      <option value="CASA_PROPIA">Casa Propia</option>
+                      <option value="IPC">IPC (variación — todavía no soportado del todo)</option>
+                    </select>
+                  </div>
+                  <div class="field" id="ct-indice-base-wrap" style="display:none;">
+                    <label for="ct-indice-base">Valor del índice al firmar (base)</label>
+                    <input type="number" id="ct-indice-base" name="indice_valor_base" step="0.0001">
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-card">
+                <h2>4. Contrato ya en curso (opcional)</h2>
+                <p class="admin-card-desc">Completá esto solo si el contrato ya venía funcionando antes de cargarlo acá (por ejemplo, se cobraba a mano en Excel) — así no se generan cuotas de meses que ya se cobraron por fuera del sistema.</p>
+                <div class="admin-form-grid">
+                  <div class="field">
+                    <label for="ct-fecha-gen">Generar cuotas desde</label>
+                    <input type="date" id="ct-fecha-gen" name="fecha_inicio_generacion">
+                  </div>
+                  <div class="field">
+                    <label for="ct-monto-actual">Monto vigente a esa fecha</label>
+                    <input type="number" id="ct-monto-actual" name="monto_actual" min="0">
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-card">
+                <h2>5. Garantes (opcional)</h2>
+                <div id="ct-garantes-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;"></div>
+                <button type="button" id="ct-garante-agregar" class="btn btn-dark btn-sm">＋ Agregar garante</button>
+              </div>
+
+              <div class="field field-full">
+                <label for="ct-notas">Notas</label>
+                <textarea id="ct-notas" name="notas" rows="2"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="contrato-submit-btn" style="padding:15px 34px; margin-top:18px;">Guardar contrato</button>
+              <div id="contrato-result" style="display:none; margin-top:26px;"></div>
+            </form>
+          </section>
+
+          <!-- ---------- Índices BCRA ---------- -->
+          <section id="tab-panel-indices" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">📈 Índices BCRA</h2>
+              <p class="admin-section-help">Cargá acá los valores de cada índice a medida que el BCRA los publica. Los contratos que ajustan por índice usan el valor más reciente cargado en o antes de la fecha del ajuste.</p>
+              <form id="indice-form" style="display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:22px;">
+                <div class="field">
+                  <label for="iv-indice">Índice</label>
+                  <select id="iv-indice" name="indice_codigo">
+                    <option value="ICL">ICL</option>
+                    <option value="UVA">UVA</option>
+                    <option value="CER">CER</option>
+                    <option value="CASA_PROPIA">Casa Propia</option>
+                    <option value="IPC">IPC</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="iv-fecha">Fecha</label>
+                  <input type="date" id="iv-fecha" name="fecha" required>
+                </div>
+                <div class="field">
+                  <label for="iv-valor">Valor</label>
+                  <input type="number" id="iv-valor" name="valor" step="0.0001" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar valor</button>
+              </form>
+              <div id="admin-indices-list"></div>
             </div>
           </section>
 
@@ -430,6 +616,64 @@
   </div>
 </div>
 
+<!-- ===================== RESCINDIR CONTRATO (modal) ===================== -->
+<div id="rescindir-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:420px; width:100%; margin:0;">
+    <h2 class="admin-section-title">Rescindir contrato</h2>
+    <p class="admin-card-desc">Las cuotas pendientes posteriores a esta fecha se anulan (no se borran). No se puede deshacer.</p>
+    <form id="rescindir-form">
+      <div class="admin-form-grid">
+        <div class="field field-full">
+          <label for="rc-fecha">Fecha de rescisión *</label>
+          <input type="date" id="rc-fecha" name="fecha_rescision" required>
+        </div>
+        <div class="field field-full">
+          <label for="rc-motivo">Motivo *</label>
+          <textarea id="rc-motivo" name="motivo" rows="2" required></textarea>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <button type="submit" class="btn btn-primary">Rescindir</button>
+        <button type="button" id="rescindir-cancelar" class="btn btn-dark">Cancelar</button>
+      </div>
+      <p id="rescindir-form-error" style="display:none; color:var(--color-danger); margin-top:12px;"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== RENOVAR CONTRATO (modal) ===================== -->
+<div id="renovar-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:420px; width:100%; margin:0;">
+    <h2 class="admin-section-title">Renovar contrato</h2>
+    <p class="admin-card-desc">Crea un contrato nuevo con estos cambios; el actual queda marcado "renovado" como historial.</p>
+    <form id="renovar-form">
+      <div class="admin-form-grid">
+        <div class="field">
+          <label for="rn-inicio">Nueva fecha de inicio *</label>
+          <input type="date" id="rn-inicio" name="fecha_inicio" required>
+        </div>
+        <div class="field">
+          <label for="rn-fin">Nueva fecha de fin *</label>
+          <input type="date" id="rn-fin" name="fecha_fin" required>
+        </div>
+        <div class="field field-full">
+          <label for="rn-monto">Nuevo monto mensual *</label>
+          <input type="number" id="rn-monto" name="monto_inicial" min="0" required>
+        </div>
+        <div class="field field-full" id="rn-indice-base-wrap" style="display:none;">
+          <label for="rn-indice-base">Nuevo valor base del índice *</label>
+          <input type="number" id="rn-indice-base" name="indice_valor_base" step="0.0001">
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <button type="submit" class="btn btn-primary">Renovar</button>
+        <button type="button" id="renovar-cancelar" class="btn btn-dark">Cancelar</button>
+      </div>
+      <p id="renovar-form-error" style="display:none; color:var(--color-danger); margin-top:12px;"></p>
+    </form>
+  </div>
+</div>
+
 <!-- ===================== FOOTER ===================== -->
 <footer class="site-footer">
   <div class="container">
@@ -478,6 +722,7 @@
 <script src="js/photo-manager.js"></script>
 <script src="js/admin-personas.js"></script>
 <script src="js/admin-inmuebles.js"></script>
+<script src="js/admin-contratos.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>

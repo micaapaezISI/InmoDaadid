@@ -33,17 +33,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "inmuebles") AdminInmuebles.loadList();
     if (tabName === "destacadas") AdminInmuebles.loadFeatured();
     if (tabName === "personas") AdminPersonas.loadList();
+    if (tabName === "contratos") AdminContratos.loadList();
+    if (tabName === "indices") AdminContratos.loadIndices();
     if (tabName === "mensajes") loadMessages();
   }
 
   tabButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      // "＋ Nuevo inmueble" siempre arranca en blanco, aunque se haya
-      // llegado a este botón en medio de estar editando otro inmueble.
-      // startEdit() cambia a esta misma pestaña por su cuenta (ver
-      // admin-inmuebles.js) sin pasar por este botón, así que no le pisa
-      // los datos que acaba de cargar.
+      // "＋ Nuevo inmueble"/"＋ Nuevo contrato" siempre arrancan en blanco,
+      // aunque se haya llegado a este botón en medio de estar editando
+      // otro registro. startEdit() cambia de pestaña por su cuenta (ver
+      // admin-inmuebles.js/admin-contratos.js) sin pasar por este botón,
+      // así que no le pisa los datos que acaba de cargar.
       if (btn.dataset.tab === "nueva") AdminInmuebles.prepararNuevo();
+      if (btn.dataset.tab === "nuevo-contrato") AdminContratos.prepararNuevo();
       switchTab(btn.dataset.tab);
     });
   });
@@ -127,8 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
-  // Inicializa los módulos de Inmuebles y Personas (les pasa el photoManager
-  // y las referencias que necesitan) — ver admin-inmuebles.js/admin-personas.js.
+  // Inicializa los módulos de Inmuebles, Personas y Contratos (les pasa el
+  // photoManager y las referencias que necesitan) — ver
+  // admin-inmuebles.js/admin-personas.js/admin-contratos.js.
   AdminInmuebles.init({ photoManager, onSaved: () => { AdminInmuebles.loadList(); AdminInmuebles.loadFeatured(); switchTab("inmuebles"); } });
   AdminPersonas.init();
+  AdminContratos.init({ onSaved: () => switchTab("contratos") });
 });
