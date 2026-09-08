@@ -34,25 +34,43 @@ const AdminInmuebles = (() => {
 
   /* ------------------------- Propietarios (filas) --------------------- */
 
-  function addPropietarioRow(personaId, porcentaje) {
+  function opcionesPersonas(seleccionadoId) {
     const personas = AdminPersonas.getAll();
+    return (
+      `<option value="">Elegir persona...</option>` +
+      personas.map((p) => `<option value="${p.id}" ${String(p.id) === String(seleccionadoId) ? "selected" : ""}>${p.nombre}</option>`).join("")
+    );
+  }
+
+  function addPropietarioRow(personaId, porcentaje) {
     const row = document.createElement("div");
     row.className = "admin-list-row";
     row.dataset.propietarioRow = "1";
     row.style.cssText = "padding:8px 0; gap:10px;";
     row.innerHTML = `
       <select data-propietario-persona style="flex:2; min-width:160px; padding:10px 12px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
-        <option value="">Elegir persona...</option>
-        ${personas.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("")}
+        ${opcionesPersonas(personaId)}
       </select>
       <input type="number" data-propietario-pct value="${porcentaje ?? 100}" min="0" max="100" step="0.01"
         style="width:90px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
       <span style="font-size:0.85rem; color:var(--color-text-light);">%</span>
+      <button type="button" class="btn btn-sm btn-dark" data-propietario-nueva>＋ Nueva</button>
       <button type="button" class="admin-delete-link" data-propietario-quitar>Quitar</button>
     `;
     row.querySelector("[data-propietario-quitar]").addEventListener("click", () => row.remove());
+    row.querySelector("[data-propietario-nueva]").addEventListener("click", () => {
+      // Al crear la persona en el modal, esta misma fila (y todas las demás
+      // ya armadas) quedan con la lista de personas al día y la nueva
+      // seleccionada acá — sin salir del formulario del inmueble.
+      AdminPersonas.abrirModal(null, (nuevoId) => {
+        document.querySelectorAll("[data-propietario-row] [data-propietario-persona]").forEach((select) => {
+          const actual = select.value;
+          select.innerHTML = opcionesPersonas(actual);
+        });
+        row.querySelector("[data-propietario-persona]").value = nuevoId;
+      });
+    });
     propietariosList.appendChild(row);
-    if (personaId) row.querySelector("[data-propietario-persona]").value = personaId;
   }
 
   propietarioAgregarBtn.addEventListener("click", () => addPropietarioRow(null, propietariosList.children.length ? "" : 100));

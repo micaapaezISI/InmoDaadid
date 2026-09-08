@@ -10,6 +10,7 @@
 const AdminPersonas = (() => {
   let cache = [];
   let editingId = null;
+  let onGuardadaCallback = null;
 
   const modal = document.getElementById("persona-modal");
   const form = document.getElementById("persona-form");
@@ -20,8 +21,13 @@ const AdminPersonas = (() => {
   const nuevaBtn = document.getElementById("persona-nueva-btn");
   const cancelarBtn = document.getElementById("persona-cancelar");
 
-  function abrirModal(persona) {
+  // onGuardada (opcional): se llama con el id de la persona recién creada,
+  // ya reflejado en getAll(). La usa Inmuebles para poder cargar un
+  // propietario nuevo sin salir del formulario del inmueble — ver
+  // admin-inmuebles.js.
+  function abrirModal(persona, onGuardada) {
     editingId = persona ? persona.id : null;
+    onGuardadaCallback = onGuardada || null;
     form.reset();
     errorBox.style.display = "none";
     if (persona) {
@@ -38,6 +44,7 @@ const AdminPersonas = (() => {
   function cerrarModal() {
     modal.style.display = "none";
     editingId = null;
+    onGuardadaCallback = null;
   }
 
   function normalizar(data) {
@@ -144,12 +151,19 @@ const AdminPersonas = (() => {
     try {
       const datos = normalizar(new FormData(form));
       submitBtn.disabled = true;
-      const { error } = editingId
-        ? await supabaseClient.from("personas").update(datos).eq("id", editingId)
-        : await supabaseClient.from("personas").insert(datos);
-      if (error) throw error;
+      let nuevoId = editingId;
+      if (editingId) {
+        const { error } = await supabaseClient.from("personas").update(datos).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { data: inserted, error } = await supabaseClient.from("personas").insert(datos).select("id").single();
+        if (error) throw error;
+        nuevoId = inserted.id;
+      }
+      const callback = onGuardadaCallback;
       cerrarModal();
-      loadList();
+      await loadList();
+      if (callback) callback(nuevoId);
     } catch (err) {
       errorBox.textContent = err.message || String(err);
       errorBox.style.display = "block";
