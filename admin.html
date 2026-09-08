@@ -101,9 +101,11 @@
           <button type="button" class="admin-sidebar-link" data-tab="mensajes">
             <span class="admin-sidebar-ico">📩</span> Mensajes
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="cobranzas">
+            <span class="admin-sidebar-ico">💰</span> Cobranzas
+          </button>
 
           <div class="admin-sidebar-group-label">Próximamente</div>
-          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Cobranzas</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Liquidación a propietarios</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Caja diaria</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Ventas</span>
@@ -329,6 +331,68 @@
               <h2 class="admin-section-title">📩 Mensajes de contacto</h2>
               <p class="admin-section-help">Estas son las consultas que la gente mandó desde el formulario de "Contacto" del sitio, con la más reciente primero.</p>
               <div id="admin-messages-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Cobranzas ---------- -->
+          <section id="tab-panel-cobranzas" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">💰 Cobranzas</h2>
+              <p class="admin-section-help">Cobrá las cuotas pendientes de los contratos. Un cobro salda una cuota completa — para adelantar varios meses, elegí varias cuotas del mismo inquilino: se agrupan bajo el mismo recibo.</p>
+            </div>
+
+            <div class="admin-card">
+              <h2>Configuración de mora</h2>
+              <p class="admin-card-desc">Se usa en los contratos que no tienen su propio interés/días de gracia cargado.</p>
+              <form id="cobranzas-config-form" class="admin-form-grid">
+                <div class="field">
+                  <label for="cf-punitorio">Interés punitorio diario (%)</label>
+                  <input type="number" id="cf-punitorio" name="punitorio_diario_pct" min="0" step="0.01">
+                </div>
+                <div class="field">
+                  <label for="cf-gracia">Días de gracia</label>
+                  <input type="number" id="cf-gracia" name="dias_gracia_mora" min="0" step="1">
+                </div>
+                <div class="field" style="justify-content:flex-end;">
+                  <button type="submit" class="btn btn-dark btn-sm">Guardar configuración</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="admin-card">
+              <h2>Cuotas pendientes de cobro</h2>
+              <p class="admin-card-desc">Tildá una o varias cuotas del mismo inquilino para armar el cobro.</p>
+              <input type="text" id="cb-buscar" placeholder="Buscar por inquilino o dirección..." style="width:100%; max-width:420px; margin-bottom:16px; padding:10px 12px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
+              <div id="cb-cuotas-list"></div>
+            </div>
+
+            <div class="admin-card" id="cb-cobro-panel" style="display:none;">
+              <h2>Registrar cobro</h2>
+              <p class="admin-card-desc" id="cb-cobro-resumen"></p>
+              <div class="admin-form-grid">
+                <div class="field">
+                  <label for="cb-fecha-pago">Fecha de pago</label>
+                  <input type="date" id="cb-fecha-pago">
+                </div>
+                <div class="field field-full">
+                  <label for="cb-observaciones">Observaciones</label>
+                  <textarea id="cb-observaciones" rows="2"></textarea>
+                </div>
+              </div>
+              <div id="cb-medios-list" style="display:flex; flex-direction:column; gap:10px; margin:14px 0;"></div>
+              <button type="button" id="cb-medio-agregar" class="btn btn-dark btn-sm">＋ Agregar medio de pago</button>
+              <p style="margin-top:16px; font-size:1.1rem;"><strong>Total a cobrar: <span id="cb-total-a-cobrar">$ 0</span></strong></p>
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="button" id="cb-registrar-btn" class="btn btn-primary">Registrar cobro</button>
+                <button type="button" id="cb-cancelar-cobro" class="btn btn-dark">Cancelar</button>
+              </div>
+              <p id="cb-cobro-error" style="display:none; color:var(--color-danger); margin-top:12px;"></p>
+              <div id="cb-recibo-resultado" style="display:none; margin-top:22px;"></div>
+            </div>
+
+            <div class="admin-card">
+              <h2>Historial de cobros</h2>
+              <div id="cb-historial-list"></div>
             </div>
           </section>
 
@@ -674,6 +738,70 @@
   </div>
 </div>
 
+<!-- ===================== BONIFICAR CUOTA (modal) ===================== -->
+<div id="bonificacion-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:420px; width:100%; margin:0;">
+    <h2 class="admin-section-title">Bonificar cuota</h2>
+    <p class="admin-card-desc">Descuento puntual sobre el alquiler de esta cuota — se cobra el 100% ya bonificado, no es un pago parcial.</p>
+    <form id="bonificacion-form">
+      <div class="admin-form-grid">
+        <div class="field field-full">
+          <label for="bo-monto">Monto de la bonificación *</label>
+          <input type="number" id="bo-monto" name="monto" min="0" required>
+        </div>
+        <div class="field field-full">
+          <label for="bo-motivo">Motivo</label>
+          <textarea id="bo-motivo" name="motivo" rows="2"></textarea>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+        <button type="button" id="bonificacion-cancelar" class="btn btn-dark btn-sm">Cancelar</button>
+      </div>
+      <p id="bonificacion-form-error" style="display:none; color:var(--color-danger); margin-top:10px;"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== EXCEPCIONES DE COBRO (modal) ===================== -->
+<div id="excepciones-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:540px; width:100%; margin:0; max-height:90vh; overflow-y:auto;">
+    <h2 class="admin-section-title">Excepciones de cobro</h2>
+    <p class="admin-card-desc">Acuerdos informales entre propietario e inmobiliaria que no tocan el contrato firmado — mientras estén vigentes, Cobranzas cobra el monto congelado en vez del que resulte del ajuste automático.</p>
+    <div id="excepciones-list" style="margin-bottom:18px;"></div>
+    <form id="excepcion-form">
+      <div class="admin-form-grid">
+        <div class="field">
+          <label for="ex-desde">Desde *</label>
+          <input type="date" id="ex-desde" name="fecha_desde" required>
+        </div>
+        <div class="field">
+          <label for="ex-hasta">Hasta *</label>
+          <input type="date" id="ex-hasta" name="fecha_hasta" required>
+        </div>
+        <div class="field field-full">
+          <label for="ex-monto">Monto congelado (mensual) *</label>
+          <input type="number" id="ex-monto" name="monto_congelado" min="0" required>
+        </div>
+        <div class="field field-full">
+          <label for="ex-motivo">Motivo *</label>
+          <textarea id="ex-motivo" name="motivo" rows="2" required></textarea>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button type="submit" class="btn btn-primary btn-sm">Agregar excepción</button>
+        <button type="button" id="excepcion-cerrar" class="btn btn-dark btn-sm">Cerrar</button>
+      </div>
+      <p id="excepcion-form-error" style="display:none; color:var(--color-danger); margin-top:10px;"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== RECIBO IMPRIMIBLE ===================== -->
+<div id="recibo-imprimible-wrap" style="display:none;">
+  <div id="recibo-imprimible"></div>
+</div>
+
 <!-- ===================== FOOTER ===================== -->
 <footer class="site-footer">
   <div class="container">
@@ -723,6 +851,7 @@
 <script src="js/admin-personas.js"></script>
 <script src="js/admin-inmuebles.js"></script>
 <script src="js/admin-contratos.js"></script>
+<script src="js/admin-cobranzas.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>

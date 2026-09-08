@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "contratos") AdminContratos.loadList();
     if (tabName === "indices") AdminContratos.loadIndices();
     if (tabName === "mensajes") loadMessages();
+    if (tabName === "cobranzas") { AdminCobranzas.loadCuotas(); AdminCobranzas.loadHistorial(); }
   }
 
   tabButtons.forEach((btn) => {
@@ -136,4 +137,5 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminInmuebles.init({ photoManager, onSaved: () => { AdminInmuebles.loadList(); AdminInmuebles.loadFeatured(); switchTab("inmuebles"); } });
   AdminPersonas.init();
   AdminContratos.init({ onSaved: () => switchTab("contratos") });
+  AdminCobranzas.init();
 });

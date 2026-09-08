@@ -2154,3 +2154,16 @@ h1, h2, h3, h4 {
     text-align: left;
   }
 }
+
+/* ===================== Recibo imprimible (Cobranzas) ===================== */
+#recibo-imprimible-wrap {
+  display: none;
+}
+
+body.printing-recibo > *:not(#recibo-imprimible-wrap) {
+  display: none !important;
+}
+
+body.printing-recibo #recibo-imprimible-wrap {
+  display: block !important;
+}

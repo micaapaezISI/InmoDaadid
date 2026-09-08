@@ -191,6 +191,7 @@ const AdminContratos = (() => {
           </div>
           <div class="admin-list-actions">
             <button type="button" class="btn btn-sm btn-dark" data-ver-cuotas="${c.id}">Ver cuotas</button>
+            <button type="button" class="btn btn-sm btn-dark" data-excepciones="${c.id}">Excepciones de cobro</button>
             ${c.estado === "vigente" ? `<button type="button" class="btn btn-sm" data-generar-cuotas="${c.id}">Generar cuotas pendientes</button>` : ""}
             ${c.estado === "vigente" ? `<button type="button" class="btn btn-sm btn-dark" data-renovar="${c.id}">Renovar</button>` : ""}
             ${c.estado === "vigente" ? `<button type="button" class="admin-delete-link" data-rescindir="${c.id}">Rescindir</button>` : ""}
@@ -203,6 +204,9 @@ const AdminContratos = (() => {
 
     listBox.querySelectorAll("[data-ver-cuotas]").forEach((btn) => {
       btn.addEventListener("click", () => toggleCuotas(parseInt(btn.dataset.verCuotas, 10)));
+    });
+    listBox.querySelectorAll("[data-excepciones]").forEach((btn) => {
+      btn.addEventListener("click", () => abrirExcepciones(parseInt(btn.dataset.excepciones, 10)));
     });
     listBox.querySelectorAll("[data-generar-cuotas]").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -318,6 +322,91 @@ const AdminContratos = (() => {
     }
     renovarModal.style.display = "none";
     loadList();
+  });
+
+  /* --------------------- Excepciones de cobro (acuerdos informales) ------ */
+
+  const excepcionesModal = document.getElementById("excepciones-modal");
+  const excepcionesListBox = document.getElementById("excepciones-list");
+  const excepcionForm = document.getElementById("excepcion-form");
+  const excepcionErrorBox = document.getElementById("excepcion-form-error");
+  let excepcionContratoId = null;
+
+  async function abrirExcepciones(contratoId) {
+    excepcionContratoId = contratoId;
+    excepcionForm.reset();
+    excepcionErrorBox.style.display = "none";
+    excepcionesModal.style.display = "flex";
+    await loadExcepciones();
+  }
+
+  async function loadExcepciones() {
+    excepcionesListBox.innerHTML = `<p style="color:var(--color-text-light);">Cargando…</p>`;
+    const { data, error } = await supabaseClient
+      .from("contrato_excepcion_cobro")
+      .select("*")
+      .eq("contrato_id", excepcionContratoId)
+      .order("fecha_desde", { ascending: false });
+    if (error) {
+      excepcionesListBox.innerHTML = `<p style="color:var(--color-danger);">${error.message}</p>`;
+      return;
+    }
+    if (!data.length) {
+      excepcionesListBox.innerHTML = `<p style="color:var(--color-text-light);">Todavía no hay excepciones cargadas para este contrato.</p>`;
+      return;
+    }
+    excepcionesListBox.innerHTML = data
+      .map((ex) => `
+      <div class="admin-list-row">
+        <div class="admin-list-info">
+          <span class="admin-list-title">${ex.fecha_desde} a ${ex.fecha_hasta} — ${Dinero.formatear(ex.monto_congelado)} ${ex.anulada ? '<span class="admin-status-badge" style="background:var(--color-text-light);">Anulada</span>' : ""}</span>
+          <span class="admin-list-meta" style="display:block;">${ex.motivo}</span>
+        </div>
+        ${!ex.anulada ? `<button type="button" class="admin-delete-link" data-anular-excepcion="${ex.id}">Anular</button>` : ""}
+      </div>`)
+      .join("");
+
+    excepcionesListBox.querySelectorAll("[data-anular-excepcion]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const motivo = prompt("Motivo de la anulación:");
+        if (motivo === null) return;
+        if (!motivo.trim()) return alert("Contá el motivo de la anulación.");
+        const { error } = await supabaseClient.from("contrato_excepcion_cobro")
+          .update({ anulada: true, motivo_anulacion: motivo.trim() })
+          .eq("id", parseInt(btn.dataset.anularExcepcion, 10));
+        if (error) return alert("No se pudo anular: " + error.message);
+        loadExcepciones();
+      });
+    });
+  }
+
+  document.getElementById("excepcion-cerrar").addEventListener("click", () => { excepcionesModal.style.display = "none"; });
+  excepcionesModal.addEventListener("click", (e) => { if (e.target === excepcionesModal) excepcionesModal.style.display = "none"; });
+
+  excepcionForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    excepcionErrorBox.style.display = "none";
+    const data = new FormData(excepcionForm);
+    const fecha_desde = data.get("fecha_desde");
+    const fecha_hasta = data.get("fecha_hasta");
+    if (fecha_hasta <= fecha_desde) {
+      excepcionErrorBox.textContent = "La fecha hasta tiene que ser posterior a la fecha desde.";
+      excepcionErrorBox.style.display = "block";
+      return;
+    }
+    const { error } = await supabaseClient.from("contrato_excepcion_cobro").insert({
+      contrato_id: excepcionContratoId,
+      fecha_desde, fecha_hasta,
+      monto_congelado: Dinero.aCentavos(data.get("monto_congelado")),
+      motivo: V.texto(data.get("motivo"), { max: 500 }),
+    });
+    if (error) {
+      excepcionErrorBox.textContent = error.message;
+      excepcionErrorBox.style.display = "block";
+      return;
+    }
+    excepcionForm.reset();
+    loadExcepciones();
   });
 
   /* ------------------------------ Índices BCRA --------------------------- */
