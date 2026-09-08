@@ -26,6 +26,11 @@ const AdminContratos = (() => {
   const indiceBaseWrap = document.getElementById("ct-indice-base-wrap");
   const garantesList = document.getElementById("ct-garantes-list");
   const garanteAgregarBtn = document.getElementById("ct-garante-agregar");
+  const inquilinoNuevaBtn = document.getElementById("ct-inquilino-nueva");
+  const propiedadNuevaBtn = document.getElementById("ct-propiedad-nueva");
+  const propiedadNuevaForm = document.getElementById("ct-propiedad-nueva-form");
+  const propiedadCancelarBtn = document.getElementById("ct-propiedad-cancelar");
+  const propiedadGuardarBtn = document.getElementById("ct-propiedad-guardar");
 
   const indiceForm = document.getElementById("indice-form");
   const indicesListBox = document.getElementById("admin-indices-list");
@@ -45,16 +50,22 @@ const AdminContratos = (() => {
   }
   ajusteTipoSelect.addEventListener("change", actualizarCamposAjuste);
 
-  function addGaranteRow(personaId, tipoGarantia) {
+  function opcionesPersonas(seleccionadoId) {
     const personas = AdminPersonas.getAll();
+    return (
+      `<option value="">Elegir persona...</option>` +
+      personas.map((p) => `<option value="${p.id}" ${String(p.id) === String(seleccionadoId) ? "selected" : ""}>${p.nombre}</option>`).join("")
+    );
+  }
+
+  function addGaranteRow(personaId, tipoGarantia) {
     const row = document.createElement("div");
     row.className = "admin-list-row";
     row.dataset.garanteRow = "1";
     row.style.cssText = "padding:8px 0; gap:10px;";
     row.innerHTML = `
       <select data-garante-persona style="flex:2; min-width:140px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
-        <option value="">Elegir persona...</option>
-        ${personas.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("")}
+        ${opcionesPersonas(personaId)}
       </select>
       <select data-garante-tipo style="padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
         <option value="personal">Garante personal</option>
@@ -62,11 +73,23 @@ const AdminContratos = (() => {
         <option value="seguro_caucion">Seguro de caución</option>
         <option value="recibo_sueldo">Recibo de sueldo</option>
       </select>
+      <button type="button" class="btn btn-sm btn-dark" data-garante-nueva>＋ Nueva</button>
       <button type="button" class="admin-delete-link" data-garante-quitar>Quitar</button>
     `;
     row.querySelector("[data-garante-quitar]").addEventListener("click", () => row.remove());
+    row.querySelector("[data-garante-nueva]").addEventListener("click", () => {
+      // Igual patrón que el propietario en Inmuebles: al crear la persona en
+      // el modal, todas las filas de garante ya armadas quedan con la lista
+      // al día y esta fila con la nueva persona seleccionada.
+      AdminPersonas.abrirModal(null, (nuevoId) => {
+        document.querySelectorAll("[data-garante-row] [data-garante-persona]").forEach((select) => {
+          const actual = select.value;
+          select.innerHTML = opcionesPersonas(actual);
+        });
+        row.querySelector("[data-garante-persona]").value = nuevoId;
+      });
+    });
     garantesList.appendChild(row);
-    if (personaId) row.querySelector("[data-garante-persona]").value = personaId;
     if (tipoGarantia) row.querySelector("[data-garante-tipo]").value = tipoGarantia;
   }
   garanteAgregarBtn.addEventListener("click", () => addGaranteRow());
@@ -80,7 +103,7 @@ const AdminContratos = (() => {
       .filter((g) => g.persona_id);
   }
 
-  async function poblarSelectsBase() {
+  async function poblarSelectsBase(seleccionarPropiedadId, seleccionarInquilinoId) {
     const { data: propiedades } = await supabaseClient
       .from("propiedades")
       .select("id, codigo, titulo_publico, calle, barrio")
@@ -88,16 +111,56 @@ const AdminContratos = (() => {
       .in("estado", ["disponible", "alquilada"])
       .order("codigo");
     cachePropiedades = propiedades || [];
+    const propiedadActual = seleccionarPropiedadId ?? propiedadSelect.value;
     propiedadSelect.innerHTML =
       `<option value="">Elegir inmueble...</option>` +
-      cachePropiedades.map((p) => `<option value="${p.id}">${p.codigo || ""} — ${p.titulo_publico || p.calle || p.barrio || "sin título"}</option>`).join("");
+      cachePropiedades.map((p) => `<option value="${p.id}" ${String(p.id) === String(propiedadActual) ? "selected" : ""}>${p.codigo || ""} — ${p.titulo_publico || p.calle || p.barrio || "sin título"}</option>`).join("");
 
     await AdminPersonas.loadList();
-    const personas = AdminPersonas.getAll();
-    inquilinoSelect.innerHTML =
-      `<option value="">Elegir persona...</option>` +
-      personas.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("");
+    const inquilinoActual = seleccionarInquilinoId ?? inquilinoSelect.value;
+    inquilinoSelect.innerHTML = opcionesPersonas(inquilinoActual).replace("Elegir persona...", "Elegir inquilino...");
   }
+
+  inquilinoNuevaBtn.addEventListener("click", () => {
+    AdminPersonas.abrirModal(null, (nuevoId) => {
+      inquilinoSelect.innerHTML = opcionesPersonas(nuevoId).replace("Elegir persona...", "Elegir inquilino...");
+    });
+  });
+
+  propiedadNuevaBtn.addEventListener("click", () => {
+    propiedadNuevaForm.style.display = propiedadNuevaForm.style.display === "none" ? "block" : "none";
+  });
+  propiedadCancelarBtn.addEventListener("click", () => {
+    propiedadNuevaForm.style.display = "none";
+    ["ni-calle", "ni-numero", "ni-precio"].forEach((id) => { document.getElementById(id).value = ""; });
+  });
+  propiedadGuardarBtn.addEventListener("click", async () => {
+    const tipo = document.getElementById("ni-tipo").value;
+    const calle = V.texto(document.getElementById("ni-calle").value);
+    const numero = V.texto(document.getElementById("ni-numero").value);
+    const precio = document.getElementById("ni-precio").value;
+    if (!calle) return alert("Escribí al menos la calle.");
+    if (!precio) return alert("Cargá el valor del alquiler.");
+
+    propiedadGuardarBtn.disabled = true;
+    try {
+      const { data: codigo } = await supabaseClient.rpc("siguiente_codigo_propiedad");
+      const { data: creada, error } = await supabaseClient.from("propiedades").insert({
+        codigo, tipo, calle, numero, operacion: "alquiler", estado: "disponible",
+        precio_alquiler: Dinero.aCentavos(precio), moneda_alquiler: "ARS", publicar_web: false,
+      }).select("id").single();
+      if (error) throw error;
+
+      await poblarSelectsBase(creada.id);
+      if (!form.elements.monto_inicial.value) form.elements.monto_inicial.value = precio;
+      propiedadNuevaForm.style.display = "none";
+      ["ni-calle", "ni-numero", "ni-precio"].forEach((id) => { document.getElementById(id).value = ""; });
+    } catch (err) {
+      alert("No se pudo crear el inmueble: " + (err.message || err));
+    } finally {
+      propiedadGuardarBtn.disabled = false;
+    }
+  });
 
   /* --------------------------- Alta de contrato ------------------------ */
 
