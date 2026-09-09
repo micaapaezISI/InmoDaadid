@@ -104,9 +104,14 @@
           <button type="button" class="admin-sidebar-link" data-tab="cobranzas">
             <span class="admin-sidebar-ico">💰</span> Cobranzas
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="gastos">
+            <span class="admin-sidebar-ico">🧾</span> Gastos
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="liquidaciones">
+            <span class="admin-sidebar-ico">🏦</span> Liquidaciones
+          </button>
 
           <div class="admin-sidebar-group-label">Próximamente</div>
-          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Liquidación a propietarios</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Caja diaria</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Ventas</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Agenda</span>
@@ -425,6 +430,83 @@
             <div class="admin-card">
               <h2>Historial de cobros</h2>
               <div id="cb-historial-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Gastos ---------- -->
+          <section id="tab-panel-gastos" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">🧾 Gastos</h2>
+              <p class="admin-section-help">Gastos de una propiedad (reparaciones, impuestos, etc.). Los que estén pendientes se descuentan solos en la próxima liquidación al propietario que corresponda.</p>
+            </div>
+
+            <div class="admin-card">
+              <h2>Cargar gasto</h2>
+              <form id="gasto-form" class="admin-form-grid">
+                <div class="field field-full">
+                  <label for="ga-propiedad">Inmueble *</label>
+                  <select id="ga-propiedad" name="propiedad_id" required></select>
+                </div>
+                <div class="field">
+                  <label for="ga-fecha">Fecha *</label>
+                  <input type="date" id="ga-fecha" name="fecha" required>
+                </div>
+                <div class="field">
+                  <label for="ga-monto">Monto *</label>
+                  <input type="number" id="ga-monto" name="monto" min="0" required>
+                </div>
+                <div class="field field-full">
+                  <label for="ga-concepto">Concepto *</label>
+                  <input type="text" id="ga-concepto" name="concepto" placeholder="Ej: Arreglo de plomería" required>
+                </div>
+                <div class="field field-full">
+                  <label for="ga-comprobante">Comprobante (referencia, opcional)</label>
+                  <input type="text" id="ga-comprobante" name="comprobante">
+                </div>
+                <div class="field field-full">
+                  <button type="submit" class="btn btn-primary">Guardar gasto</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="admin-card">
+              <h2>Gastos cargados</h2>
+              <div style="display:flex; gap:10px; margin-bottom:14px;">
+                <button type="button" class="btn btn-sm btn-dark" data-gastos-filtro="pendientes">Pendientes de liquidar</button>
+                <button type="button" class="btn btn-sm btn-dark" data-gastos-filtro="todos">Todos</button>
+              </div>
+              <div id="gastos-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Liquidaciones a propietarios ---------- -->
+          <section id="tab-panel-liquidaciones" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">🏦 Liquidaciones a propietarios</h2>
+              <p class="admin-section-help">Cuánto cobró un propietario en un período, con la comisión y los gastos pendientes ya descontados. Se genera una por persona y período — se puede volver a generar para completarla con cobros que lleguen después.</p>
+            </div>
+
+            <div class="admin-card">
+              <h2>Generar liquidación</h2>
+              <div class="admin-form-grid">
+                <div class="field">
+                  <label for="lq-persona">Propietario *</label>
+                  <select id="lq-persona"></select>
+                </div>
+                <div class="field">
+                  <label for="lq-periodo">Período *</label>
+                  <input type="month" id="lq-periodo">
+                </div>
+                <div class="field" style="justify-content:flex-end;">
+                  <button type="button" id="lq-generar-btn" class="btn btn-primary">Generar</button>
+                </div>
+              </div>
+              <p id="lq-generar-resultado" style="display:none; margin-top:12px;"></p>
+            </div>
+
+            <div class="admin-card">
+              <h2>Liquidaciones</h2>
+              <div id="liquidaciones-list"></div>
             </div>
           </section>
 
@@ -829,6 +911,25 @@
   </div>
 </div>
 
+<!-- ===================== PAGAR LIQUIDACIÓN (modal) ===================== -->
+<div id="pagar-liquidacion-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:480px; width:100%; margin:0;">
+    <h2 class="admin-section-title">Pagar liquidación</h2>
+    <p class="admin-card-desc" id="pl-resumen"></p>
+    <div class="field">
+      <label for="pl-fecha">Fecha de pago *</label>
+      <input type="date" id="pl-fecha">
+    </div>
+    <div id="pl-medios-list" style="display:flex; flex-direction:column; gap:10px; margin:14px 0;"></div>
+    <button type="button" id="pl-medio-agregar" class="btn btn-dark btn-sm">＋ Agregar medio de pago</button>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button type="button" id="pl-confirmar-btn" class="btn btn-primary">Confirmar pago</button>
+      <button type="button" id="pl-cancelar-btn" class="btn btn-dark">Cancelar</button>
+    </div>
+    <p id="pl-error" style="display:none; color:var(--color-danger); margin-top:12px;"></p>
+  </div>
+</div>
+
 <!-- ===================== RECIBO IMPRIMIBLE ===================== -->
 <div id="recibo-imprimible-wrap" style="display:none;">
   <div id="recibo-imprimible"></div>
@@ -884,6 +985,8 @@
 <script src="js/admin-inmuebles.js"></script>
 <script src="js/admin-contratos.js"></script>
 <script src="js/admin-cobranzas.js"></script>
+<script src="js/admin-gastos.js"></script>
+<script src="js/admin-liquidaciones.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>

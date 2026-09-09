@@ -37,6 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "indices") AdminContratos.loadIndices();
     if (tabName === "mensajes") loadMessages();
     if (tabName === "cobranzas") { AdminCobranzas.loadCuotas(); AdminCobranzas.loadHistorial(); }
+    if (tabName === "gastos") AdminGastos.loadList();
+    if (tabName === "liquidaciones") AdminLiquidaciones.loadList();
   }
 
   tabButtons.forEach((btn) => {
@@ -138,4 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminPersonas.init();
   AdminContratos.init({ onSaved: () => switchTab("contratos") });
   AdminCobranzas.init();
+  AdminGastos.init();
+  AdminLiquidaciones.init();
 });
