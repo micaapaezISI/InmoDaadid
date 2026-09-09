@@ -135,7 +135,7 @@ const AdminCaja = (() => {
       btn.addEventListener("click", async () => {
         if (!confirm("¿Anular este movimiento?")) return;
         const { error } = await supabaseClient.rpc("anular_movimiento_caja", { p_id: parseInt(btn.dataset.anularMovimiento, 10) });
-        if (error) return alert("No se pudo anular: " + error.message);
+        if (error) return avisar("No se pudo anular: " + error.message, "error");
         loadMovimientos();
         loadSaldosHoy();
       });
@@ -155,11 +155,12 @@ const AdminCaja = (() => {
       medio_pago: data.get("medio_pago"),
       concepto: V.texto(data.get("concepto"), { max: 255 }),
     };
-    if (!payload.monto) return alert("Cargá el monto.");
-    if (!payload.concepto) return alert("Contá de qué se trata el movimiento.");
+    if (!payload.monto) return avisar("Cargá el monto.", "error");
+    if (!payload.concepto) return avisar("Contá de qué se trata el movimiento.", "error");
 
     const { error } = await supabaseClient.from("movimiento_caja").insert(payload);
-    if (error) return alert("No se pudo guardar: " + error.message);
+    if (error) return avisar("No se pudo guardar: " + error.message, "error");
+    avisar("Movimiento guardado.");
     form.reset();
     loadMovimientos();
     loadSaldosHoy();

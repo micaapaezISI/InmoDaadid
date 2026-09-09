@@ -126,7 +126,7 @@ const AdminPersonas = (() => {
         const id = parseInt(btn.dataset.borrarPersona, 10);
         if (!confirm("¿Dar de baja a esta persona? No se borra: queda inactiva y se puede reactivar más adelante si hace falta.")) return;
         const { error } = await supabaseClient.from("personas").update({ activo: false }).eq("id", id);
-        if (error) return alert("No se pudo dar de baja: " + error.message);
+        if (error) return avisar("No se pudo dar de baja: " + error.message, "error");
         loadList();
       });
     });

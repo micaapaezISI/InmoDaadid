@@ -71,8 +71,8 @@ const AdminLiquidaciones = (() => {
     generarResultado.style.display = "none";
     const personaId = parseInt(personaSelect.value, 10);
     const periodo = periodoInput.value;
-    if (!personaId) return alert("Elegí el propietario.");
-    if (!periodo) return alert("Elegí el período.");
+    if (!personaId) return avisar("Elegí el propietario.", "error");
+    if (!periodo) return avisar("Elegí el período.", "error");
 
     generarBtn.disabled = true;
     generarBtn.textContent = "Generando…";
@@ -247,9 +247,9 @@ const AdminLiquidaciones = (() => {
         e.stopPropagation();
         const motivo = prompt("Motivo de la anulación:");
         if (motivo === null) return;
-        if (!motivo.trim()) return alert("Contá el motivo de la anulación.");
+        if (!motivo.trim()) return avisar("Contá el motivo de la anulación.", "error");
         const { error } = await supabaseClient.rpc("anular_liquidacion", { p_liquidacion_id: parseInt(btn.dataset.anularLiquidacion, 10), p_motivo: motivo.trim() });
-        if (error) return alert("No se pudo anular: " + error.message);
+        if (error) return avisar("No se pudo anular: " + error.message, "error");
         loadList();
         loadPendientes();
         AdminGastos.loadList();
@@ -337,7 +337,7 @@ const AdminLiquidaciones = (() => {
       });
       if (error) throw error;
       modal.style.display = "none";
-      alert(`Liquidación pagada. Recibo Nº ${data.recibo_numero}.`);
+      avisar(`Liquidación pagada. Recibo Nº ${data.recibo_numero}.`);
       loadList();
       loadPendientes();
     } catch (err) {

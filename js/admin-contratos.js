@@ -150,8 +150,8 @@ const AdminContratos = (() => {
     const calle = V.texto(document.getElementById("ni-calle").value);
     const numero = V.texto(document.getElementById("ni-numero").value);
     const precio = document.getElementById("ni-precio").value;
-    if (!calle) return alert("Escribí al menos la calle.");
-    if (!precio) return alert("Cargá el valor del alquiler.");
+    if (!calle) return avisar("Escribí al menos la calle.", "error");
+    if (!precio) return avisar("Cargá el valor del alquiler.", "error");
 
     propiedadGuardarBtn.disabled = true;
     try {
@@ -167,7 +167,7 @@ const AdminContratos = (() => {
       propiedadNuevaForm.style.display = "none";
       ["ni-calle", "ni-numero", "ni-precio"].forEach((id) => { document.getElementById(id).value = ""; });
     } catch (err) {
-      alert("No se pudo crear el inmueble: " + (err.message || err));
+      avisar("No se pudo crear el inmueble: " + (err.message || err), "error");
     } finally {
       propiedadGuardarBtn.disabled = false;
     }
@@ -209,7 +209,7 @@ const AdminContratos = (() => {
       notas: V.texto(data.get("notas"), { max: 4000 }),
     };
 
-    if (!datos.propiedad_id || !datos.inquilino_id) return alert("Elegí el inmueble y el inquilino.");
+    if (!datos.propiedad_id || !datos.inquilino_id) return avisar("Elegí el inmueble y el inquilino.", "error");
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Guardando…";
@@ -314,11 +314,11 @@ const AdminContratos = (() => {
         btn.disabled = true;
         const { data: res, error } = await supabaseClient.rpc("generar_cuotas_pendientes", { p_contrato_id: parseInt(btn.dataset.generarCuotas, 10) });
         btn.disabled = false;
-        if (error) return alert("No se pudo generar: " + error.message);
+        if (error) return avisar("No se pudo generar: " + error.message, "error");
         const r = Array.isArray(res) ? res[0] : res;
-        alert(r && r.detenido_por_indice
+        avisar(r && r.detenido_por_indice
           ? `Se generaron ${r.generadas} cuota(s) más. Se detuvo porque falta cargar un valor de índice más reciente — cargalo en "Índices BCRA" y volvé a tocar este botón.`
-          : `Se generaron ${r ? r.generadas : 0} cuota(s) más.`);
+          : `Se generaron ${r ? r.generadas : 0} cuota(s) más.`, r && r.detenido_por_indice ? "error" : "ok");
         loadList();
       });
     });
@@ -471,11 +471,11 @@ const AdminContratos = (() => {
       btn.addEventListener("click", async () => {
         const motivo = prompt("Motivo de la anulación:");
         if (motivo === null) return;
-        if (!motivo.trim()) return alert("Contá el motivo de la anulación.");
+        if (!motivo.trim()) return avisar("Contá el motivo de la anulación.", "error");
         const { error } = await supabaseClient.from("contrato_excepcion_cobro")
           .update({ anulada: true, motivo_anulacion: motivo.trim() })
           .eq("id", parseInt(btn.dataset.anularExcepcion, 10));
-        if (error) return alert("No se pudo anular: " + error.message);
+        if (error) return avisar("No se pudo anular: " + error.message, "error");
         loadExcepciones();
       });
     });
@@ -548,7 +548,7 @@ const AdminContratos = (() => {
       fecha: data.get("fecha"),
       valor: V.decimal(data.get("valor")),
     });
-    if (error) return alert("No se pudo guardar: " + error.message);
+    if (error) return avisar("No se pudo guardar: " + error.message, "error");
     indiceForm.reset();
     loadIndices();
   });

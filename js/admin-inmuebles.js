@@ -102,7 +102,7 @@ const AdminInmuebles = (() => {
 
   async function startEdit(id) {
     const { data: propiedad, error } = await supabaseClient.from("propiedades").select("*").eq("id", id).single();
-    if (error || !propiedad) return alert("No se pudo abrir ese inmueble: " + (error ? error.message : ""));
+    if (error || !propiedad) return avisar("No se pudo abrir ese inmueble: " + (error ? error.message : ""), "error");
 
     const { data: propietarios } = await supabaseClient
       .from("propiedad_propietario")
@@ -201,7 +201,7 @@ const AdminInmuebles = (() => {
     if (propietarios.length) {
       const suma = propietarios.reduce((t, p) => t + (p.porcentaje || 0), 0);
       if (Math.abs(suma - 100) > 0.01) {
-        return alert(`Los porcentajes de los propietarios suman ${suma}%. Tienen que sumar 100%.`);
+        return avisar(`Los porcentajes de los propietarios suman ${suma}%. Tienen que sumar 100%.`, "error");
       }
     }
 
@@ -344,7 +344,7 @@ const AdminInmuebles = (() => {
         const id = parseInt(btn.dataset.desactivarInmueble, 10);
         if (!confirm("Esto saca el inmueble del sitio y de la lista. No se borra el historial — se puede reactivar más adelante.\n\n¿Seguro?")) return;
         const { error } = await supabaseClient.from("propiedades").update({ activo: false }).eq("id", id);
-        if (error) return alert("No se pudo desactivar: " + error.message);
+        if (error) return avisar("No se pudo desactivar: " + error.message, "error");
         loadList();
         loadFeatured();
       });
@@ -392,7 +392,7 @@ const AdminInmuebles = (() => {
         const { error } = await supabaseClient.from("propiedades").update({ featured: checkbox.checked }).eq("id", id);
         checkbox.disabled = false;
         if (error) {
-          alert("No se pudo guardar: " + error.message);
+          avisar("No se pudo guardar: " + error.message, "error");
           checkbox.checked = !checkbox.checked;
         }
       });

@@ -81,6 +81,24 @@ function linkWhatsApp(telefono, mensaje) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 }
 
+// Aviso en pantalla (no bloqueante) en vez de alert() del navegador — un
+// alert() congela cualquier otra pestaña/ventana que dependa de esta
+// página hasta que alguien lo cierra a mano, y no se puede probar por
+// automatización. Un error queda un poco más de tiempo (hay que poder
+// leerlo y entender qué corregir), un aviso de "listo" no necesita tanto.
+let avisarTimer;
+function avisar(mensaje, tipo = "ok") {
+  clearTimeout(avisarTimer);
+  document.querySelectorAll(".admin-aviso").forEach((n) => n.remove());
+  const nodo = document.createElement("div");
+  nodo.className = "admin-aviso admin-aviso--" + tipo;
+  nodo.setAttribute("role", "status");
+  nodo.textContent = mensaje;
+  document.body.appendChild(nodo);
+  avisarTimer = setTimeout(() => nodo.remove(), tipo === "error" ? 6000 : 3200);
+  nodo.addEventListener("click", () => nodo.remove());
+}
+
 const Dinero = {
   // Acepta "1.234.567,89" (formato argentino) y "1234567.89"; siempre en pesos.
   aCentavos(valor) {

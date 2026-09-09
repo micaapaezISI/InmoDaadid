@@ -38,12 +38,13 @@ const AdminGastos = (() => {
       medio_pago: V.unoDe(data.get("medio_pago"), ["efectivo", "transferencia", "cheque", "deposito", "mercadopago", "tarjeta", "digital", "otro"], "efectivo"),
       comprobante: V.texto(data.get("comprobante"), { max: 100 }),
     };
-    if (!payload.propiedad_id) return alert("Elegí el inmueble.");
-    if (!payload.concepto) return alert("Contá de qué es el gasto.");
-    if (!payload.monto) return alert("Cargá el monto del gasto.");
+    if (!payload.propiedad_id) return avisar("Elegí el inmueble.", "error");
+    if (!payload.concepto) return avisar("Contá de qué es el gasto.", "error");
+    if (!payload.monto) return avisar("Cargá el monto del gasto.", "error");
 
     const { error } = await supabaseClient.from("gastos").insert(payload);
-    if (error) return alert("No se pudo guardar: " + error.message);
+    if (error) return avisar("No se pudo guardar: " + error.message, "error");
+    avisar("Gasto guardado.");
     form.reset();
     loadList();
   });
@@ -94,7 +95,7 @@ const AdminGastos = (() => {
       btn.addEventListener("click", async () => {
         if (!confirm("¿Anular este gasto?")) return;
         const { error } = await supabaseClient.rpc("anular_gasto", { p_gasto_id: parseInt(btn.dataset.anularGasto, 10) });
-        if (error) return alert("No se pudo anular: " + error.message);
+        if (error) return avisar("No se pudo anular: " + error.message, "error");
         loadList();
       });
     });

@@ -87,8 +87,8 @@ const AdminAgenda = (() => {
       propiedad_id: data.get("propiedad_id") ? parseInt(data.get("propiedad_id"), 10) : null,
       persona_id: data.get("persona_id") ? parseInt(data.get("persona_id"), 10) : null,
     };
-    if (!payload.titulo) return alert("Escribí un título para el evento.");
-    if (!payload.fecha) return alert("Cargá la fecha.");
+    if (!payload.titulo) return avisar("Escribí un título para el evento.", "error");
+    if (!payload.fecha) return avisar("Cargá la fecha.", "error");
 
     submitBtn.disabled = true;
     try {
@@ -162,7 +162,7 @@ const AdminAgenda = (() => {
         const resultado = prompt("¿Cómo resultó? (opcional)");
         if (resultado === null) return;
         const { error } = await supabaseClient.from("eventos").update({ estado: "realizado", resultado: resultado.trim() || null }).eq("id", parseInt(btn.dataset.completarEvento, 10));
-        if (error) return alert("No se pudo completar: " + error.message);
+        if (error) return avisar("No se pudo completar: " + error.message, "error");
         loadList();
       });
     });
@@ -171,7 +171,7 @@ const AdminAgenda = (() => {
         const resultado = prompt("¿Por qué se cancela? (opcional)");
         if (resultado === null) return;
         const { error } = await supabaseClient.from("eventos").update({ estado: "cancelado", resultado: resultado.trim() || null }).eq("id", parseInt(btn.dataset.cancelarEvento, 10));
-        if (error) return alert("No se pudo cancelar: " + error.message);
+        if (error) return avisar("No se pudo cancelar: " + error.message, "error");
         loadList();
       });
     });

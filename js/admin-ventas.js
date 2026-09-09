@@ -114,7 +114,7 @@ const AdminVentas = (() => {
       comision_monto: data.get("comision_monto") ? Dinero.aCentavos(data.get("comision_monto")) : null,
       notas: V.texto(data.get("notas"), { max: 2000 }),
     };
-    if (!datos.propiedad_id) return alert("Elegí el inmueble.");
+    if (!datos.propiedad_id) return avisar("Elegí el inmueble.", "error");
 
     submitBtn.disabled = true;
     try {

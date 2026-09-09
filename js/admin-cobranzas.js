@@ -392,7 +392,7 @@ const AdminCobranzas = (() => {
 
   async function imprimirRecibo(reciboId) {
     const { data: recibo } = await supabaseClient.from("recibos").select("*, personas(nombre, documento_tipo, documento)").eq("id", reciboId).single();
-    if (!recibo) return alert("No se pudo cargar el recibo.");
+    if (!recibo) return avisar("No se pudo cargar el recibo.", "error");
 
     const { data: pagos } = await supabaseClient.from("pagos").select("*").eq("recibo_id", reciboId).order("id");
     const pagoIds = (pagos || []).map((p) => p.id);
@@ -476,9 +476,9 @@ const AdminCobranzas = (() => {
       btn.addEventListener("click", async () => {
         const motivo = prompt("Motivo de la anulación:");
         if (motivo === null) return;
-        if (!motivo.trim()) return alert("Contá el motivo de la anulación.");
+        if (!motivo.trim()) return avisar("Contá el motivo de la anulación.", "error");
         const { error } = await supabaseClient.rpc("anular_cobro", { p_pago_id: parseInt(btn.dataset.anularCobro, 10), p_motivo: motivo.trim() });
-        if (error) return alert("No se pudo anular: " + error.message);
+        if (error) return avisar("No se pudo anular: " + error.message, "error");
         loadHistorial();
         loadCuotas();
       });
@@ -491,12 +491,12 @@ const AdminCobranzas = (() => {
         if (estadoNuevo === "rechazado") {
           motivo = prompt("Motivo del rechazo:");
           if (motivo === null) return;
-          if (!motivo.trim()) return alert("Contá el motivo del rechazo.");
+          if (!motivo.trim()) return avisar("Contá el motivo del rechazo.", "error");
         }
         const { error } = await supabaseClient.rpc("actualizar_estado_cheque", {
           p_pago_id: parseInt(btn.dataset.chequeEstado, 10), p_estado: estadoNuevo, p_motivo_rechazo: motivo,
         });
-        if (error) return alert("No se pudo actualizar: " + error.message);
+        if (error) return avisar("No se pudo actualizar: " + error.message, "error");
         loadHistorial();
       });
     });

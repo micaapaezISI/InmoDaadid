@@ -24,8 +24,8 @@ const AdminConfiguracion = (() => {
     const data = new FormData(form);
     const filas = CLAVES.map((clave) => ({ clave, valor: String(V.decimal(data.get(clave)) ?? 0) }));
     const { error } = await supabaseClient.from("config").upsert(filas);
-    if (error) return alert("No se pudo guardar: " + error.message);
-    alert("Configuración guardada.");
+    if (error) return avisar("No se pudo guardar: " + error.message, "error");
+    avisar("Configuración guardada.");
   });
 
   return {
