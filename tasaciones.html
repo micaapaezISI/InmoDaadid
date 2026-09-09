@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Propiedades en San Salvador de Jujuy — Patricia Daadin</title>
-<meta name="description" content="Casas, departamentos y locales comerciales en venta, alquiler y alquiler temporario en San Salvador de Jujuy.">
+<title>Tasaciones — Patricia Daadin</title>
+<meta name="description" content="Solicitá la tasación de tu propiedad en San Salvador de Jujuy. Valuamos con criterio de mercado local, sin costo ni compromiso.">
 <link rel="icon" type="image/png" href="img/daadin-logo.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -37,101 +37,94 @@
 <!-- ===================== PAGE HERO ===================== -->
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow">Catálogo</span>
-    <h1>Propiedades en San Salvador de Jujuy</h1>
-    <p>Filtrá por operación, tipo, zona y dormitorios para encontrar la propiedad que buscás.</p>
-    <div class="breadcrumb"><a href="index.html">Inicio</a> / Propiedades</div>
+    <span class="eyebrow">Servicio profesional</span>
+    <h1>Tasaciones</h1>
+    <p>Valuamos tu propiedad con criterio de mercado local. Contame los datos básicos y te contacto para coordinar la visita de tasación.</p>
+    <div class="breadcrumb"><a href="index.html">Inicio</a> / Tasaciones</div>
   </div>
 </section>
 
-<!-- ===================== LISTADO + FILTROS ===================== -->
+<!-- ===================== TASACIONES ===================== -->
 <section class="section">
   <div class="container">
-    <form class="filters-bar" id="filters-form">
-      <div class="filters-grid">
-        <div class="field">
-          <label for="f-operation">Operación</label>
-          <select id="f-operation" name="operation">
-            <option value="todas">Todas</option>
-            <option value="venta">Venta</option>
-            <option value="alquiler">Alquiler</option>
-            <option value="temporal">Alquiler temporario</option>
-          </select>
+    <div class="calc-wrap">
+      <form class="calc-form" id="tasacion-form">
+        <div class="form-row">
+          <div class="field">
+            <label for="ta-name">Nombre y apellido</label>
+            <input type="text" id="ta-name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="ta-phone">Teléfono</label>
+            <input type="tel" id="ta-phone" name="phone" required>
+          </div>
         </div>
         <div class="field">
-          <label for="f-type">Tipo</label>
-          <select id="f-type" name="type">
-            <option value="todos">Todos</option>
-            <option value="casa">Casa</option>
-            <option value="departamento">Departamento</option>
-            <option value="terreno">Terreno</option>
-            <option value="local">Local comercial</option>
-          </select>
+          <label for="ta-email">Email</label>
+          <input type="email" id="ta-email" name="email">
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="ta-type">Tipo de inmueble</label>
+            <select id="ta-type" name="type">
+              <option value="Casa">Casa</option>
+              <option value="Departamento">Departamento</option>
+              <option value="Local comercial">Local comercial</option>
+              <option value="Oficina">Oficina</option>
+              <option value="Terreno">Terreno</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ta-zone">Barrio / zona</label>
+            <input type="text" id="ta-zone" name="zone" placeholder="Ej: Barrio Balcón">
+          </div>
         </div>
         <div class="field">
-          <label for="f-zone">Zona</label>
-          <select id="f-zone" name="zone">
-            <option value="todas">Todas</option>
-            <option value="Centro">Centro</option>
-            <option value="Barrio Balcón">Barrio Balcón</option>
-            <option value="El Ceibal">El Ceibal</option>
-            <option value="Countries / Barrios cerrados">Countries / Barrios cerrados</option>
-          </select>
+          <label for="ta-area">Superficie aproximada (m²)</label>
+          <input type="number" id="ta-area" name="area" min="0" step="1" placeholder="Ej: 120">
         </div>
         <div class="field">
-          <label for="f-bedrooms">Dormitorios</label>
-          <select id="f-bedrooms" name="bedrooms">
-            <option value="todos">Todos</option>
-            <option value="1">1+</option>
-            <option value="2">2+</option>
-            <option value="3">3+</option>
-            <option value="4">4+</option>
-          </select>
+          <label for="ta-message">Contame más sobre la propiedad</label>
+          <textarea id="ta-message" name="message" rows="4" placeholder="Antigüedad, ambientes, estado general..."></textarea>
         </div>
-        <div class="field">
-          <label for="f-currency">Moneda</label>
-          <select id="f-currency" name="currency">
-            <option value="todas">Todas</option>
-            <option value="USD">USD</option>
-            <option value="ARS">ARS ($)</option>
-          </select>
+        <button type="submit" class="btn btn-whatsapp btn-block"><svg class="ico-wsp" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.82L2 22l5.42-1.42a9.87 9.87 0 0 0 4.62 1.17h.01c5.46 0 9.9-4.45 9.9-9.9C21.96 6.45 17.5 2 12.04 2Zm5.86 14.02c-.25.7-1.24 1.28-1.99 1.44-.53.11-1.22.2-3.55-.76-2.98-1.23-4.9-4.24-5.05-4.44-.15-.2-1.21-1.6-1.21-3.06 0-1.46.76-2.17 1.03-2.47.27-.3.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.53.25.61.85 2.1.92 2.25.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.3.75 1.24 1.62 2 1.11.99 2.05 1.3 2.35 1.44.3.15.48.13.65-.08.18-.2.75-.87.95-1.17.2-.3.4-.25.68-.15.28.1 1.76.83 2.06.98.3.15.5.22.57.35.08.13.08.75-.17 1.45Z"/></svg>Solicitar tasación por WhatsApp</button>
+        <p id="tasacion-feedback" style="display:none; color: var(--color-whatsapp-dark); font-size:0.9rem; font-weight:600;"></p>
+        <p style="font-size:0.8rem; color: var(--color-text-light);">Al enviar, se abre WhatsApp con los datos ya redactados para que los confirmes y envíes.</p>
+      </form>
+
+      <div class="calc-result">
+        <h3>¿Cómo sigue?</h3>
+        <p class="calc-note">Así trabajo la tasación de tu propiedad.</p>
+        <div class="calc-output">
+          <div class="calc-output-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+            <strong style="font-family:var(--font-heading); font-size:1rem; color:#fff;">1. Me contás los datos</strong>
+            <span>Completá el formulario con la info básica de la propiedad.</span>
+          </div>
+          <div class="calc-output-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+            <strong style="font-family:var(--font-heading); font-size:1rem; color:#fff;">2. Coordinamos la visita</strong>
+            <span>Te contacto para ver la propiedad en persona y evaluarla en detalle.</span>
+          </div>
+          <div class="calc-output-row" style="flex-direction:column; align-items:flex-start; gap:4px; border-bottom:none; padding-bottom:0;">
+            <strong style="font-family:var(--font-heading); font-size:1rem; color:#fff;">3. Te entrego la valuación</strong>
+            <span>Recibís un valor de mercado fundamentado, sin costo ni compromiso.</span>
+          </div>
         </div>
-        <div class="field">
-          <label for="f-price-min">Precio mínimo</label>
-          <input type="number" id="f-price-min" name="priceMin" min="0" step="1" placeholder="Sin mínimo">
-        </div>
-        <div class="field">
-          <label for="f-price-max">Precio máximo</label>
-          <input type="number" id="f-price-max" name="priceMax" min="0" step="1" placeholder="Sin máximo">
-        </div>
+        <p class="calc-disclaimer">
+          La tasación es orientativa hasta la visita presencial — el valor final se confirma con la inspección de la propiedad.
+        </p>
       </div>
-      <div class="filters-actions">
-        <button type="submit" class="btn btn-primary">Filtrar</button>
-        <button type="button" id="filters-reset" class="btn btn-dark">Limpiar filtros</button>
-        <span style="font-size:0.78rem; color:var(--color-text-light);">Tip: elegí la moneda para que el precio mínimo/máximo compare correctamente.</span>
-      </div>
-    </form>
-
-    <div class="results-bar">
-      <span><strong id="results-count">0</strong> propiedades encontradas</span>
-    </div>
-
-    <div class="property-grid" id="results-grid"></div>
-
-    <div class="empty-state" id="empty-state" style="display:none;">
-      <h3>No encontramos propiedades con esos filtros</h3>
-      <p>Probá modificar la búsqueda o escribime y te ayudo a encontrar algo a medida.</p>
     </div>
   </div>
 </section>
 
 <!-- ===================== CTA CONTACTO ===================== -->
-<section class="section">
+<section class="section section-alt">
   <div class="container">
     <div class="cta-band cta-band--rose">
       <div>
-        <h3>¿No encontrás lo que buscás?</h3>
-        <p>Contame qué necesitás y te aviso apenas tenga una propiedad que coincida.</p>
+        <h3>¿Preferís contarme por WhatsApp?</h3>
+        <p>Escribime directamente y coordinamos la visita de tasación cuando te quede cómodo.</p>
       </div>
       <div class="cta-band-actions">
         <a href="contacto.html" class="btn btn-primary">Dejar mi consulta</a>
@@ -194,9 +187,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-config.js"></script>
-<script src="js/validar.js"></script>
-<script src="js/properties-data.js"></script>
-<script src="js/properties.js"></script>
+<script src="js/tasacion-form.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
