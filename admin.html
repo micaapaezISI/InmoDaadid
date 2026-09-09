@@ -113,9 +113,11 @@
           <button type="button" class="admin-sidebar-link" data-tab="caja">
             <span class="admin-sidebar-ico">💵</span> Caja diaria
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="ventas">
+            <span class="admin-sidebar-ico">🏷️</span> Ventas
+          </button>
 
           <div class="admin-sidebar-group-label">Próximamente</div>
-          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Ventas</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Agenda</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Informes</span>
         </nav>
@@ -608,6 +610,86 @@
             </div>
           </section>
 
+          <!-- ---------- Ventas ---------- -->
+          <section id="tab-panel-ventas" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">🏷️ Ventas</h2>
+              <p class="admin-section-help">Operaciones de venta, de la reserva a la escritura. El estado del inmueble se actualiza solo (salvo que tenga un alquiler vigente encima).</p>
+            </div>
+
+            <div class="admin-card">
+              <h2 class="admin-section-title" id="venta-form-heading">＋ Nueva operación</h2>
+              <form id="venta-form" class="admin-form-grid">
+                <div class="field field-full">
+                  <label for="ve-propiedad">Inmueble *</label>
+                  <select id="ve-propiedad" name="propiedad_id" required></select>
+                </div>
+                <div class="field field-full">
+                  <label for="ve-comprador">Comprador</label>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <select id="ve-comprador" name="comprador_id" style="flex:1;"></select>
+                    <button type="button" id="ve-comprador-nueva" class="btn btn-sm btn-dark">＋ Nueva</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="ve-estado">Estado</label>
+                  <select id="ve-estado" name="estado">
+                    <option value="reserva">Reserva</option>
+                    <option value="boleto">Boleto</option>
+                    <option value="escriturada">Escriturada</option>
+                    <option value="caida">Caída</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="ve-monto-operacion">Monto de la operación *</label>
+                  <input type="number" id="ve-monto-operacion" name="monto_operacion" min="0" required>
+                </div>
+                <div class="field">
+                  <label for="ve-moneda">Moneda</label>
+                  <select id="ve-moneda" name="moneda"><option value="USD">USD</option><option value="ARS">ARS</option></select>
+                </div>
+                <div class="field">
+                  <label for="ve-fecha-reserva">Fecha de reserva</label>
+                  <input type="date" id="ve-fecha-reserva" name="fecha_reserva">
+                </div>
+                <div class="field">
+                  <label for="ve-monto-reserva">Monto de la seña</label>
+                  <input type="number" id="ve-monto-reserva" name="monto_reserva" min="0">
+                </div>
+                <div class="field">
+                  <label for="ve-fecha-boleto">Fecha de boleto</label>
+                  <input type="date" id="ve-fecha-boleto" name="fecha_boleto">
+                </div>
+                <div class="field">
+                  <label for="ve-fecha-escritura">Fecha de escritura</label>
+                  <input type="date" id="ve-fecha-escritura" name="fecha_escritura">
+                </div>
+                <div class="field">
+                  <label for="ve-comision-pct">Comisión (%)</label>
+                  <input type="number" id="ve-comision-pct" name="comision_pct" min="0" max="100" step="0.1">
+                </div>
+                <div class="field">
+                  <label for="ve-comision-monto">Comisión (monto, opcional)</label>
+                  <input type="number" id="ve-comision-monto" name="comision_monto" min="0" placeholder="Se calcula solo del % si lo dejás vacío">
+                </div>
+                <div class="field field-full">
+                  <label for="ve-notas">Notas</label>
+                  <textarea id="ve-notas" name="notas" rows="2"></textarea>
+                </div>
+                <div class="field field-full">
+                  <button type="submit" class="btn btn-primary" id="venta-submit-btn">Guardar operación</button>
+                  <button type="button" id="venta-cancelar-edicion" class="btn btn-dark" style="display:none;">Cancelar edición</button>
+                </div>
+                <p id="venta-form-error" style="display:none; color:var(--color-danger);"></p>
+              </form>
+            </div>
+
+            <div class="admin-card">
+              <h2>Operaciones</h2>
+              <div id="ventas-list"></div>
+            </div>
+          </section>
+
           <!-- ---------- Nuevo / editar inmueble ---------- -->
           <section id="tab-panel-nueva" class="admin-tab-panel" style="display:none;">
             <div class="admin-card">
@@ -1028,6 +1110,40 @@
   </div>
 </div>
 
+<!-- ===================== COBRAR COMISIÓN DE VENTA (modal) ===================== -->
+<div id="cobrar-comision-modal" style="display:none; position:fixed; inset:0; z-index:1200; background:rgba(26,26,26,0.55); align-items:center; justify-content:center; padding:20px;">
+  <div class="admin-card" style="max-width:420px; width:100%; margin:0;">
+    <h2 class="admin-section-title">Cobrar comisión</h2>
+    <p class="admin-card-desc" id="cc-resumen"></p>
+    <form id="cobrar-comision-form">
+      <div class="admin-form-grid">
+        <div class="field">
+          <label for="cc-fecha">Fecha de cobro *</label>
+          <input type="date" id="cc-fecha" name="fecha" required>
+        </div>
+        <div class="field">
+          <label for="cc-medio">Medio de pago *</label>
+          <select id="cc-medio" name="medio_pago" required>
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="cheque">Cheque</option>
+            <option value="deposito">Depósito</option>
+            <option value="mercadopago">Mercado Pago</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="digital">Otro digital</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
+        <button type="button" id="cc-cancelar" class="btn btn-dark btn-sm">Cancelar</button>
+      </div>
+      <p id="cc-error" style="display:none; color:var(--color-danger); margin-top:10px;"></p>
+    </form>
+  </div>
+</div>
+
 <!-- ===================== RECIBO IMPRIMIBLE ===================== -->
 <div id="recibo-imprimible-wrap" style="display:none;">
   <div id="recibo-imprimible"></div>
@@ -1086,6 +1202,7 @@
 <script src="js/admin-gastos.js"></script>
 <script src="js/admin-liquidaciones.js"></script>
 <script src="js/admin-caja.js"></script>
+<script src="js/admin-ventas.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>

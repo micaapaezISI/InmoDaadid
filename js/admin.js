@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "gastos") AdminGastos.loadList();
     if (tabName === "liquidaciones") AdminLiquidaciones.loadList();
     if (tabName === "caja") { AdminCaja.loadMovimientos(); AdminCaja.loadSaldosHoy(); }
+    if (tabName === "ventas") AdminVentas.loadList();
   }
 
   tabButtons.forEach((btn) => {
@@ -144,4 +145,5 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminGastos.init();
   AdminLiquidaciones.init();
   AdminCaja.init();
+  AdminVentas.init();
 });
