@@ -116,9 +116,11 @@
           <button type="button" class="admin-sidebar-link" data-tab="ventas">
             <span class="admin-sidebar-ico">🏷️</span> Ventas
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="agenda">
+            <span class="admin-sidebar-ico">🗓️</span> Agenda
+          </button>
 
           <div class="admin-sidebar-group-label">Próximamente</div>
-          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Agenda</span>
           <span class="admin-sidebar-link is-disabled" title="Todavía no está">Informes</span>
         </nav>
 
@@ -690,6 +692,76 @@
             </div>
           </section>
 
+          <!-- ---------- Agenda ---------- -->
+          <section id="tab-panel-agenda" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">🗓️ Agenda</h2>
+              <p class="admin-section-help">Visitas, llamados, tasaciones, firmas y recordatorios. Los vencimientos de contrato y de cuota se cargan solos.</p>
+            </div>
+
+            <div class="admin-card">
+              <h2 class="admin-section-title" id="evento-form-heading">＋ Nuevo evento</h2>
+              <form id="evento-form" class="admin-form-grid">
+                <div class="field">
+                  <label for="ev-tipo">Tipo *</label>
+                  <select id="ev-tipo" name="tipo" required>
+                    <option value="visita">Visita</option>
+                    <option value="llamado">Llamado</option>
+                    <option value="tasacion">Tasación</option>
+                    <option value="firma">Firma</option>
+                    <option value="recordatorio">Recordatorio</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="field field-full">
+                  <label for="ev-titulo">Título *</label>
+                  <input type="text" id="ev-titulo" name="titulo" required>
+                </div>
+                <div class="field">
+                  <label for="ev-fecha">Fecha *</label>
+                  <input type="date" id="ev-fecha" name="fecha" required>
+                </div>
+                <div class="field">
+                  <label for="ev-hora">Hora</label>
+                  <input type="time" id="ev-hora" name="hora">
+                </div>
+                <div class="field">
+                  <label for="ev-propiedad">Inmueble</label>
+                  <select id="ev-propiedad" name="propiedad_id"></select>
+                </div>
+                <div class="field">
+                  <label for="ev-persona">Persona</label>
+                  <select id="ev-persona" name="persona_id"></select>
+                </div>
+                <div class="field field-full">
+                  <label for="ev-descripcion">Descripción</label>
+                  <textarea id="ev-descripcion" name="descripcion" rows="2"></textarea>
+                </div>
+                <div class="field field-full">
+                  <button type="submit" class="btn btn-primary" id="evento-submit-btn">Guardar evento</button>
+                  <button type="button" id="evento-cancelar-edicion" class="btn btn-dark" style="display:none;">Cancelar edición</button>
+                </div>
+                <p id="evento-form-error" style="display:none; color:var(--color-danger);"></p>
+              </form>
+            </div>
+
+            <div class="admin-card">
+              <h2>Próximos eventos</h2>
+              <div style="display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-bottom:16px;">
+                <div class="field">
+                  <label for="ag-desde">Desde</label>
+                  <input type="date" id="ag-desde">
+                </div>
+                <div class="field">
+                  <label for="ag-hasta">Hasta</label>
+                  <input type="date" id="ag-hasta">
+                </div>
+                <button type="button" id="ag-filtrar-btn" class="btn btn-dark btn-sm">Filtrar</button>
+              </div>
+              <div id="eventos-list"></div>
+            </div>
+          </section>
+
           <!-- ---------- Nuevo / editar inmueble ---------- -->
           <section id="tab-panel-nueva" class="admin-tab-panel" style="display:none;">
             <div class="admin-card">
@@ -1203,6 +1275,7 @@
 <script src="js/admin-liquidaciones.js"></script>
 <script src="js/admin-caja.js"></script>
 <script src="js/admin-ventas.js"></script>
+<script src="js/admin-agenda.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>
