@@ -148,7 +148,7 @@ const AdminCobranzas = (() => {
         </label>
         <div class="admin-list-actions">
           <strong>${Dinero.formatear(c.total_a_cobrar, c.moneda)}</strong>
-          <button type="button" class="btn btn-sm btn-dark" data-bonificar="${c.id}">Bonificar</button>
+          <button type="button" class="btn btn-sm btn-dark" data-bonificar="${c.id}" title="Descuento puntual sobre esta cuota — se cobra el 100% ya bonificado, no es un pago parcial.">Bonificar</button>
         </div>
       </div>`;
 
