@@ -106,7 +106,7 @@ const AdminContratos = (() => {
   async function poblarSelectsBase(seleccionarPropiedadId, seleccionarInquilinoId) {
     const { data: propiedades } = await supabaseClient
       .from("propiedades")
-      .select("id, codigo, titulo_publico, calle, barrio")
+      .select("id, codigo, titulo_publico, calle, barrio, precio_alquiler, moneda_alquiler")
       .eq("activo", true)
       .in("estado", ["disponible", "alquilada"])
       .order("codigo");
@@ -120,6 +120,17 @@ const AdminContratos = (() => {
     const inquilinoActual = seleccionarInquilinoId ?? inquilinoSelect.value;
     inquilinoSelect.innerHTML = opcionesPersonas(inquilinoActual).replace("Elegir persona...", "Elegir inquilino...");
   }
+
+  // Al elegir el inmueble, se sugiere el monto mensual que ya tiene
+  // cargado como precio de alquiler — se puede corregir a mano si el
+  // monto pactado en el contrato es distinto.
+  propiedadSelect.addEventListener("change", () => {
+    const propiedad = cachePropiedades.find((p) => String(p.id) === propiedadSelect.value);
+    if (propiedad && propiedad.precio_alquiler && !form.elements.monto_inicial.value) {
+      form.elements.monto_inicial.value = Dinero.aPesos(propiedad.precio_alquiler);
+      if (propiedad.moneda_alquiler) form.elements.moneda.value = propiedad.moneda_alquiler;
+    }
+  });
 
   inquilinoNuevaBtn.addEventListener("click", () => {
     AdminPersonas.abrirModal(null, (nuevoId) => {
@@ -224,7 +235,34 @@ const AdminContratos = (() => {
 
   const ESTADO_LABEL = { vigente: "Vigente", vencido: "Vencido", rescindido: "Rescindido", renovado: "Renovado" };
 
+  // Un inmueble puede quedar marcado "alquilada" a mano desde Inmuebles
+  // (o por una venta/otro motivo) sin que exista todavía el contrato que
+  // lo respalde — un aviso para que no se pase por alto cargarlo.
+  async function avisarInmueblesSinContrato() {
+    const avisoBox = document.getElementById("ct-avisos-faltan-contrato");
+    const { data: alquiladas } = await supabaseClient
+      .from("propiedades")
+      .select("id, codigo, titulo_publico, calle, barrio")
+      .eq("activo", true)
+      .eq("estado", "alquilada");
+    if (!alquiladas || !alquiladas.length) { avisoBox.style.display = "none"; return; }
+
+    const { data: vigentes } = await supabaseClient.from("contratos").select("propiedad_id").eq("estado", "vigente");
+    const conContrato = new Set((vigentes || []).map((c) => c.propiedad_id));
+    const sinContrato = alquiladas.filter((p) => !conContrato.has(p.id));
+
+    if (!sinContrato.length) { avisoBox.style.display = "none"; return; }
+    avisoBox.style.display = "block";
+    avisoBox.innerHTML = `
+      <div style="background:var(--color-bg-alt); border-left:3px solid var(--color-danger); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:12px 16px;">
+        <strong>⚠️ Faltan cargar contratos:</strong>
+        ${sinContrato.map((p) => `${p.codigo || ""} — ${p.titulo_publico || p.calle || p.barrio || "sin título"}`).join(" · ")}
+        marcan "alquilada" pero no tienen ningún contrato vigente.
+      </div>`;
+  }
+
   async function loadList() {
+    avisarInmueblesSinContrato();
     listBox.innerHTML = `<p style="color:var(--color-text-light);">Cargando…</p>`;
     const { data, error } = await supabaseClient
       .from("contratos")
@@ -250,7 +288,7 @@ const AdminContratos = (() => {
           <div class="admin-list-info">
             <span class="admin-list-title">${inmueble}</span>
             <span class="admin-status-badge" style="background:${c.estado === "vigente" ? "#1a9c4a" : "var(--color-text-light)"};">${ESTADO_LABEL[c.estado] || c.estado}</span>
-            <span class="admin-list-meta" style="display:block;">Inquilino: ${c.personas ? c.personas.nombre : "-"} · ${c.fecha_inicio} a ${c.fecha_fin} · ${c.moneda} ${(Dinero.aPesos(c.monto_inicial) || 0).toLocaleString("es-AR")}/mes</span>
+            <span class="admin-list-meta" style="display:block;">Inquilino: ${c.personas ? c.personas.nombre : "-"} · ${Fecha.formatear(c.fecha_inicio)} a ${Fecha.formatear(c.fecha_fin)} · ${c.moneda} ${(Dinero.aPesos(c.monto_inicial) || 0).toLocaleString("es-AR")}/mes</span>
           </div>
           <div class="admin-list-actions">
             <button type="button" class="btn btn-sm btn-dark" data-ver-cuotas="${c.id}">Ver cuotas</button>
@@ -327,7 +365,7 @@ const AdminContratos = (() => {
       </div>
       ${data.map((q) => `
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; font-size:0.9rem; padding:6px 0; border-top:1px solid var(--color-border);">
-          <span>${q.periodo}</span><span>${q.fecha_vencimiento}</span>
+          <span>${q.periodo}</span><span>${Fecha.formatear(q.fecha_vencimiento)}</span>
           <span>$ ${(Dinero.aPesos(q.monto_alquiler) || 0).toLocaleString("es-AR")}</span>
           <span>${q.estado}</span>
         </div>`).join("")}
@@ -422,7 +460,7 @@ const AdminContratos = (() => {
       .map((ex) => `
       <div class="admin-list-row">
         <div class="admin-list-info">
-          <span class="admin-list-title">${ex.fecha_desde} a ${ex.fecha_hasta} — ${Dinero.formatear(ex.monto_congelado)} ${ex.anulada ? '<span class="admin-status-badge" style="background:var(--color-text-light);">Anulada</span>' : ""}</span>
+          <span class="admin-list-title">${Fecha.formatear(ex.fecha_desde)} a ${Fecha.formatear(ex.fecha_hasta)} — ${Dinero.formatear(ex.monto_congelado)} ${ex.anulada ? '<span class="admin-status-badge" style="background:var(--color-text-light);">Anulada</span>' : ""}</span>
           <span class="admin-list-meta" style="display:block;">${ex.motivo}</span>
         </div>
         ${!ex.anulada ? `<button type="button" class="admin-delete-link" data-anular-excepcion="${ex.id}">Anular</button>` : ""}
@@ -488,7 +526,7 @@ const AdminContratos = (() => {
       <div class="admin-list-row">
         <div class="admin-list-info">
           <span class="admin-list-title">${v.indice_codigo}</span>
-          <span class="admin-list-meta" style="display:block;">${v.fecha} · valor ${v.valor}</span>
+          <span class="admin-list-meta" style="display:block;">${Fecha.formatear(v.fecha)} · valor ${v.valor}</span>
         </div>
         <button type="button" class="admin-delete-link" data-borrar-indice="${v.id}">Eliminar</button>
       </div>`)

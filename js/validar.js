@@ -59,6 +59,28 @@ const V = {
   },
 };
 
+const Fecha = {
+  // "2026-01-05" -> "05/01/2026". Si no viene con esa forma (o viene
+  // vacío), se devuelve tal cual para no mostrar "undefined" en la UI.
+  formatear(fechaISO) {
+    if (!fechaISO) return "";
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(fechaISO));
+    if (!m) return fechaISO;
+    return `${m[3]}/${m[2]}/${m[1]}`;
+  },
+};
+
+// Portado de InmoGestion (public/js/api.js): si no arranca con el código
+// de país, se asume número argentino y se le agrega "549" (indicativo +
+// celular), sacando ceros iniciales de la característica local.
+function linkWhatsApp(telefono, mensaje) {
+  if (!telefono) return null;
+  let numero = String(telefono).replace(/\D/g, "");
+  if (!numero) return null;
+  if (!numero.startsWith("54")) numero = "549" + numero.replace(/^0+/, "");
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+}
+
 const Dinero = {
   // Acepta "1.234.567,89" (formato argentino) y "1234567.89"; siempre en pesos.
   aCentavos(valor) {

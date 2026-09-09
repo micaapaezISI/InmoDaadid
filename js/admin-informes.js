@@ -166,6 +166,7 @@ const AdminInformes = (() => {
   function formatearValor(valor, tipo) {
     if (valor === null || valor === undefined) return "—";
     if (tipo === MONEDA) return Dinero.formatear(valor);
+    if (tipo === FECHA) return Fecha.formatear(valor);
     if (tipo === BOOL) return valor ? "⚠️ Sí" : "";
     return String(valor);
   }

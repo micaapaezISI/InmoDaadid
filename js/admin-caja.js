@@ -122,7 +122,7 @@ const AdminCaja = (() => {
             ${g.tipo === "ingreso" ? "+" : "−"} ${Dinero.formatear(g.monto, g.moneda)}
           </span>
           ${g.anulado ? '<span class="admin-status-badge" style="background:var(--color-text-light);">Anulado</span>' : ""}
-          <span class="admin-list-meta" style="display:block;">${g.fecha} · ${CATEGORIA_LABEL[g.categoria] || g.categoria} · ${g.concepto} · ${medioTexto}${quien ? " · " + quien : ""}</span>
+          <span class="admin-list-meta" style="display:block;">${Fecha.formatear(g.fecha)} · ${CATEGORIA_LABEL[g.categoria] || g.categoria} · ${g.concepto} · ${medioTexto}${quien ? " · " + quien : ""}</span>
         </div>
         <div class="admin-list-actions">
           ${!esAutomatico && !g.anulado ? `<button type="button" class="admin-delete-link" data-anular-movimiento="${g.filaId}">Anular</button>` : ""}

@@ -38,10 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "mensajes") loadMessages();
     if (tabName === "cobranzas") { AdminCobranzas.loadCuotas(); AdminCobranzas.loadHistorial(); }
     if (tabName === "gastos") AdminGastos.loadList();
-    if (tabName === "liquidaciones") AdminLiquidaciones.loadList();
+    if (tabName === "liquidaciones") { AdminLiquidaciones.poblarPersonas(); AdminLiquidaciones.loadList(); AdminLiquidaciones.loadPendientes(); }
     if (tabName === "caja") { AdminCaja.loadMovimientos(); AdminCaja.loadSaldosHoy(); }
     if (tabName === "ventas") AdminVentas.loadList();
     if (tabName === "agenda") AdminAgenda.loadList();
+    if (tabName === "configuracion") AdminConfiguracion.loadConfig();
   }
 
   tabButtons.forEach((btn) => {
@@ -149,4 +150,5 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminVentas.init();
   AdminAgenda.init();
   AdminInformes.init();
+  AdminConfiguracion.init();
 });

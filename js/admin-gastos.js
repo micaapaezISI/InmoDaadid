@@ -81,7 +81,7 @@ const AdminGastos = (() => {
       <div class="admin-list-row">
         <div class="admin-list-info">
           <span class="admin-list-title">${g.concepto} — ${Dinero.formatear(g.monto)}</span>
-          <span class="admin-list-meta" style="display:block;">${inmueble} · ${g.fecha} · ${g.liquidado ? '<span class="admin-status-badge" style="background:var(--color-text-light);">Ya liquidado</span>' : "Pendiente de liquidar"}${g.comprobante ? " · " + g.comprobante : ""}</span>
+          <span class="admin-list-meta" style="display:block;">${inmueble} · ${Fecha.formatear(g.fecha)} · ${g.liquidado ? '<span class="admin-status-badge" style="background:var(--color-text-light);">Ya liquidado</span>' : "Pendiente de liquidar"}${g.comprobante ? " · " + g.comprobante : ""}</span>
         </div>
         <div class="admin-list-actions">
           <button type="button" class="admin-delete-link" data-anular-gasto="${g.id}">Anular</button>

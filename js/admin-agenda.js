@@ -143,7 +143,7 @@ const AdminAgenda = (() => {
         <div class="admin-list-info">
           <span class="admin-list-title">${ev.titulo}</span>
           <span class="admin-status-badge" style="background:${colorEstado};">${ESTADO_LABEL[ev.estado] || ev.estado}</span>
-          <span class="admin-list-meta" style="display:block;">${TIPO_LABEL[ev.tipo] || ev.tipo} · ${ev.fecha}${ev.hora ? " " + ev.hora : ""}${quien ? " · " + quien : ""}${ev.resultado ? " · " + ev.resultado : ""}</span>
+          <span class="admin-list-meta" style="display:block;">${TIPO_LABEL[ev.tipo] || ev.tipo} · ${Fecha.formatear(ev.fecha)}${ev.hora ? " " + ev.hora : ""}${quien ? " · " + quien : ""}${ev.resultado ? " · " + ev.resultado : ""}</span>
         </div>
         <div class="admin-list-actions">
           ${ev.tipo !== "vencimiento" ? `<button type="button" class="btn btn-sm btn-dark" data-editar-evento="${ev.id}">Editar</button>` : ""}

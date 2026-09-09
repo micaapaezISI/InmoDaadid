@@ -39,9 +39,32 @@ const AdminLiquidaciones = (() => {
   /* ------------------------------ Generar ------------------------------ */
 
   async function poblarPersonas() {
-    if (!AdminPersonas.getAll().length) await AdminPersonas.loadList();
+    await AdminPersonas.loadList();
     const personas = AdminPersonas.getAll();
     personaSelect.innerHTML = `<option value="">Elegir propietario...</option>` + personas.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("");
+  }
+
+  /* --------------------------- Pendiente de liquidar --------------------- */
+
+  async function loadPendientes() {
+    const card = document.getElementById("lq-pendientes-card");
+    const box = document.getElementById("lq-pendientes-list");
+    const { data, error } = await supabaseClient.rpc("informe_deudas_propietarios");
+    if (error || !data || !data.length) {
+      card.style.display = "none";
+      return;
+    }
+    card.style.display = "block";
+    box.innerHTML = data
+      .map((d) => `
+      <div class="admin-list-row">
+        <div class="admin-list-info">
+          <span class="admin-list-title">${d.nombre}</span>
+          <span class="admin-list-meta" style="display:block;">Sin liquidar: ${Dinero.formatear(d.deuda_cobros_sin_liquidar)} · Liquidado, sin pagar: ${Dinero.formatear(d.deuda_liquidaciones_pendientes)}${d.aviso_usd ? ' · <span style="color:var(--color-danger);">tiene cobros en USD, revisar a mano</span>' : ""}</span>
+        </div>
+        <div class="admin-list-actions"><strong>${Dinero.formatear(d.deuda_total)}</strong></div>
+      </div>`)
+      .join("");
   }
 
   generarBtn.addEventListener("click", async () => {
@@ -66,6 +89,7 @@ const AdminLiquidaciones = (() => {
         generarResultado.textContent = `Liquidación generada: neto ${Dinero.formatear(data.total_neto)} (cobrado ${Dinero.formatear(data.total_cobrado)}, comisión ${Dinero.formatear(data.total_comision)}, gastos ${Dinero.formatear(data.total_gastos)}).`;
       }
       loadList();
+      loadPendientes();
     } catch (err) {
       generarResultado.style.display = "block";
       generarResultado.style.color = "var(--color-danger)";
@@ -227,6 +251,7 @@ const AdminLiquidaciones = (() => {
         const { error } = await supabaseClient.rpc("anular_liquidacion", { p_liquidacion_id: parseInt(btn.dataset.anularLiquidacion, 10), p_motivo: motivo.trim() });
         if (error) return alert("No se pudo anular: " + error.message);
         loadList();
+        loadPendientes();
         AdminGastos.loadList();
       });
     });
@@ -314,6 +339,7 @@ const AdminLiquidaciones = (() => {
       modal.style.display = "none";
       alert(`Liquidación pagada. Recibo Nº ${data.recibo_numero}.`);
       loadList();
+      loadPendientes();
     } catch (err) {
       errorEl.textContent = err.message || String(err);
       errorEl.style.display = "block";
@@ -325,5 +351,7 @@ const AdminLiquidaciones = (() => {
   return {
     init() { poblarPersonas(); },
     loadList,
+    poblarPersonas,
+    loadPendientes,
   };
 })();

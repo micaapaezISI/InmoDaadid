@@ -20,7 +20,6 @@ const AdminCobranzas = (() => {
   let seleccionCuotaIds = new Set();
   let inquilinoExpandido = null;
 
-  const configForm = document.getElementById("cobranzas-config-form");
   const buscarInput = document.getElementById("cb-buscar");
   const cuotasList = document.getElementById("cb-cuotas-list");
 
@@ -43,30 +42,6 @@ const AdminCobranzas = (() => {
   const bonifErrorEl = document.getElementById("bonificacion-form-error");
   let bonifCuotaId = null;
 
-  /* ------------------------------ Configuración ------------------------------ */
-
-  async function loadConfig() {
-    const { data } = await supabaseClient.from("config").select("clave, valor")
-      .in("clave", ["punitorio_diario_pct", "dias_gracia_mora"]);
-    (data || []).forEach((c) => {
-      if (configForm.elements[c.clave]) configForm.elements[c.clave].value = c.valor;
-    });
-  }
-
-  configForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const data = new FormData(configForm);
-    const pct = V.decimal(data.get("punitorio_diario_pct"));
-    const gracia = V.entero(data.get("dias_gracia_mora"));
-    const { error } = await supabaseClient.from("config").upsert([
-      { clave: "punitorio_diario_pct", valor: String(pct ?? 0) },
-      { clave: "dias_gracia_mora", valor: String(gracia ?? 0) },
-    ]);
-    if (error) return alert("No se pudo guardar: " + error.message);
-    alert("Configuración guardada.");
-    loadCuotas();
-  });
-
   /* --------------------------- Cuotas pendientes ------------------------- */
 
   async function loadCuotas() {
@@ -84,7 +59,7 @@ const AdminCobranzas = (() => {
       inquilinoExpandido = null;
     }
     renderCuotas();
-    actualizarPanelCobro();
+    if (!seleccionCuotaIds.size) cobroPanel.style.display = "none";
   }
 
   // Una fila por inquilino (cantidad de cuotas + total), atrasados primero
@@ -140,8 +115,8 @@ const AdminCobranzas = (() => {
           seleccionCuotaIds.clear();
           seleccionPersonaId = null;
         }
+        cobroPanel.style.display = "none";
         renderCuotas();
-        actualizarPanelCobro();
       });
     });
 
@@ -165,7 +140,7 @@ const AdminCobranzas = (() => {
           <div class="admin-list-info">
             <span class="admin-list-title">${c.propiedad_codigo || ""} ${c.direccion || ""} — período ${c.periodo}</span>
             <span class="admin-list-meta" style="display:block;">
-              vence ${c.fecha_vencimiento}${c.dias_atraso > 0 ? ` · <strong style="color:var(--color-danger);">${c.dias_atraso} día(s) de atraso</strong>` : ""}
+              vence ${Fecha.formatear(c.fecha_vencimiento)}${c.dias_atraso > 0 ? ` · <strong style="color:var(--color-danger);">${c.dias_atraso} día(s) de atraso</strong>` : ""}
               ${c.bonificacion_aplicada > 0 ? ` · Bonificación: ${Dinero.formatear(c.bonificacion_aplicada, c.moneda)}${c.motivo_bonificacion_aplicada ? " (" + c.motivo_bonificacion_aplicada + ")" : ""}` : ""}
               ${c.punitorio_hoy > 0 ? ` · Punitorio hoy: ${Dinero.formatear(c.punitorio_hoy, c.moneda)}` : ""}
             </span>
@@ -182,7 +157,8 @@ const AdminCobranzas = (() => {
       ${lista.map(filaCuota).join("")}
     `;
 
-    contenedor.innerHTML = bloque("Vencidas", vencidas) + bloque("Al día", alDia);
+    contenedor.innerHTML = bloque("Vencidas", vencidas) + bloque("Al día", alDia) +
+      `<div data-barra-seleccion style="display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:14px; padding-top:14px; border-top:1px solid var(--color-border); flex-wrap:wrap;"></div>`;
 
     contenedor.querySelectorAll("[data-cuota-check]").forEach((chk) => {
       chk.addEventListener("change", () => {
@@ -195,7 +171,7 @@ const AdminCobranzas = (() => {
           seleccionCuotaIds.delete(id);
           if (seleccionCuotaIds.size === 0) seleccionPersonaId = null;
         }
-        actualizarPanelCobro();
+        actualizarBarraSeleccion();
       });
     });
 
@@ -204,6 +180,31 @@ const AdminCobranzas = (() => {
         e.stopPropagation();
         abrirBonificacion(parseInt(btn.dataset.bonificar, 10));
       });
+    });
+
+    actualizarBarraSeleccion();
+  }
+
+  // Tildar cuotas solo actualiza el resumen; recién al tocar "Registrar
+  // cobro" se abre la ficha con los medios de pago — no aparece sola con
+  // la primera cuota tildada.
+  function actualizarBarraSeleccion() {
+    const barra = cuotasList.querySelector("[data-barra-seleccion]");
+    if (!barra) return;
+    const seleccionadas = cacheCuotas.filter((c) => seleccionCuotaIds.has(c.id));
+    if (!seleccionadas.length) {
+      barra.innerHTML = `<span style="color:var(--color-text-light); font-size:0.9rem;">Elegí las cuotas que querés cobrar.</span>`;
+      cobroPanel.style.display = "none";
+      return;
+    }
+    const total = seleccionadas.reduce((t, c) => t + c.total_a_cobrar, 0);
+    barra.innerHTML = `
+      <span style="font-weight:600;">${seleccionadas.length} cuota${seleccionadas.length > 1 ? "s" : ""} seleccionada${seleccionadas.length > 1 ? "s" : ""} — total ${Dinero.formatear(total, seleccionadas[0].moneda)}</span>
+      <button type="button" class="btn btn-primary btn-sm" data-abrir-registrar>Registrar cobro</button>
+    `;
+    barra.querySelector("[data-abrir-registrar]").addEventListener("click", (e) => {
+      e.stopPropagation();
+      abrirPanelCobro();
     });
   }
 
@@ -244,11 +245,10 @@ const AdminCobranzas = (() => {
 
   /* --------------------------- Panel de registro de cobro ------------------- */
 
-  function actualizarPanelCobro() {
-    if (seleccionCuotaIds.size === 0) {
-      cobroPanel.style.display = "none";
-      return;
-    }
+  // Se abre solo al tocar "Registrar cobro" en la barra de selección —
+  // tildar cuotas nunca la muestra sola.
+  function abrirPanelCobro() {
+    if (seleccionCuotaIds.size === 0) return;
     cobroPanel.style.display = "block";
     const seleccionadas = cacheCuotas.filter((c) => seleccionCuotaIds.has(c.id));
     const total = seleccionadas.reduce((t, c) => t + c.total_a_cobrar, 0);
@@ -258,6 +258,7 @@ const AdminCobranzas = (() => {
     totalACobrarEl.textContent = Dinero.formatear(total, moneda);
     if (!fechaPagoInput.value) fechaPagoInput.value = new Date().toISOString().slice(0, 10);
     if (!mediosList.children.length) addMedioRow();
+    cobroPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   function addMedioRow() {
@@ -320,18 +321,13 @@ const AdminCobranzas = (() => {
   }
 
   cancelarCobroBtn.addEventListener("click", () => {
-    seleccionCuotaIds.clear();
-    seleccionPersonaId = null;
+    cobroPanel.style.display = "none";
     mediosList.innerHTML = "";
-    reciboResultadoEl.style.display = "none";
     cobroErrorEl.style.display = "none";
-    renderCuotas();
-    actualizarPanelCobro();
   });
 
   registrarBtn.addEventListener("click", async () => {
     cobroErrorEl.style.display = "none";
-    reciboResultadoEl.style.display = "none";
 
     const medios = leerMedios();
     const datos = {
@@ -345,27 +341,22 @@ const AdminCobranzas = (() => {
     registrarBtn.disabled = true;
     registrarBtn.textContent = "Registrando…";
     try {
-      const { data, error } = await supabaseClient.rpc("registrar_cobro", { p_datos: datos });
-      if (error) throw error;
-
       const seleccionadas = cacheCuotas.filter((c) => seleccionCuotaIds.has(c.id));
       const moneda = seleccionadas[0] ? seleccionadas[0].moneda : "ARS";
       const nombre = seleccionadas[0] ? seleccionadas[0].inquilino_nombre : "";
+      const telefono = seleccionadas[0] ? seleccionadas[0].telefono : null;
+      const periodos = [...new Set(seleccionadas.map((c) => c.periodo))].join(", ");
 
-      reciboResultadoEl.style.display = "block";
-      reciboResultadoEl.innerHTML = `
-        <div class="admin-card" style="border-color:var(--color-secondary); background:var(--color-bg-alt);">
-          <h2>✅ Recibo Nº ${data.recibo_numero}</h2>
-          <p>${nombre} — total ${Dinero.formatear(data.total, moneda)}.</p>
-          <button type="button" class="btn btn-dark btn-sm" id="cb-imprimir-btn">Imprimir recibo</button>
-        </div>`;
-      document.getElementById("cb-imprimir-btn").addEventListener("click", () => imprimirRecibo(data.recibo_id));
+      const { data, error } = await supabaseClient.rpc("registrar_cobro", { p_datos: datos });
+      if (error) throw error;
 
+      mostrarRecibo(data, { nombre, moneda, telefono, periodos });
+
+      cobroPanel.style.display = "none";
       seleccionCuotaIds.clear();
       seleccionPersonaId = null;
       observacionesInput.value = "";
       mediosList.innerHTML = "";
-      addMedioRow();
       await loadCuotas();
       loadHistorial();
     } catch (err) {
@@ -376,6 +367,26 @@ const AdminCobranzas = (() => {
       registrarBtn.textContent = "Registrar cobro";
     }
   });
+
+  // Queda a la vista hasta que se cierre a mano (o hasta el próximo
+  // cobro) — antes desaparecía solo apenas se volvía a dibujar la lista.
+  function mostrarRecibo(data, { nombre, moneda, telefono, periodos }) {
+    const mensaje = `Hola ${nombre}, te escribimos de la inmobiliaria para confirmarte que recibimos tu pago de ${periodos} por ${Dinero.formatear(data.total, moneda)}. ¡Gracias!`;
+    const link = linkWhatsApp(telefono, mensaje);
+    reciboResultadoEl.style.display = "block";
+    reciboResultadoEl.innerHTML = `
+      <div style="border:1.5px solid var(--color-secondary); background:var(--color-bg-alt); border-radius:var(--radius-sm); padding:20px;">
+        <h2 style="margin-top:0;">✅ Recibo Nº ${data.recibo_numero}</h2>
+        <p>${nombre} — total ${Dinero.formatear(data.total, moneda)}.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-dark btn-sm" id="cb-imprimir-btn">Descargar / imprimir recibo</button>
+          ${link ? `<a class="btn btn-sm" style="background:#25D366; color:#fff;" href="${link}" target="_blank" rel="noopener">Avisar por WhatsApp</a>` : ""}
+          <button type="button" class="btn btn-dark btn-sm" id="cb-cerrar-recibo-btn">Cerrar</button>
+        </div>
+      </div>`;
+    document.getElementById("cb-imprimir-btn").addEventListener("click", () => imprimirRecibo(data.recibo_id));
+    document.getElementById("cb-cerrar-recibo-btn").addEventListener("click", () => { reciboResultadoEl.style.display = "none"; });
+  }
 
   /* ------------------------------- Recibo imprimible ------------------------ */
 
@@ -407,7 +418,7 @@ const AdminCobranzas = (() => {
         ${anulado ? '<h1 style="color:#b00; text-align:center;">ANULADO</h1>' : ""}
         <h1>Patricia Daadin — Martillera</h1>
         <h2>Recibo Nº ${recibo.numero}</h2>
-        <p>Fecha: ${recibo.fecha_emision}</p>
+        <p>Fecha: ${Fecha.formatear(recibo.fecha_emision)}</p>
         <p>Recibí de: <strong>${recibo.personas.nombre}</strong> ${recibo.personas.documento ? `(${recibo.personas.documento_tipo} ${recibo.personas.documento})` : ""}</p>
         <p>Concepto: ${recibo.concepto || ""}</p>
         <table style="width:100%; border-collapse:collapse; margin-top:16px;">${filasConcepto}</table>
@@ -449,7 +460,7 @@ const AdminCobranzas = (() => {
       <div class="admin-list-row">
         <div class="admin-list-info">
           <span class="admin-list-title">${p.personas ? p.personas.nombre : "-"} — ${Dinero.formatear(p.monto, p.moneda)} ${p.anulado ? '<span class="admin-status-badge" style="background:var(--color-danger);">ANULADO</span>' : ""}</span>
-          <span class="admin-list-meta" style="display:block;">Recibo Nº ${p.recibos ? p.recibos.numero : "-"} · ${p.fecha_pago} · ${p.medio_pago}${cheque ? ` (cheque: ${cheque.estado})` : ""}</span>
+          <span class="admin-list-meta" style="display:block;">Recibo Nº ${p.recibos ? p.recibos.numero : "-"} · ${Fecha.formatear(p.fecha_pago)} · ${p.medio_pago}${cheque ? ` (cheque: ${cheque.estado})` : ""}</span>
         </div>
         <div class="admin-list-actions">
           ${cheque && !p.anulado && ESTADO_CHEQUE_SIGUIENTE[cheque.estado] ? ESTADO_CHEQUE_SIGUIENTE[cheque.estado].map((e) =>
@@ -492,7 +503,7 @@ const AdminCobranzas = (() => {
   }
 
   return {
-    init() { loadConfig(); },
+    init() {},
     loadCuotas,
     loadHistorial,
   };
