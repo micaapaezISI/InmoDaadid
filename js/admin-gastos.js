@@ -35,6 +35,7 @@ const AdminGastos = (() => {
       fecha: data.get("fecha"),
       concepto: V.texto(data.get("concepto"), { max: 255 }),
       monto: Dinero.aCentavos(data.get("monto")),
+      medio_pago: V.unoDe(data.get("medio_pago"), ["efectivo", "transferencia", "cheque", "deposito", "mercadopago", "tarjeta", "digital", "otro"], "efectivo"),
       comprobante: V.texto(data.get("comprobante"), { max: 100 }),
     };
     if (!payload.propiedad_id) return alert("Elegí el inmueble.");

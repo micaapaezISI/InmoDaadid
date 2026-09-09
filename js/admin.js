@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "cobranzas") { AdminCobranzas.loadCuotas(); AdminCobranzas.loadHistorial(); }
     if (tabName === "gastos") AdminGastos.loadList();
     if (tabName === "liquidaciones") AdminLiquidaciones.loadList();
+    if (tabName === "caja") { AdminCaja.loadMovimientos(); AdminCaja.loadSaldosHoy(); }
   }
 
   tabButtons.forEach((btn) => {
@@ -142,4 +143,5 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminCobranzas.init();
   AdminGastos.init();
   AdminLiquidaciones.init();
+  AdminCaja.init();
 });
