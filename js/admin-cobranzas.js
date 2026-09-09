@@ -18,6 +18,7 @@ const AdminCobranzas = (() => {
   let cacheCuotas = [];
   let seleccionPersonaId = null;
   let seleccionCuotaIds = new Set();
+  let inquilinoExpandido = null;
 
   const configForm = document.getElementById("cobranzas-config-form");
   const buscarInput = document.getElementById("cb-buscar");
@@ -79,8 +80,32 @@ const AdminCobranzas = (() => {
     cacheCuotas = data || [];
     // Una cuota que ya no está en la lista (se cobró, o cambió de otra forma) no puede seguir seleccionada.
     seleccionCuotaIds = new Set([...seleccionCuotaIds].filter((id) => cacheCuotas.some((c) => c.id === id)));
+    if (inquilinoExpandido !== null && !cacheCuotas.some((c) => c.inquilino_id === inquilinoExpandido)) {
+      inquilinoExpandido = null;
+    }
     renderCuotas();
     actualizarPanelCobro();
+  }
+
+  // Una fila por inquilino (cantidad de cuotas + total), atrasados primero
+  // — mismo criterio que InmoGestion (public/js/cobranzas.js): evita la
+  // grilla plana de todas las cuotas de todos los inquilinos mezcladas.
+  // Recién al hacer click se despliega el detalle de sus cuotas.
+  function agruparPorInquilino() {
+    const porInquilino = new Map();
+    cacheCuotas.forEach((c) => {
+      if (!porInquilino.has(c.inquilino_id)) {
+        porInquilino.set(c.inquilino_id, { inquilino_id: c.inquilino_id, nombre: c.inquilino_nombre, cuotas: [] });
+      }
+      porInquilino.get(c.inquilino_id).cuotas.push(c);
+    });
+    const lista = [...porInquilino.values()].map((g) => ({
+      ...g,
+      atrasadas: g.cuotas.filter((c) => c.dias_atraso > 0).length,
+      total: g.cuotas.reduce((t, c) => t + c.total_a_cobrar, 0),
+      moneda: g.cuotas[0].moneda,
+    }));
+    return lista.sort((a, b) => (b.atrasadas > 0 ? 1 : 0) - (a.atrasadas > 0 ? 1 : 0));
   }
 
   function renderCuotas() {
@@ -88,18 +113,59 @@ const AdminCobranzas = (() => {
       cuotasList.innerHTML = `<p style="color:var(--color-text-light); padding-top:14px;">No hay cuotas pendientes de cobro.</p>`;
       return;
     }
-    cuotasList.innerHTML = cacheCuotas
-      .map((c) => {
-        const marcada = seleccionCuotaIds.has(c.id);
-        const bloqueada = seleccionPersonaId !== null && seleccionPersonaId !== c.inquilino_id;
-        return `
-      <div class="admin-list-row" style="${bloqueada ? "opacity:0.45;" : ""}">
-        <label style="display:flex; align-items:center; gap:12px; flex:1; cursor:pointer;">
-          <input type="checkbox" data-cuota-check="${c.id}" ${marcada ? "checked" : ""} ${bloqueada ? "disabled" : ""} style="width:18px; height:18px;">
+    const grupos = agruparPorInquilino();
+    cuotasList.innerHTML = grupos
+      .map((g) => `
+      <div class="admin-list-row" style="flex-direction:column; align-items:stretch; cursor:pointer;" data-inquilino-row="${g.inquilino_id}">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
           <div class="admin-list-info">
-            <span class="admin-list-title">${c.inquilino_nombre} — ${c.propiedad_codigo || ""} ${c.direccion || ""}</span>
+            <span class="admin-list-title">${g.nombre}</span>
+            ${g.atrasadas > 0 ? `<span class="admin-status-badge" style="background:var(--color-danger);">${g.atrasadas} atrasada${g.atrasadas > 1 ? "s" : ""}</span>` : ""}
+            <span class="admin-list-meta" style="display:block;">${g.cuotas.length} cuota${g.cuotas.length > 1 ? "s" : ""} pendiente${g.cuotas.length > 1 ? "s" : ""}</span>
+          </div>
+          <strong>${Dinero.formatear(g.total, g.moneda)}</strong>
+        </div>
+        <div data-detalle-inquilino="${g.inquilino_id}" style="display:${inquilinoExpandido === g.inquilino_id ? "block" : "none"}; margin-top:14px; padding-top:14px; border-top:1px solid var(--color-border); cursor:default;"></div>
+      </div>`)
+      .join("");
+
+    cuotasList.querySelectorAll("[data-inquilino-row]").forEach((row) => {
+      row.addEventListener("click", (e) => {
+        if (e.target.closest("[data-detalle-inquilino]")) return;
+        const id = parseInt(row.dataset.inquilinoRow, 10);
+        if (inquilinoExpandido === id) {
+          inquilinoExpandido = null;
+        } else {
+          inquilinoExpandido = id;
+          seleccionCuotaIds.clear();
+          seleccionPersonaId = null;
+        }
+        renderCuotas();
+        actualizarPanelCobro();
+      });
+    });
+
+    if (inquilinoExpandido !== null) renderDetalleInquilino(inquilinoExpandido);
+  }
+
+  // Detalle de las cuotas de un inquilino, separadas en "Vencidas" y "Al
+  // día" (mismo criterio que InmoGestion: el color de fondo solo no
+  // alcanza como única señal de atraso).
+  function renderDetalleInquilino(inquilinoId) {
+    const contenedor = cuotasList.querySelector(`[data-detalle-inquilino="${inquilinoId}"]`);
+    if (!contenedor) return;
+    const cuotas = cacheCuotas.filter((c) => c.inquilino_id === inquilinoId);
+    const vencidas = [...cuotas.filter((c) => c.dias_atraso > 0)].sort((a, b) => b.dias_atraso - a.dias_atraso);
+    const alDia = cuotas.filter((c) => c.dias_atraso <= 0);
+
+    const filaCuota = (c) => `
+      <div class="admin-list-row" style="padding:8px 0;">
+        <label style="display:flex; align-items:center; gap:12px; flex:1; cursor:pointer;">
+          <input type="checkbox" data-cuota-check="${c.id}" ${seleccionCuotaIds.has(c.id) ? "checked" : ""} style="width:18px; height:18px;">
+          <div class="admin-list-info">
+            <span class="admin-list-title">${c.propiedad_codigo || ""} ${c.direccion || ""} — período ${c.periodo}</span>
             <span class="admin-list-meta" style="display:block;">
-              Período ${c.periodo} · vence ${c.fecha_vencimiento}${c.dias_atraso > 0 ? ` · <strong style="color:var(--color-danger);">${c.dias_atraso} día(s) de atraso</strong>` : ""}
+              vence ${c.fecha_vencimiento}${c.dias_atraso > 0 ? ` · <strong style="color:var(--color-danger);">${c.dias_atraso} día(s) de atraso</strong>` : ""}
               ${c.bonificacion_aplicada > 0 ? ` · Bonificación: ${Dinero.formatear(c.bonificacion_aplicada, c.moneda)}${c.motivo_bonificacion_aplicada ? " (" + c.motivo_bonificacion_aplicada + ")" : ""}` : ""}
               ${c.punitorio_hoy > 0 ? ` · Punitorio hoy: ${Dinero.formatear(c.punitorio_hoy, c.moneda)}` : ""}
             </span>
@@ -110,10 +176,15 @@ const AdminCobranzas = (() => {
           <button type="button" class="btn btn-sm btn-dark" data-bonificar="${c.id}">Bonificar</button>
         </div>
       </div>`;
-      })
-      .join("");
 
-    cuotasList.querySelectorAll("[data-cuota-check]").forEach((chk) => {
+    const bloque = (titulo, lista) => !lista.length ? "" : `
+      <div style="font-weight:700; font-size:0.85rem; color:var(--color-text-light); margin:10px 0 4px;">${titulo} (${lista.length})</div>
+      ${lista.map(filaCuota).join("")}
+    `;
+
+    contenedor.innerHTML = bloque("Vencidas", vencidas) + bloque("Al día", alDia);
+
+    contenedor.querySelectorAll("[data-cuota-check]").forEach((chk) => {
       chk.addEventListener("change", () => {
         const id = parseInt(chk.dataset.cuotaCheck, 10);
         const cuota = cacheCuotas.find((c) => c.id === id);
@@ -124,13 +195,15 @@ const AdminCobranzas = (() => {
           seleccionCuotaIds.delete(id);
           if (seleccionCuotaIds.size === 0) seleccionPersonaId = null;
         }
-        renderCuotas();
         actualizarPanelCobro();
       });
     });
 
-    cuotasList.querySelectorAll("[data-bonificar]").forEach((btn) => {
-      btn.addEventListener("click", () => abrirBonificacion(parseInt(btn.dataset.bonificar, 10)));
+    contenedor.querySelectorAll("[data-bonificar]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        abrirBonificacion(parseInt(btn.dataset.bonificar, 10));
+      });
     });
   }
 
