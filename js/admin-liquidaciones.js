@@ -17,7 +17,8 @@ const AdminLiquidaciones = (() => {
   const TIPO_LABEL = { cobro: "Cobro", comision: "Comisión", gasto: "Gasto" };
   const ESTADO_LABEL = { pendiente: "Pendiente", pagada: "Pagada", anulada: "Anulada" };
 
-  let cacheLiquidaciones = [];
+  let cacheLiquidaciones = new Map(); // liquidacion_id -> {liquidacion_id, persona, periodo, estado, total_neto}
+  let gruposExpandidos = new Set(); // "propiedadId|periodo"
   let liquidacionParaPagar = null;
 
   const personaSelect = document.getElementById("lq-persona");
@@ -80,10 +81,9 @@ const AdminLiquidaciones = (() => {
   async function loadList() {
     listBox.innerHTML = `<p style="color:var(--color-text-light);">Cargando…</p>`;
     const { data, error } = await supabaseClient
-      .from("liquidaciones")
-      .select("*, personas(nombre)")
-      .order("creado_en", { ascending: false })
-      .limit(200);
+      .from("liquidacion_detalle")
+      .select("tipo, monto, propiedad_id, liquidacion_id, propiedades(codigo, calle, numero), liquidaciones(persona_id, periodo, estado, personas(nombre))")
+      .order("liquidacion_id");
     if (error) {
       listBox.innerHTML = `<p style="color:var(--color-danger);">No se pudo cargar: ${error.message}</p>`;
       return;
@@ -92,35 +92,135 @@ const AdminLiquidaciones = (() => {
       listBox.innerHTML = `<p style="color:var(--color-text-light);">Todavía no hay liquidaciones generadas.</p>`;
       return;
     }
-    cacheLiquidaciones = data;
 
-    listBox.innerHTML = data
-      .map((l) => `
-      <div class="admin-list-row" style="flex-direction:column; align-items:stretch;">
+    // Cada propietario de un inmueble se liquida en un registro aparte
+    // (uno puede cobrar hoy y el otro el mes que viene) — pero listados
+    // como filas separadas de la misma propiedad y período parecía un
+    // cobro triplicado, igual que pasaba en Caja con los medios de pago.
+    // Se agrupa por (inmueble, período) — mismo criterio que InmoGestion
+    // (src/routes/liquidaciones.js, agruparPorInmueble): el pago de cada
+    // propietario sigue siendo independiente, solo cambia cómo se lista.
+    cacheLiquidaciones = new Map();
+    const grupos = new Map();
+    data.forEach((f) => {
+      const liq = f.liquidaciones;
+      if (!cacheLiquidaciones.has(f.liquidacion_id)) {
+        cacheLiquidaciones.set(f.liquidacion_id, { liquidacion_id: f.liquidacion_id, persona: liq.personas?.nombre, periodo: liq.periodo, estado: liq.estado, cobrado: 0, comision: 0, gastos: 0 });
+      }
+      const cacheEntry = cacheLiquidaciones.get(f.liquidacion_id);
+      if (f.tipo === "cobro") cacheEntry.cobrado += f.monto;
+      else if (f.tipo === "comision") cacheEntry.comision += f.monto;
+      else if (f.tipo === "gasto") cacheEntry.gastos += f.monto;
+
+      const claveGrupo = f.propiedad_id + "|" + liq.periodo;
+      if (!grupos.has(claveGrupo)) {
+        grupos.set(claveGrupo, {
+          propiedad_id: f.propiedad_id,
+          propiedad_codigo: f.propiedades?.codigo,
+          propiedad_direccion: [f.propiedades?.calle, f.propiedades?.numero].filter(Boolean).join(" "),
+          periodo: liq.periodo,
+          propietarios: new Map(),
+        });
+      }
+      const grupo = grupos.get(claveGrupo);
+      if (!grupo.propietarios.has(f.liquidacion_id)) {
+        grupo.propietarios.set(f.liquidacion_id, {
+          liquidacion_id: f.liquidacion_id, persona: liq.personas?.nombre, estado: liq.estado,
+          cobrado: 0, comision: 0, gastos: 0,
+        });
+      }
+      const p = grupo.propietarios.get(f.liquidacion_id);
+      if (f.tipo === "cobro") p.cobrado += f.monto;
+      else if (f.tipo === "comision") p.comision += f.monto;
+      else if (f.tipo === "gasto") p.gastos += f.monto;
+    });
+
+    const listaGrupos = [...grupos.values()].map((g) => {
+      const propietarios = [...g.propietarios.values()].map((p) => ({ ...p, neto: p.cobrado - p.comision - p.gastos }));
+      const activos = propietarios.filter((p) => p.estado !== "anulada");
+      const estadoGrupo = activos.length === 0 ? "anulada"
+        : activos.every((p) => p.estado === "pagada") ? "pagada"
+        : activos.every((p) => p.estado === "pendiente") ? "pendiente"
+        : "parcial";
+      return { ...g, estado: estadoGrupo, total_neto: propietarios.reduce((t, p) => t + p.neto, 0), propietarios };
+    }).sort((a, b) => (a.periodo < b.periodo ? 1 : a.periodo > b.periodo ? -1 : (a.propiedad_codigo || "").localeCompare(b.propiedad_codigo || "")));
+
+    if (!listaGrupos.length) {
+      listBox.innerHTML = `<p style="color:var(--color-text-light);">Todavía no hay liquidaciones generadas.</p>`;
+      return;
+    }
+
+    listBox.innerHTML = listaGrupos
+      .map((g) => {
+        const claveGrupo = g.propiedad_id + "|" + g.periodo;
+        return `
+      <div class="admin-list-row" style="flex-direction:column; align-items:stretch; cursor:pointer;" data-grupo-row="${claveGrupo}">
         <div style="display:flex; flex-wrap:wrap; align-items:center; gap:14px;">
           <div class="admin-list-info">
-            <span class="admin-list-title">${l.personas ? l.personas.nombre : "-"} — ${l.periodo}</span>
-            <span class="admin-status-badge" style="background:${l.estado === "pagada" ? "#1a9c4a" : l.estado === "anulada" ? "var(--color-text-light)" : "#c98a1c"};">${ESTADO_LABEL[l.estado] || l.estado}</span>
-            <span class="admin-list-meta" style="display:block;">Neto: ${Dinero.formatear(l.total_neto)} · Cobrado ${Dinero.formatear(l.total_cobrado)} · Comisión ${Dinero.formatear(l.total_comision)} · Gastos ${Dinero.formatear(l.total_gastos)}</span>
-          </div>
-          <div class="admin-list-actions">
-            <button type="button" class="btn btn-sm btn-dark" data-ver-detalle="${l.id}">Ver detalle</button>
-            ${l.estado === "pendiente" ? `<button type="button" class="btn btn-sm" data-pagar="${l.id}">Pagar</button>` : ""}
-            ${l.estado !== "anulada" ? `<button type="button" class="admin-delete-link" data-anular-liquidacion="${l.id}">Anular</button>` : ""}
+            <span class="admin-list-title">${g.propiedad_codigo || ""} — ${g.propiedad_direccion || "sin dirección"} · ${g.periodo}</span>
+            <span class="admin-status-badge" style="background:${g.estado === "pagada" ? "#1a9c4a" : g.estado === "anulada" ? "var(--color-text-light)" : g.estado === "parcial" ? "#c98a1c" : "#c98a1c"};">${ESTADO_LABEL[g.estado] || g.estado}</span>
+            <span class="admin-list-meta" style="display:block;">${g.propietarios.length} propietario${g.propietarios.length > 1 ? "s" : ""} · Neto total: ${Dinero.formatear(g.total_neto)}</span>
           </div>
         </div>
-        <div data-detalle-de="${l.id}" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--color-border);"></div>
-      </div>`)
+        <div data-detalle-grupo="${claveGrupo}" style="display:${gruposExpandidos.has(claveGrupo) ? "block" : "none"}; margin-top:14px; padding-top:14px; border-top:1px solid var(--color-border); cursor:default;"></div>
+      </div>`;
+      })
       .join("");
 
-    listBox.querySelectorAll("[data-ver-detalle]").forEach((btn) => {
-      btn.addEventListener("click", () => toggleDetalle(parseInt(btn.dataset.verDetalle, 10)));
+    listBox.querySelectorAll("[data-grupo-row]").forEach((row) => {
+      row.addEventListener("click", (e) => {
+        if (e.target.closest("[data-detalle-grupo]")) return;
+        const clave = row.dataset.grupoRow;
+        if (gruposExpandidos.has(clave)) gruposExpandidos.delete(clave);
+        else gruposExpandidos.add(clave);
+        const grupo = listaGrupos.find((g) => (g.propiedad_id + "|" + g.periodo) === clave);
+        const contenedor = row.querySelector(`[data-detalle-grupo="${clave}"]`);
+        if (gruposExpandidos.has(clave)) {
+          contenedor.style.display = "block";
+          renderPropietariosDeGrupo(contenedor, grupo);
+        } else {
+          contenedor.style.display = "none";
+        }
+      });
     });
-    listBox.querySelectorAll("[data-pagar]").forEach((btn) => {
-      btn.addEventListener("click", () => abrirPagar(parseInt(btn.dataset.pagar, 10)));
+
+    gruposExpandidos.forEach((clave) => {
+      const grupo = listaGrupos.find((g) => (g.propiedad_id + "|" + g.periodo) === clave);
+      const contenedor = listBox.querySelector(`[data-detalle-grupo="${clave}"]`);
+      if (grupo && contenedor) renderPropietariosDeGrupo(contenedor, grupo);
     });
-    listBox.querySelectorAll("[data-anular-liquidacion]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
+  }
+
+  // Cada propietario del grupo (inmueble+período) sigue siendo un registro
+  // totalmente aparte — se ve y se paga/anula desde adentro, cada uno con
+  // su propio "Ver detalle" (cobro/comisión/gasto) y sus propias acciones.
+  function renderPropietariosDeGrupo(contenedor, grupo) {
+    contenedor.innerHTML = grupo.propietarios
+      .map((p) => `
+        <div class="admin-list-row" style="padding:8px 0;">
+          <div class="admin-list-info">
+            <span class="admin-list-title">${p.persona || "-"}</span>
+            <span class="admin-status-badge" style="background:${p.estado === "pagada" ? "#1a9c4a" : p.estado === "anulada" ? "var(--color-text-light)" : "#c98a1c"};">${ESTADO_LABEL[p.estado] || p.estado}</span>
+            <span class="admin-list-meta" style="display:block;">Cobrado ${Dinero.formatear(p.cobrado)} · Comisión ${Dinero.formatear(p.comision)} · Gastos ${Dinero.formatear(p.gastos)} · Neto ${Dinero.formatear(p.neto)}</span>
+          </div>
+          <div class="admin-list-actions">
+            <button type="button" class="btn btn-sm btn-dark" data-ver-detalle="${p.liquidacion_id}">Ver detalle</button>
+            ${p.estado === "pendiente" ? `<button type="button" class="btn btn-sm" data-pagar="${p.liquidacion_id}">Pagar</button>` : ""}
+            ${p.estado !== "anulada" ? `<button type="button" class="admin-delete-link" data-anular-liquidacion="${p.liquidacion_id}">Anular</button>` : ""}
+          </div>
+          <div data-detalle-de="${p.liquidacion_id}" style="display:none; width:100%; margin-top:10px; padding-top:10px; border-top:1px solid var(--color-border);"></div>
+        </div>`)
+      .join("");
+
+    contenedor.querySelectorAll("[data-ver-detalle]").forEach((btn) => {
+      btn.addEventListener("click", (e) => { e.stopPropagation(); toggleDetalle(parseInt(btn.dataset.verDetalle, 10)); });
+    });
+    contenedor.querySelectorAll("[data-pagar]").forEach((btn) => {
+      btn.addEventListener("click", (e) => { e.stopPropagation(); abrirPagar(parseInt(btn.dataset.pagar, 10)); });
+    });
+    contenedor.querySelectorAll("[data-anular-liquidacion]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
         const motivo = prompt("Motivo de la anulación:");
         if (motivo === null) return;
         if (!motivo.trim()) return alert("Contá el motivo de la anulación.");
@@ -180,15 +280,16 @@ const AdminLiquidaciones = (() => {
   medioAgregarBtn.addEventListener("click", addMedioRow);
 
   function abrirPagar(liquidacionId) {
-    const liq = cacheLiquidaciones.find((l) => l.id === liquidacionId);
+    const liq = cacheLiquidaciones.get(liquidacionId);
     if (!liq) return;
-    liquidacionParaPagar = liq;
+    const totalNeto = liq.cobrado - liq.comision - liq.gastos;
+    liquidacionParaPagar = { id: liquidacionId, total_neto: totalNeto };
     errorEl.style.display = "none";
-    resumenEl.textContent = `${liq.personas ? liq.personas.nombre : ""} — período ${liq.periodo}. Neto a pagar: ${Dinero.formatear(liq.total_neto)}.`;
+    resumenEl.textContent = `${liq.persona || ""} — período ${liq.periodo}. Neto a pagar: ${Dinero.formatear(totalNeto)}.`;
     fechaInput.value = new Date().toISOString().slice(0, 10);
     mediosList.innerHTML = "";
     addMedioRow();
-    mediosList.querySelector("[data-medio-monto]").value = Dinero.aPesos(liq.total_neto);
+    mediosList.querySelector("[data-medio-monto]").value = Dinero.aPesos(totalNeto);
     modal.style.display = "flex";
   }
   cancelarBtn.addEventListener("click", () => { modal.style.display = "none"; });
