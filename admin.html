@@ -119,9 +119,9 @@
           <button type="button" class="admin-sidebar-link" data-tab="agenda">
             <span class="admin-sidebar-ico">🗓️</span> Agenda
           </button>
-
-          <div class="admin-sidebar-group-label">Próximamente</div>
-          <span class="admin-sidebar-link is-disabled" title="Todavía no está">Informes</span>
+          <button type="button" class="admin-sidebar-link" data-tab="informes">
+            <span class="admin-sidebar-ico">📊</span> Informes
+          </button>
         </nav>
 
         <!-- ===================== CONTENIDO ===================== -->
@@ -762,6 +762,38 @@
             </div>
           </section>
 
+          <!-- ---------- Informes ---------- -->
+          <section id="tab-panel-informes" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">📊 Informes</h2>
+              <p class="admin-section-help">Lo que las otras pantallas ya calculan, juntado acá para consultar rápido. Se pueden imprimir con el navegador (Ctrl/Cmd+P).</p>
+            </div>
+
+            <div class="admin-card">
+              <div class="admin-form-grid">
+                <div class="field field-full">
+                  <label for="in-selector">Informe</label>
+                  <select id="in-selector"></select>
+                </div>
+                <div class="field" id="in-filtro-dias-wrap" style="display:none;">
+                  <label for="in-filtro-dias">Días de atraso mínimo</label>
+                  <input type="number" id="in-filtro-dias" min="0" value="0">
+                </div>
+                <div class="field" id="in-filtro-periodo-wrap" style="display:none;">
+                  <label for="in-filtro-periodo">Período</label>
+                  <input type="month" id="in-filtro-periodo">
+                </div>
+                <div class="field" style="align-self:end;">
+                  <button type="button" id="in-generar-btn" class="btn btn-primary">Generar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div id="informe-resultado" style="overflow-x:auto;"></div>
+            </div>
+          </section>
+
           <!-- ---------- Nuevo / editar inmueble ---------- -->
           <section id="tab-panel-nueva" class="admin-tab-panel" style="display:none;">
             <div class="admin-card">
@@ -1276,6 +1308,7 @@
 <script src="js/admin-caja.js"></script>
 <script src="js/admin-ventas.js"></script>
 <script src="js/admin-agenda.js"></script>
+<script src="js/admin-informes.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>

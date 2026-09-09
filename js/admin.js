@@ -148,4 +148,5 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminCaja.init();
   AdminVentas.init();
   AdminAgenda.init();
+  AdminInformes.init();
 });
