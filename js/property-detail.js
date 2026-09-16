@@ -60,6 +60,8 @@ async function initPropertyDetail() {
         ${property.amenities.map((a) => `<li><span class="check-ico" style="width:20px;height:20px;font-size:0.7rem;">✓</span> ${a}</li>`).join("")}
       </ul>
     </div>
+
+    ${renderMapSection(property)}
   `;
 
   const message = encodeURIComponent(
@@ -89,6 +91,35 @@ async function initPropertyDetail() {
 }
 
 document.addEventListener("DOMContentLoaded", initPropertyDetail);
+
+/* ===========================================================================
+   MAPA DE UBICACIÓN
+   Se arma con Google Maps a partir del texto de la dirección — no hace
+   falta API key para este embed (parámetro output=embed). property.address
+   ya viene calculado respetando "ocultar dirección exacta" (si está
+   tildado en el admin, ya llega como solo el barrio/localidad, sin calle
+   ni altura) — acá no hace falta repetir esa lógica.
+   =========================================================================== */
+function renderMapSection(property) {
+  const parts = [...new Set([property.address, property.zone].filter(Boolean))];
+  if (parts.length === 0) return "";
+
+  const query = [...parts, "San Salvador de Jujuy", "Argentina"].join(", ");
+  const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
+  const linkHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  const esAproximada = property.address === property.zone;
+
+  return `
+    <div class="detail-map">
+      <h2>Ubicación</h2>
+      ${esAproximada ? `<p class="detail-map-caption">Ubicación aproximada — la dirección exacta se comparte al coordinar una visita.</p>` : ""}
+      <div class="detail-map-frame">
+        <iframe src="${embedSrc}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación de la propiedad"></iframe>
+      </div>
+      <a class="detail-map-link" href="${linkHref}" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
+    </div>
+  `;
+}
 
 /* ===========================================================================
    GALERÍA + LIGHTBOX

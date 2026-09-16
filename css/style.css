@@ -1616,9 +1616,41 @@ h1, h2, h3, h4 {
 }
 
 .detail-desc h2,
-.detail-amenities h2 {
+.detail-amenities h2,
+.detail-map h2 {
   font-size: 1.2rem;
   margin-bottom: 12px;
+}
+
+.detail-map-caption {
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.detail-map-frame {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-map-frame iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 0;
+}
+
+.detail-map-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-primary);
+}
+
+.detail-map-link:hover {
+  text-decoration: underline;
 }
 
 .detail-desc p {
