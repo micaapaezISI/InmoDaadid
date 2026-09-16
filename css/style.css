@@ -215,7 +215,7 @@ h1, h2, h3, h4 {
   position: sticky;
   top: 0;
   z-index: 1000;
-  height: var(--header-height);
+  min-height: var(--header-height);
   display: flex;
   align-items: center;
   background: var(--color-bg);
@@ -233,6 +233,7 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.1rem;
@@ -247,6 +248,14 @@ h1, h2, h3, h4 {
   border-radius: 12px;
 }
 
+.brand-text {
+  display: block;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .brand-text small {
   display: block;
   font-family: var(--font-body);
@@ -254,6 +263,9 @@ h1, h2, h3, h4 {
   font-size: 0.7rem;
   color: var(--color-text-light);
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .main-nav {
@@ -2396,6 +2408,19 @@ h1, h2, h3, h4 {
 
   .nav-toggle {
     display: flex;
+  }
+
+  .brand {
+    gap: 8px;
+    font-size: 0.95rem;
+  }
+
+  .brand-mark-img {
+    height: 34px;
+  }
+
+  .brand-text small {
+    font-size: 0.62rem;
   }
 
   .site-header.is-open .main-nav {
