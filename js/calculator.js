@@ -25,6 +25,26 @@ function monthsBefore(date, months) {
   return d;
 }
 
+// Si se sabe la fecha de inicio del contrato (o de la última actualización),
+// el período a ajustar no es "hoy menos la frecuencia" — es el último
+// vencimiento real según esa fecha y la frecuencia pactada. Por ejemplo,
+// contrato iniciado el 15/01 con ajuste trimestral: si hoy es 16/09, el
+// último vencimiento fue el 15/07 (no "hace 3 meses calendario" desde hoy).
+function ultimaFechaAniversario(fechaInicioStr, frecuenciaMeses, hasta) {
+  if (!fechaInicioStr) return null;
+  const inicio = new Date(`${fechaInicioStr}T00:00:00`);
+  if (Number.isNaN(inicio.getTime())) return null;
+  if (inicio >= hasta) return inicio;
+
+  let anterior = new Date(inicio);
+  let cursor = new Date(inicio);
+  while (cursor <= hasta) {
+    anterior = new Date(cursor);
+    cursor.setMonth(cursor.getMonth() + frecuenciaMeses);
+  }
+  return anterior;
+}
+
 function formatDateAR(isoDate) {
   const [y, m, d] = isoDate.split("-");
   return `${d}/${m}/${y}`;
@@ -58,11 +78,11 @@ function closestPoint(series, targetDate) {
   return best;
 }
 
-// Ratio real ICL(hoy) / ICL(hace N meses) — el ICL no publica fines de
-// semana/feriados, así que se toma el día hábil más cercano a cada fecha.
-async function getIclAdjustment(months) {
-  const hasta = new Date();
-  const desdeTarget = monthsBefore(hasta, months);
+// Ratio real ICL(hoy) / ICL(desde) — el ICL no publica fines de semana ni
+// feriados, así que se toma el día hábil más cercano a cada fecha. "desde"
+// ya viene resuelto por el llamador (según la fecha de inicio del contrato
+// si se cargó, o "hace N meses" si no).
+async function getIclAdjustment(desdeTarget, hasta) {
   const ventanaDesde = new Date(desdeTarget);
   ventanaDesde.setDate(ventanaDesde.getDate() - 8);
 
@@ -132,6 +152,7 @@ function initCalculator() {
     const indexKey = data.get("index");
     const months = parseInt(data.get("frequency"), 10) || 12;
     const fixedAnnualPct = parseFloat(data.get("fixedPct")) || 0;
+    const startDateStr = data.get("startDate");
 
     errorBox.style.display = "none";
 
@@ -141,9 +162,15 @@ function initCalculator() {
 
     try {
       let result;
-      if (indexKey === "icl") result = await getIclAdjustment(months);
-      else if (indexKey === "ipc") result = await getIpcAdjustment(months);
-      else result = calcFixedAdjustment(fixedAnnualPct, months);
+      const hasta = new Date();
+      if (indexKey === "icl") {
+        const desdeTarget = ultimaFechaAniversario(startDateStr, months, hasta) || monthsBefore(hasta, months);
+        result = await getIclAdjustment(desdeTarget, hasta);
+      } else if (indexKey === "ipc") {
+        result = await getIpcAdjustment(months);
+      } else {
+        result = calcFixedAdjustment(fixedAnnualPct, months);
+      }
 
       const increase = amount * result.factor;
       const newAmount = amount + increase;

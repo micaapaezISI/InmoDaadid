@@ -54,6 +54,11 @@
           <input type="number" id="calc-amount" name="amount" min="0" step="1" placeholder="Ej: 150000" required>
         </div>
         <div class="field">
+          <label for="calc-start-date">Fecha de inicio del contrato (o de la última actualización)</label>
+          <input type="date" id="calc-start-date" name="startDate">
+          <p class="field-help" style="margin-top:4px; font-size:0.78rem; color:var(--color-text-light);">Opcional, pero recomendado: sin esta fecha, se calcula como si el período venciera justo hoy — con la fecha, se calcula el vencimiento real según esa fecha y la frecuencia elegida.</p>
+        </div>
+        <div class="field">
           <label for="calc-index">Índice de actualización</label>
           <select id="calc-index" name="index">
             <option value="icl">ICL (Índice para Contratos de Locación)</option>
