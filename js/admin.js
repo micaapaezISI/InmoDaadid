@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     window.scrollTo({ top: panel.offsetTop - 20, behavior: "smooth" });
 
+    if (tabName === "hoy") AdminHoy.loadResumen();
     if (tabName === "inmuebles") AdminInmuebles.loadList();
     if (tabName === "destacadas") AdminInmuebles.loadFeatured();
     if (tabName === "personas") AdminPersonas.loadList();
@@ -64,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function showLoggedIn() {
     loginWrap.style.display = "none";
     panel.style.display = "block";
+    AdminHoy.loadResumen();
     AdminPersonas.loadList();
     AdminInmuebles.loadList();
     AdminInmuebles.loadFeatured();
@@ -151,4 +153,5 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminAgenda.init();
   AdminInformes.init();
   AdminConfiguracion.init();
+  AdminHoy.init();
 });

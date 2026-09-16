@@ -2023,6 +2023,15 @@ h1, h2, h3, h4 {
   margin-bottom: 26px;
 }
 
+.admin-hoy-tile {
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.admin-hoy-tile:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
 .admin-card h2 {
   font-size: 1.15rem;
   margin-bottom: 4px;

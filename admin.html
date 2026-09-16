@@ -79,7 +79,10 @@
       <div class="admin-shell">
         <!-- ===================== NAV LATERAL ===================== -->
         <nav class="admin-sidebar">
-          <button type="button" class="admin-sidebar-link is-active" data-tab="inmuebles">
+          <button type="button" class="admin-sidebar-link is-active" data-tab="hoy">
+            <span class="admin-sidebar-ico">☀️</span> Hoy
+          </button>
+          <button type="button" class="admin-sidebar-link" data-tab="inmuebles">
             <span class="admin-sidebar-ico">🏠</span> Inmuebles
           </button>
           <button type="button" class="admin-sidebar-link" data-tab="nueva">
@@ -132,8 +135,17 @@
         <!-- ===================== CONTENIDO ===================== -->
         <div class="admin-content">
 
+          <!-- ---------- Hoy (resumen) ---------- -->
+          <section id="tab-panel-hoy" class="admin-tab-panel">
+            <div class="admin-card" style="margin-bottom:22px;">
+              <h2 class="admin-section-title">☀️ Hoy</h2>
+              <p class="admin-section-help">Un pantallazo de cómo está todo: caja, cobranzas atrasadas, deudas a propietarios, contratos por vencer, agenda y consultas nuevas — con acceso directo a cada sección.</p>
+            </div>
+            <div id="hoy-resumen"></div>
+          </section>
+
           <!-- ---------- Inmuebles (listado) ---------- -->
-          <section id="tab-panel-inmuebles" class="admin-tab-panel">
+          <section id="tab-panel-inmuebles" class="admin-tab-panel" style="display:none;">
             <div class="admin-card">
               <h2 class="admin-section-title">🏠 Inmuebles</h2>
               <p class="admin-section-help">Acá están todos los inmuebles que cargaste. Tocá <strong>Editar</strong> para cambiar sus datos, propietarios o fotos. Si un alquiler ya se ocupó, mejor tocá <strong>Desactivar</strong> en vez de borrarlo — así lo sacás del sitio sin perder los datos.</p>
@@ -1344,6 +1356,7 @@
 <script src="js/admin-agenda.js"></script>
 <script src="js/admin-informes.js"></script>
 <script src="js/admin-configuracion.js"></script>
+<script src="js/admin-hoy.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>
