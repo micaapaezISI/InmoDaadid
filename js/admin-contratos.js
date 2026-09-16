@@ -121,15 +121,48 @@ const AdminContratos = (() => {
     inquilinoSelect.innerHTML = opcionesPersonas(inquilinoActual).replace("Elegir persona...", "Elegir inquilino...");
   }
 
+  // Moneda actual del inmueble elegido (para el aviso de abajo). Se guarda
+  // aparte de cachePropiedades porque esa lista se arma una sola vez al
+  // abrir la pestaña y puede quedar vieja si el inmueble se corrige después
+  // (justo el caso que generó liquidaciones que no contaban el cobro real:
+  // ver supabase/migrations/013_fix_gastos_liquidacion_negativa.sql).
+  let monedaInmuebleActual = null;
+  const monedaAviso = document.getElementById("ct-moneda-aviso");
+
+  function chequearMonedaAviso() {
+    if (!monedaAviso) return;
+    if (monedaInmuebleActual && form.elements.moneda.value && form.elements.moneda.value !== monedaInmuebleActual) {
+      monedaAviso.style.display = "block";
+      monedaAviso.textContent = `⚠️ El inmueble tiene el precio cargado en ${monedaInmuebleActual}, pero elegiste ${form.elements.moneda.value} para el contrato. Las liquidaciones al propietario hoy solo contemplan contratos en ARS — revisá que sea así a propósito.`;
+    } else {
+      monedaAviso.style.display = "none";
+      monedaAviso.textContent = "";
+    }
+  }
+  form.elements.moneda.addEventListener("change", chequearMonedaAviso);
+
   // Al elegir el inmueble, se sugiere el monto mensual que ya tiene
   // cargado como precio de alquiler — se puede corregir a mano si el
-  // monto pactado en el contrato es distinto.
-  propiedadSelect.addEventListener("change", () => {
-    const propiedad = cachePropiedades.find((p) => String(p.id) === propiedadSelect.value);
-    if (propiedad && propiedad.precio_alquiler && !form.elements.monto_inicial.value) {
+  // monto pactado en el contrato es distinto. Se trae fresco de la base
+  // (no de cachePropiedades) para no arrastrar un precio/moneda vieja si
+  // el inmueble se editó después de abrir esta pestaña.
+  propiedadSelect.addEventListener("change", async () => {
+    monedaInmuebleActual = null;
+    if (!propiedadSelect.value) return chequearMonedaAviso();
+
+    const { data: propiedad } = await supabaseClient
+      .from("propiedades")
+      .select("precio_alquiler, moneda_alquiler")
+      .eq("id", propiedadSelect.value)
+      .single();
+    if (!propiedad) return chequearMonedaAviso();
+
+    monedaInmuebleActual = propiedad.moneda_alquiler || null;
+    if (propiedad.precio_alquiler && !form.elements.monto_inicial.value) {
       form.elements.monto_inicial.value = Dinero.aPesos(propiedad.precio_alquiler);
       if (propiedad.moneda_alquiler) form.elements.moneda.value = propiedad.moneda_alquiler;
     }
+    chequearMonedaAviso();
   });
 
   inquilinoNuevaBtn.addEventListener("click", () => {
@@ -179,6 +212,8 @@ const AdminContratos = (() => {
     form.reset();
     garantesList.innerHTML = "";
     resultBox.style.display = "none";
+    monedaInmuebleActual = null;
+    chequearMonedaAviso();
     await poblarSelectsBase();
     actualizarCamposAjuste();
   }
