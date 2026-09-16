@@ -10,7 +10,31 @@
 document.addEventListener("DOMContentLoaded", () => {
   if (typeof SUPABASE_URL === "undefined" || typeof SUPABASE_ANON_KEY === "undefined") return;
 
-  const history = [];
+  const STORAGE_KEY = "daadin-chatbot-state";
+
+  function loadState() {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  function saveState() {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ history, opened, panelOpen: !panel.hidden })
+      );
+    } catch {
+      /* sessionStorage no disponible (modo privado, etc.) */
+    }
+  }
+
+  const savedState = loadState();
+  const history = savedState?.history || [];
   let sending = false;
 
   const wrap = document.createElement("div");
@@ -64,7 +88,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el) el.remove();
   }
 
-  let opened = false;
+  history.forEach((entry) => addMessage(entry.role, entry.text));
+
+  let opened = savedState?.opened || false;
+  if (savedState?.panelOpen) panel.hidden = false;
+
   toggleBtn.addEventListener("click", () => {
     panel.hidden = !panel.hidden;
     if (!panel.hidden && !opened) {
@@ -75,10 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
     if (!panel.hidden) input.focus();
+    saveState();
   });
 
   closeBtn.addEventListener("click", () => {
     panel.hidden = true;
+    saveState();
   });
 
   form.addEventListener("submit", async (e) => {
@@ -88,6 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     addMessage("user", message);
     history.push({ role: "user", text: message });
+    saveState();
     input.value = "";
     sending = true;
     addTyping();
@@ -109,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       addMessage("bot", data.text);
       history.push({ role: "bot", text: data.text });
+      saveState();
     } catch (err) {
       removeTyping();
       addMessage(
