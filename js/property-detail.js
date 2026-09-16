@@ -92,13 +92,12 @@ document.addEventListener("DOMContentLoaded", initPropertyDetail);
 
 /* ===========================================================================
    GALERÍA + LIGHTBOX
-   El bloque de arriba (main + 2 miniaturas) siempre muestra como máximo
-   3 fotos: es solo una "vidriera". Todas las fotos de la propiedad (las
-   que vinieron del .zip subido en el panel admin incluidas) quedan
-   disponibles al hacer click, dentro del lightbox con flechas.
+   Una foto principal arriba y, debajo, una tira de miniaturas con TODAS
+   las fotos de la propiedad (las que vinieron del .zip subido en el panel
+   admin incluidas). Click en la principal o en cualquier miniatura abre
+   el lightbox a pantalla completa: flechas (de pantalla y de teclado),
+   contador y zoom (click sobre la foto).
    =========================================================================== */
-const GALLERY_VISIBLE_TILES = 3; // 1 foto principal + 2 miniaturas
-
 function renderGallery(images, property) {
   const gallery = document.getElementById("detail-gallery");
   if (!gallery) return;
@@ -108,28 +107,21 @@ function renderGallery(images, property) {
     return;
   }
 
-  const visible = images.slice(0, GALLERY_VISIBLE_TILES);
-  const remaining = images.length - visible.length;
-
-  const sideThumbs = visible
-    .slice(1)
-    .map((url, i) => {
-      const index = i + 1;
-      const isLastVisible = index === visible.length - 1 && remaining > 0;
-      return `
-        <div data-gallery-index="${index}">
-          <img src="${url}" alt="${property.title} — foto ${index + 1}" loading="lazy">
-          ${isLastVisible ? `<span class="gallery-more-badge">+${remaining} foto${remaining === 1 ? "" : "s"}</span>` : ""}
-        </div>`;
-    })
+  const thumbs = images
+    .map(
+      (url, i) => `
+        <div class="detail-gallery-thumb" data-gallery-index="${i}">
+          <img src="${url}" alt="${property.title} — foto ${i + 1}" loading="lazy">
+        </div>`
+    )
     .join("");
 
   gallery.innerHTML = `
     <div class="detail-gallery-main" data-gallery-index="0">
-      <img src="${visible[0]}" alt="${property.title}" loading="lazy">
-      ${images.length > 1 ? `<button type="button" class="gallery-viewall-btn">🖼️ Ver las ${images.length} fotos</button>` : ""}
+      <img src="${images[0]}" alt="${property.title}" loading="lazy">
+      ${images.length > 1 ? `<span class="gallery-count-badge">🖼️ ${images.length} fotos</span>` : ""}
     </div>
-    ${visible.length > 1 ? `<div class="detail-gallery-side">${sideThumbs}</div>` : ""}
+    ${images.length > 1 ? `<div class="detail-gallery-thumbs">${thumbs}</div>` : ""}
   `;
 
   gallery.querySelectorAll("[data-gallery-index]").forEach((el) => {
@@ -151,18 +143,25 @@ function ensureLightbox() {
     <button type="button" class="lightbox-close" aria-label="Cerrar">✕</button>
     <button type="button" class="lightbox-nav lightbox-prev" aria-label="Foto anterior">‹</button>
     <div class="lightbox-img-wrap">
-      <img class="lightbox-img" src="" alt="">
+      <img class="lightbox-img" src="" alt="" title="Click para hacer zoom">
     </div>
     <button type="button" class="lightbox-nav lightbox-next" aria-label="Foto siguiente">›</button>
     <div class="lightbox-counter"></div>
   `;
   document.body.appendChild(el);
 
+  const imgWrap = el.querySelector(".lightbox-img-wrap");
+  const img = el.querySelector(".lightbox-img");
+
   el.querySelector(".lightbox-close").addEventListener("click", closeLightbox);
   el.querySelector(".lightbox-prev").addEventListener("click", () => stepLightbox(-1));
   el.querySelector(".lightbox-next").addEventListener("click", () => stepLightbox(1));
   el.addEventListener("click", (e) => {
     if (e.target === el) closeLightbox();
+  });
+  img.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleZoom();
   });
   document.addEventListener("keydown", (e) => {
     if (!el.classList.contains("is-open")) return;
@@ -197,8 +196,36 @@ function stepLightbox(delta) {
   updateLightbox();
 }
 
+function resetZoom() {
+  if (!lightboxEl) return;
+  const img = lightboxEl.querySelector(".lightbox-img");
+  const wrap = lightboxEl.querySelector(".lightbox-img-wrap");
+  img.classList.remove("is-zoomed");
+  img.style.width = "";
+  img.style.height = "";
+  wrap.classList.remove("is-zoomed-wrap");
+  wrap.scrollTo(0, 0);
+}
+
+function toggleZoom() {
+  if (!lightboxEl) return;
+  const img = lightboxEl.querySelector(".lightbox-img");
+  const wrap = lightboxEl.querySelector(".lightbox-img-wrap");
+  if (img.classList.contains("is-zoomed")) {
+    resetZoom();
+    return;
+  }
+  img.classList.add("is-zoomed");
+  wrap.classList.add("is-zoomed-wrap");
+  img.style.width = img.naturalWidth + "px";
+  img.style.height = img.naturalHeight + "px";
+  wrap.scrollLeft = (img.offsetWidth - wrap.clientWidth) / 2;
+  wrap.scrollTop = (img.offsetHeight - wrap.clientHeight) / 2;
+}
+
 function updateLightbox() {
   if (!lightboxEl) return;
+  resetZoom();
   const img = lightboxEl.querySelector(".lightbox-img");
   img.src = lightboxImages[lightboxIndex];
   img.alt = lightboxTitle;
