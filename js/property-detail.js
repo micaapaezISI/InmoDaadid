@@ -24,19 +24,7 @@ async function initPropertyDetail() {
   document.getElementById("breadcrumb-title").textContent = property.title;
 
   const images = property.images && property.images.length ? property.images : [];
-  const mainImg = images[0]
-    ? `<img src="${images[0]}" alt="${property.title}">`
-    : placeholderPhotoSVG(property.id % 6, typeLabel(property.type));
-  const sideImg1 = images[1] ? `<img src="${images[1]}" alt="${property.title}">` : placeholderPhotoSVG((property.id + 1) % 6, "Interior");
-  const sideImg2 = images[2] ? `<img src="${images[2]}" alt="${property.title}">` : placeholderPhotoSVG((property.id + 2) % 6, "Exterior");
-
-  document.getElementById("detail-gallery").innerHTML = `
-    <div class="detail-gallery-main">${mainImg}</div>
-    <div class="detail-gallery-side">
-      <div>${sideImg1}</div>
-      <div>${sideImg2}</div>
-    </div>
-  `;
+  renderGallery(images, property);
 
   const badgeClass =
     property.operation === "venta" ? "badge-venta" : property.operation === "alquiler" ? "badge-alquiler" : "badge-temporal";
@@ -101,3 +89,121 @@ async function initPropertyDetail() {
 }
 
 document.addEventListener("DOMContentLoaded", initPropertyDetail);
+
+/* ===========================================================================
+   GALERÍA + LIGHTBOX
+   El bloque de arriba (main + 2 miniaturas) siempre muestra como máximo
+   3 fotos: es solo una "vidriera". Todas las fotos de la propiedad (las
+   que vinieron del .zip subido en el panel admin incluidas) quedan
+   disponibles al hacer click, dentro del lightbox con flechas.
+   =========================================================================== */
+const GALLERY_VISIBLE_TILES = 3; // 1 foto principal + 2 miniaturas
+
+function renderGallery(images, property) {
+  const gallery = document.getElementById("detail-gallery");
+  if (!gallery) return;
+
+  if (images.length === 0) {
+    gallery.innerHTML = `<div class="detail-gallery-main">${placeholderPhotoSVG(property.id % 6, typeLabel(property.type))}</div>`;
+    return;
+  }
+
+  const visible = images.slice(0, GALLERY_VISIBLE_TILES);
+  const remaining = images.length - visible.length;
+
+  const sideThumbs = visible
+    .slice(1)
+    .map((url, i) => {
+      const index = i + 1;
+      const isLastVisible = index === visible.length - 1 && remaining > 0;
+      return `
+        <div data-gallery-index="${index}">
+          <img src="${url}" alt="${property.title} — foto ${index + 1}" loading="lazy">
+          ${isLastVisible ? `<span class="gallery-more-badge">+${remaining} foto${remaining === 1 ? "" : "s"}</span>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  gallery.innerHTML = `
+    <div class="detail-gallery-main" data-gallery-index="0">
+      <img src="${visible[0]}" alt="${property.title}" loading="lazy">
+      ${images.length > 1 ? `<button type="button" class="gallery-viewall-btn">🖼️ Ver las ${images.length} fotos</button>` : ""}
+    </div>
+    ${visible.length > 1 ? `<div class="detail-gallery-side">${sideThumbs}</div>` : ""}
+  `;
+
+  gallery.querySelectorAll("[data-gallery-index]").forEach((el) => {
+    el.addEventListener("click", () => openLightbox(images, property.title, parseInt(el.dataset.galleryIndex, 10)));
+  });
+}
+
+/* ------------------------------ Lightbox ------------------------------ */
+let lightboxImages = [];
+let lightboxIndex = 0;
+let lightboxTitle = "";
+let lightboxEl = null;
+
+function ensureLightbox() {
+  if (lightboxEl) return lightboxEl;
+  const el = document.createElement("div");
+  el.className = "lightbox-overlay";
+  el.innerHTML = `
+    <button type="button" class="lightbox-close" aria-label="Cerrar">✕</button>
+    <button type="button" class="lightbox-nav lightbox-prev" aria-label="Foto anterior">‹</button>
+    <div class="lightbox-img-wrap">
+      <img class="lightbox-img" src="" alt="">
+    </div>
+    <button type="button" class="lightbox-nav lightbox-next" aria-label="Foto siguiente">›</button>
+    <div class="lightbox-counter"></div>
+  `;
+  document.body.appendChild(el);
+
+  el.querySelector(".lightbox-close").addEventListener("click", closeLightbox);
+  el.querySelector(".lightbox-prev").addEventListener("click", () => stepLightbox(-1));
+  el.querySelector(".lightbox-next").addEventListener("click", () => stepLightbox(1));
+  el.addEventListener("click", (e) => {
+    if (e.target === el) closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!el.classList.contains("is-open")) return;
+    if (e.key === "Escape") closeLightbox();
+    else if (e.key === "ArrowLeft") stepLightbox(-1);
+    else if (e.key === "ArrowRight") stepLightbox(1);
+  });
+
+  lightboxEl = el;
+  return el;
+}
+
+function openLightbox(images, title, index) {
+  if (!images.length) return;
+  lightboxImages = images;
+  lightboxIndex = index || 0;
+  lightboxTitle = title || "";
+  const el = ensureLightbox();
+  updateLightbox();
+  el.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  if (!lightboxEl) return;
+  lightboxEl.classList.remove("is-open");
+  document.body.style.overflow = "";
+}
+
+function stepLightbox(delta) {
+  lightboxIndex = (lightboxIndex + delta + lightboxImages.length) % lightboxImages.length;
+  updateLightbox();
+}
+
+function updateLightbox() {
+  if (!lightboxEl) return;
+  const img = lightboxEl.querySelector(".lightbox-img");
+  img.src = lightboxImages[lightboxIndex];
+  img.alt = lightboxTitle;
+  lightboxEl.querySelector(".lightbox-counter").textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  const multi = lightboxImages.length > 1;
+  lightboxEl.querySelector(".lightbox-prev").style.display = multi ? "flex" : "none";
+  lightboxEl.querySelector(".lightbox-next").style.display = multi ? "flex" : "none";
+}
