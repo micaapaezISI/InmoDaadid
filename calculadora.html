@@ -50,13 +50,13 @@
     <div class="calc-wrap">
       <form class="calc-form" id="calc-form">
         <div class="field">
-          <label for="calc-amount">Monto actual del alquiler (ARS)</label>
+          <label for="calc-amount">Valor inicial del alquiler (ARS)</label>
           <input type="number" id="calc-amount" name="amount" min="0" step="1" placeholder="Ej: 150000" required>
+          <p class="field-help">El monto que se pactó al firmar el contrato, antes de cualquier ajuste.</p>
         </div>
         <div class="field">
-          <label for="calc-start-date">Fecha de inicio del contrato (o de la última actualización)</label>
-          <input type="date" id="calc-start-date" name="startDate">
-          <p class="field-help" style="margin-top:4px; font-size:0.78rem; color:var(--color-text-light);">Opcional, pero recomendado: sin esta fecha, se calcula como si el período venciera justo hoy — con la fecha, se calcula el vencimiento real según esa fecha y la frecuencia elegida.</p>
+          <label for="calc-start-date">Fecha de inicio de contrato</label>
+          <input type="date" id="calc-start-date" name="startDate" required>
         </div>
         <div class="field">
           <label for="calc-index">Índice de actualización</label>
@@ -71,7 +71,7 @@
           <input type="number" id="calc-fixed" name="fixedPct" min="0" step="0.1" placeholder="Ej: 40">
         </div>
         <div class="field">
-          <label for="calc-frequency">Frecuencia de actualización</label>
+          <label for="calc-frequency">Cada cuánto se actualiza</label>
           <select id="calc-frequency" name="frequency">
             <option value="1">Cada 1 mes</option>
             <option value="2">Cada 2 meses</option>
@@ -100,10 +100,22 @@
 
         <div id="calc-result-filled" style="display:none;">
           <div class="calc-output">
-            <div class="calc-output-row"><span>Porcentaje de actualización</span><strong id="calc-out-percent">—</strong></div>
-            <div class="calc-output-row"><span>Incremento en pesos</span><strong id="calc-out-increase">—</strong></div>
-            <div class="calc-output-row"><span>Nuevo monto del alquiler</span><strong id="calc-out-new">—</strong></div>
+            <div class="calc-output-row"><span>Alquiler vigente hoy</span><strong id="calc-out-new">—</strong></div>
+            <div class="calc-output-row"><span>Último ajuste aplicado</span><strong id="calc-out-percent">—</strong></div>
+            <div class="calc-output-row"><span>Aumento acumulado</span><strong id="calc-out-total">—</strong></div>
+            <div class="calc-output-row"><span>Próxima actualización</span><strong id="calc-out-next">—</strong></div>
           </div>
+
+          <div id="calc-table-wrap" class="calc-table-wrap">
+            <h4>Actualizaciones del contrato</h4>
+            <table class="calc-table">
+              <thead>
+                <tr><th>Desde</th><th>Hasta</th><th>Ajuste</th><th>Monto</th></tr>
+              </thead>
+              <tbody id="calc-table-body"></tbody>
+            </table>
+          </div>
+
           <p id="calc-out-source" style="color:rgba(245,247,250,0.65); font-size:0.78rem; margin-top:10px;"></p>
         </div>
 

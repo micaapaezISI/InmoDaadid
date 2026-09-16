@@ -1096,6 +1096,56 @@ h1, h2, h3, h4 {
   color: #ff8a97;
 }
 
+.field-help {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--color-text-light);
+  line-height: 1.45;
+}
+
+.calc-table-wrap {
+  margin-top: 22px;
+}
+
+.calc-table-wrap h4 {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.calc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.calc-table th {
+  text-align: left;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.calc-table td {
+  padding: 7px 8px 7px 0;
+  color: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
+.calc-table td:last-child,
+.calc-table th:last-child {
+  text-align: right;
+  padding-right: 0;
+}
+
+.calc-table tr.is-vigente td {
+  color: #ff8a97;
+  font-weight: 700;
+}
+
 .calc-disclaimer {
   margin-top: 20px;
   font-size: 0.78rem;

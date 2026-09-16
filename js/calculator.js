@@ -1,57 +1,79 @@
 /* =====================================================================
    PATRICIA DAADIN — Calculadora de actualización de alquileres
    ---------------------------------------------------------------------
-   Conectada a la API pública de estadísticas del BCRA (api.bcra.gob.ar):
-     - ICL: variable 40 "Índice para Contratos de Locación" (serie diaria,
-       base 30/6/2020=1). El ajuste se calcula como la razón entre el
-       valor del índice al día de hoy y el valor N meses atrás.
-     - IPC: variable 27 "Inflación mensual" (% mensual, replicando el
-       IPC de INDEC). El ajuste se calcula componiendo los últimos N
-       valores mensuales publicados.
-   "Porcentaje fijo" no usa ninguna API: es el que carga el usuario.
+   Mismo modelo que las calculadoras de referencia (aRquiler y similares):
+   se carga el valor INICIAL del contrato + la fecha de inicio + cada
+   cuántos meses se ajusta, y se recorre el contrato ajuste por ajuste
+   hasta hoy. Cada período arranca donde terminó el anterior, así que el
+   monto va componiendo — no es un único porcentaje contra la fecha de hoy.
+
+   Índices (API pública del BCRA, api.bcra.gob.ar):
+     - ICL: variable 40, serie diaria de nivel (base 30/6/2020=1). El
+       ajuste de cada período es ICL(fin) / ICL(inicio).
+     - IPC: variable 27, inflación mensual en %. El ajuste de cada período
+       compone los meses que caen dentro de ese período.
+   "Porcentaje fijo" no consulta ninguna API: es el que carga el usuario.
    ===================================================================== */
 
 const BCRA_API_BASE = "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias";
 const BCRA_ICL_VARIABLE = 40;
 const BCRA_IPC_VARIABLE = 27;
 
+// Tolerancia al buscar el valor del índice para una fecha: el ICL puede no
+// tener publicado el día exacto, pero si el más cercano está a más de esta
+// distancia es que la fecha quedó fuera de la serie.
+const DIAS_TOLERANCIA_INDICE = 10;
+const MS_POR_DIA = 86400000;
+
 function toISODate(date) {
-  return date.toISOString().slice(0, 10);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-function monthsBefore(date, months) {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() - months);
+function parseISODate(str) {
+  return new Date(`${str}T00:00:00`);
+}
+
+// Suma meses anclando el día del mes: 31/01 + 1 mes = 28/02, no 03/03.
+function addMonths(base, months) {
+  const d = new Date(base.getFullYear(), base.getMonth() + months, 1);
+  const ultimoDia = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(base.getDate(), ultimoDia));
   return d;
 }
 
-// Si se sabe la fecha de inicio del contrato (o de la última actualización),
-// el período a ajustar no es "hoy menos la frecuencia" — es el último
-// vencimiento real según esa fecha y la frecuencia pactada. Por ejemplo,
-// contrato iniciado el 15/01 con ajuste trimestral: si hoy es 16/09, el
-// último vencimiento fue el 15/07 (no "hace 3 meses calendario" desde hoy).
-function ultimaFechaAniversario(fechaInicioStr, frecuenciaMeses, hasta) {
-  if (!fechaInicioStr) return null;
-  const inicio = new Date(`${fechaInicioStr}T00:00:00`);
-  if (Number.isNaN(inicio.getTime())) return null;
-  if (inicio >= hasta) return inicio;
-
-  let anterior = new Date(inicio);
-  let cursor = new Date(inicio);
-  while (cursor <= hasta) {
-    anterior = new Date(cursor);
-    cursor.setMonth(cursor.getMonth() + frecuenciaMeses);
-  }
-  return anterior;
+function formatDateAR(date) {
+  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 }
 
-function formatDateAR(isoDate) {
-  const [y, m, d] = isoDate.split("-");
-  return `${d}/${m}/${y}`;
+function formatARS(value) {
+  return value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+}
+
+function formatPct(factor) {
+  return `${(factor * 100).toFixed(2)}%`;
+}
+
+// Fechas de corte del contrato: inicio, inicio+f, inicio+2f… hasta hoy.
+// Devuelve también la primera que todavía no venció (la próxima actualización).
+function fechasDeAjuste(inicio, frecuenciaMeses, hasta) {
+  const cortes = [inicio];
+  let proxima = null;
+  for (let k = 1; k <= 600; k++) {
+    const fecha = addMonths(inicio, frecuenciaMeses * k);
+    if (fecha > hasta) {
+      proxima = fecha;
+      break;
+    }
+    cortes.push(fecha);
+  }
+  return { cortes, proxima };
 }
 
 async function fetchBcraSeries(variableId, desde, hasta) {
-  const url = `${BCRA_API_BASE}/${variableId}?desde=${desde}&hasta=${hasta}`;
+  const url = `${BCRA_API_BASE}/${variableId}?desde=${desde}&hasta=${hasta}&limit=3000`;
   let res;
   try {
     res = await fetch(url);
@@ -65,63 +87,76 @@ async function fetchBcraSeries(variableId, desde, hasta) {
   return detalle.slice().reverse();
 }
 
-function closestPoint(series, targetDate) {
+function valorIndiceEn(series, fecha) {
   let best = null;
   let bestDiff = Infinity;
   for (const point of series) {
-    const diff = Math.abs(new Date(point.fecha) - targetDate);
+    const diff = Math.abs(parseISODate(point.fecha) - fecha);
     if (diff < bestDiff) {
       bestDiff = diff;
       best = point;
     }
   }
-  return best;
+  if (!best || bestDiff > DIAS_TOLERANCIA_INDICE * MS_POR_DIA) return null;
+  return best.valor;
 }
 
-// Ratio real ICL(hoy) / ICL(desde) — el ICL no publica fines de semana ni
-// feriados, así que se toma el día hábil más cercano a cada fecha. "desde"
-// ya viene resuelto por el llamador (según la fecha de inicio del contrato
-// si se cargó, o "hace N meses" si no).
-async function getIclAdjustment(desdeTarget, hasta) {
-  const ventanaDesde = new Date(desdeTarget);
-  ventanaDesde.setDate(ventanaDesde.getDate() - 8);
+async function periodosIcl(cortes, hasta) {
+  const desde = new Date(cortes[0]);
+  desde.setDate(desde.getDate() - DIAS_TOLERANCIA_INDICE);
 
-  const series = await fetchBcraSeries(BCRA_ICL_VARIABLE, toISODate(ventanaDesde), toISODate(hasta));
-  if (series.length < 2) throw new Error("El BCRA todavía no publicó suficientes datos de ICL para ese período.");
+  const series = await fetchBcraSeries(BCRA_ICL_VARIABLE, toISODate(desde), toISODate(hasta));
+  if (series.length < 2) throw new Error("El BCRA no tiene publicado el ICL para ese período.");
 
-  const startPoint = closestPoint(series, desdeTarget);
-  const endPoint = series[series.length - 1];
-
-  return {
-    factor: endPoint.valor / startPoint.valor - 1,
-    startDate: startPoint.fecha,
-    endDate: endPoint.fecha,
-    sourceLabel: "ICL — BCRA",
-  };
+  return cortes.slice(1).map((fin, i) => {
+    const inicio = cortes[i];
+    const vInicio = valorIndiceEn(series, inicio);
+    const vFin = valorIndiceEn(series, fin);
+    if (vInicio === null || vFin === null) {
+      throw new Error("El BCRA no publicó el ICL para alguna de las fechas del contrato. Revisá la fecha de inicio.");
+    }
+    return { inicio, fin, factor: vFin / vInicio - 1 };
+  });
 }
 
-// Compone los últimos N valores de inflación mensual publicados por el BCRA.
-async function getIpcAdjustment(months) {
-  const hasta = new Date();
-  const desde = monthsBefore(hasta, months + 1);
+async function periodosIpc(cortes, frecuenciaMeses, hasta) {
+  const series = await fetchBcraSeries(BCRA_IPC_VARIABLE, toISODate(cortes[0]), toISODate(hasta));
+  if (series.length === 0) throw new Error("El BCRA no tiene publicada la inflación mensual para ese período.");
 
-  const series = await fetchBcraSeries(BCRA_IPC_VARIABLE, toISODate(desde), toISODate(hasta));
-  if (series.length === 0) throw new Error("El BCRA todavía no publicó datos de inflación mensual para ese período.");
-
-  const recent = series.slice(-months);
-  const factor = recent.reduce((acc, point) => acc * (1 + point.valor / 100), 1) - 1;
-
-  return {
-    factor,
-    startDate: recent[0].fecha,
-    endDate: recent[recent.length - 1].fecha,
-    sourceLabel: `IPC — BCRA (${recent.length} ${recent.length === 1 ? "mes" : "meses"})`,
-  };
+  return cortes.slice(1).map((fin, i) => {
+    const inicio = cortes[i];
+    const meses = series.filter((p) => {
+      const f = parseISODate(p.fecha);
+      return f > inicio && f <= fin;
+    });
+    const factor = meses.reduce((acc, p) => acc * (1 + p.valor / 100), 1) - 1;
+    // El IPC se publica con unas semanas de atraso: el último período puede
+    // quedar con menos meses que los pactados.
+    return { inicio, fin, factor, parcial: meses.length < frecuenciaMeses };
+  });
 }
 
-function calcFixedAdjustment(fixedAnnualPct, months) {
-  const annualRate = (fixedAnnualPct || 0) / 100;
-  return { factor: Math.pow(1 + annualRate, months / 12) - 1, sourceLabel: "Porcentaje fijo pactado" };
+function periodosFijos(cortes, frecuenciaMeses, porcentajeAnual) {
+  const factor = Math.pow(1 + (porcentajeAnual || 0) / 100, frecuenciaMeses / 12) - 1;
+  return cortes.slice(1).map((fin, i) => ({ inicio: cortes[i], fin, factor }));
+}
+
+function renderTabla(tbody, periodos, montoInicial) {
+  tbody.innerHTML = periodos
+    .map(
+      (p) => `
+      <tr${p.vigente ? ' class="is-vigente"' : ""}>
+        <td>${formatDateAR(p.inicio)}</td>
+        <td>${formatDateAR(p.fin)}</td>
+        <td>${formatPct(p.factor)}${p.parcial ? " *" : ""}</td>
+        <td>${formatARS(p.monto)}</td>
+      </tr>`
+    )
+    .join("");
+
+  if (periodos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4">Todavía no corresponde ninguna actualización — sigue vigente el valor inicial de ${formatARS(montoInicial)}.</td></tr>`;
+  }
 }
 
 function initCalculator() {
@@ -136,6 +171,7 @@ function initCalculator() {
   const filledBox = document.getElementById("calc-result-filled");
   const errorBox = document.getElementById("calc-result-error");
   const sourceLine = document.getElementById("calc-out-source");
+  const tableBody = document.getElementById("calc-table-body");
 
   function toggleFixedField() {
     if (!fixedField) return;
@@ -148,49 +184,67 @@ function initCalculator() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(form);
-    const amount = parseFloat(data.get("amount")) || 0;
+    const montoInicial = parseFloat(data.get("amount")) || 0;
     const indexKey = data.get("index");
-    const months = parseInt(data.get("frequency"), 10) || 12;
-    const fixedAnnualPct = parseFloat(data.get("fixedPct")) || 0;
+    const frecuenciaMeses = parseInt(data.get("frequency"), 10) || 12;
+    const porcentajeFijo = parseFloat(data.get("fixedPct")) || 0;
     const startDateStr = data.get("startDate");
 
     errorBox.style.display = "none";
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const inicio = parseISODate(startDateStr);
+
+    if (Number.isNaN(inicio.getTime()) || inicio > hoy) {
+      errorBox.textContent = "⚠️ Cargá una fecha de inicio de contrato válida (no puede ser futura).";
+      errorBox.style.display = "block";
+      filledBox.style.display = "none";
+      return;
+    }
 
     submitBtn.disabled = true;
     const originalBtnText = submitBtn.textContent;
     submitBtn.textContent = indexKey === "fijo" ? "Calculando…" : "Consultando al BCRA…";
 
     try {
-      let result;
-      const hasta = new Date();
+      const { cortes, proxima } = fechasDeAjuste(inicio, frecuenciaMeses, hoy);
+
+      let periodos;
+      let sourceLabel;
       if (indexKey === "icl") {
-        const desdeTarget = ultimaFechaAniversario(startDateStr, months, hasta) || monthsBefore(hasta, months);
-        result = await getIclAdjustment(desdeTarget, hasta);
+        periodos = await periodosIcl(cortes, hoy);
+        sourceLabel = "ICL — BCRA";
       } else if (indexKey === "ipc") {
-        result = await getIpcAdjustment(months);
+        periodos = await periodosIpc(cortes, frecuenciaMeses, hoy);
+        sourceLabel = "IPC — BCRA";
       } else {
-        result = calcFixedAdjustment(fixedAnnualPct, months);
+        periodos = periodosFijos(cortes, frecuenciaMeses, porcentajeFijo);
+        sourceLabel = "Porcentaje fijo pactado";
       }
 
-      const increase = amount * result.factor;
-      const newAmount = amount + increase;
+      let monto = montoInicial;
+      periodos.forEach((p, i) => {
+        monto = monto * (1 + p.factor);
+        p.monto = monto;
+        p.vigente = i === periodos.length - 1;
+      });
 
-      document.getElementById("calc-out-percent").textContent = `${(result.factor * 100).toFixed(2)}%`;
-      document.getElementById("calc-out-increase").textContent = increase.toLocaleString("es-AR", {
-        style: "currency",
-        currency: "ARS",
-        maximumFractionDigits: 0,
-      });
-      document.getElementById("calc-out-new").textContent = newAmount.toLocaleString("es-AR", {
-        style: "currency",
-        currency: "ARS",
-        maximumFractionDigits: 0,
-      });
+      const ultimo = periodos[periodos.length - 1];
+      const acumulado = montoInicial > 0 ? monto / montoInicial - 1 : 0;
+
+      document.getElementById("calc-out-new").textContent = formatARS(monto);
+      document.getElementById("calc-out-percent").textContent = ultimo ? formatPct(ultimo.factor) : "—";
+      document.getElementById("calc-out-total").textContent = formatPct(acumulado);
+      document.getElementById("calc-out-next").textContent = proxima ? formatDateAR(proxima) : "—";
+
+      renderTabla(tableBody, periodos, montoInicial);
 
       if (sourceLine) {
-        sourceLine.textContent = result.startDate
-          ? `Fuente: ${result.sourceLabel} · ${formatDateAR(result.startDate)} → ${formatDateAR(result.endDate)}`
-          : `Fuente: ${result.sourceLabel}`;
+        const parcial = periodos.some((p) => p.parcial);
+        sourceLine.textContent =
+          `Fuente: ${sourceLabel} · contrato desde ${formatDateAR(inicio)}, ajustes cada ${frecuenciaMeses} ${frecuenciaMeses === 1 ? "mes" : "meses"}.` +
+          (parcial ? " (*) Período con índice aún incompleto — el BCRA todavía no publicó todos los meses." : "");
       }
 
       emptyBox.style.display = "none";
