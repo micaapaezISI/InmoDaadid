@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrap = document.createElement("div");
   wrap.className = "chatbot-wrap";
   wrap.innerHTML = `
-    <button type="button" class="chatbot-toggle" id="chatbot-toggle" aria-label="Abrir asistente virtual">💬</button>
+    <button type="button" class="chatbot-toggle" id="chatbot-toggle" aria-label="Abrir asistente virtual">🤖</button>
     <div class="chatbot-panel" id="chatbot-panel" hidden>
       <div class="chatbot-header">
         <div>
@@ -91,25 +91,46 @@ document.addEventListener("DOMContentLoaded", () => {
   history.forEach((entry) => addMessage(entry.role, entry.text));
 
   let opened = savedState?.opened || false;
-  if (savedState?.panelOpen) panel.hidden = false;
+
+  function mostrarSaludo() {
+    if (opened) return;
+    opened = true;
+    addMessage(
+      "bot",
+      "¡Hola! Soy el asistente virtual de Patricia Daadin. Puedo ayudarte a encontrar una propiedad, o contarte sobre tasaciones y actualización de alquileres. ¿En qué te ayudo?"
+    );
+  }
+
+  function abrirPanel({ enfocar } = {}) {
+    panel.hidden = false;
+    mostrarSaludo();
+    if (enfocar) input.focus();
+    saveState();
+  }
 
   toggleBtn.addEventListener("click", () => {
-    panel.hidden = !panel.hidden;
-    if (!panel.hidden && !opened) {
-      opened = true;
-      addMessage(
-        "bot",
-        "¡Hola! Soy el asistente virtual de Patricia Daadin. Puedo ayudarte a encontrar una propiedad, o contarte sobre tasaciones y actualización de alquileres. ¿En qué te ayudo?"
-      );
+    if (panel.hidden) abrirPanel({ enfocar: true });
+    else {
+      panel.hidden = true;
+      saveState();
     }
-    if (!panel.hidden) input.focus();
-    saveState();
   });
 
   closeBtn.addEventListener("click", () => {
     panel.hidden = true;
     saveState();
   });
+
+  if (savedState?.panelOpen) {
+    panel.hidden = false;
+    mostrarSaludo();
+  } else if (!savedState) {
+    // Primera vez que se abre el sitio en esta pestaña: se muestra solo,
+    // sin robarle el foco al usuario (no hace falta que esté escribiendo
+    // nada todavía). Si lo cierra, no se le vuelve a abrir solo en esta
+    // misma sesión — sessionStorage ya queda con panelOpen:false.
+    setTimeout(() => abrirPanel(), 1500);
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

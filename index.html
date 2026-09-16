@@ -158,24 +158,31 @@
 </section>
 
 <!-- ===================== TESTIMONIOS ===================== -->
-<!-- Tratamiento de cita editorial (no tarjetas con avatar) — son testimonios de ejemplo, reemplazar por reales. -->
-<section class="section">
+<section class="section section-alt">
   <div class="container">
-    <div class="quote-stack">
-      <span class="eyebrow-plain">Lo que dicen mis clientes</span>
-      <blockquote class="quote-block quote-block--lead">
-        <p>“Me ayudó a vender la casa de mis padres sin complicaciones. Muy buena atención y rapidez.”</p>
-        <cite>M. Cruz, venta de vivienda</cite>
-      </blockquote>
-      <blockquote class="quote-block">
-        <p>“Alquilé un departamento para trabajar unos meses en la zona, todo el proceso fue muy claro.”</p>
-        <cite>J. Pérez, alquiler temporario</cite>
-      </blockquote>
-      <blockquote class="quote-block">
-        <p>“Profesional y con buen conocimiento de la zona. Recomendable para comprar en San Salvador de Jujuy.”</p>
-        <cite>R. Soto, compra de departamento</cite>
-      </blockquote>
-      <p class="quote-disclaimer">Testimonios de ejemplo — se reemplazan por comentarios reales de clientes.</p>
+    <div class="testimonios-layout">
+      <div>
+        <span class="eyebrow-plain">Lo que dicen mis clientes</span>
+        <h2 style="margin:12px 0 24px; font-size:1.8rem;">Comentarios de quienes ya trabajaron conmigo</h2>
+        <div class="testimonios-grid" id="testimonios-grid">
+          <p style="color:var(--color-text-light);">Cargando comentarios…</p>
+        </div>
+      </div>
+      <div class="testimonio-form-card">
+        <h3>Dejá tu comentario</h3>
+        <p>Contame cómo fue tu experiencia — se publica en el sitio apenas lo reviso.</p>
+        <form id="testimonio-form">
+          <div class="field">
+            <label for="ts-nombre">Tu nombre</label>
+            <input type="text" id="ts-nombre" name="nombre" maxlength="100" required>
+          </div>
+          <div class="field">
+            <label for="ts-comentario">Tu comentario</label>
+            <textarea id="ts-comentario" name="comentario" rows="4" maxlength="600" placeholder="Contame tu experiencia..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enviar comentario</button>
+        </form>
+      </div>
     </div>
   </div>
 </section>
@@ -202,11 +209,11 @@
   <div class="container">
     <div class="cta-band cta-band--verde">
       <div>
-        <h3>¿Querés saber cuánto te corresponde en el próximo ajuste?</h3>
+        <h3>📊 ¿Querés saber cuánto te corresponde en el próximo ajuste?</h3>
         <p>Calculalo gratis con nuestra calculadora de actualización de alquileres, según ICL, IPC o el porcentaje fijo pactado en tu contrato.</p>
       </div>
       <div class="cta-band-actions">
-        <a href="calculadora.html" class="btn btn-primary">Ir a la calculadora</a>
+        <a href="calculadora.html" class="btn btn-primary btn-cta-grande">Ir a la calculadora →</a>
       </div>
     </div>
   </div>
@@ -290,6 +297,7 @@
 <script src="js/properties-data.js"></script>
 <script src="js/properties.js"></script>
 <script src="js/custom-select.js"></script>
+<script src="js/testimonios.js"></script>
 <script src="js/chatbot.js"></script>
 <script src="js/main.js"></script>
 </body>

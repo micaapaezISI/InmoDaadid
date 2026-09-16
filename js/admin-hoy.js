@@ -43,6 +43,7 @@ const AdminHoy = (() => {
     { tab: "contratos", ico: "📄", label: "Contratos" },
     { tab: "agenda", ico: "🗓️", label: "Agenda" },
     { tab: "mensajes", ico: "📩", label: "Mensajes" },
+    { tab: "testimonios", ico: "💬", label: "Comentarios" },
     { tab: "ventas", ico: "🏷️", label: "Ventas" },
     { tab: "informes", ico: "📊", label: "Informes" },
     { tab: "inmuebles", ico: "🏠", label: "Inmuebles" },
@@ -52,7 +53,7 @@ const AdminHoy = (() => {
     box.innerHTML = `<p style="color:var(--color-text-light);">Cargando el resumen de hoy…</p>`;
     const hoy = hoyISO();
 
-    const [cajaRes, cuotasRes, deudasRes, vencerRes, eventosRes, mensajesRes, alquiladasRes, vigentesRes, gastosRes] =
+    const [cajaRes, cuotasRes, deudasRes, vencerRes, eventosRes, mensajesRes, alquiladasRes, vigentesRes, gastosRes, testimoniosRes] =
       await Promise.all([
         supabaseClient.from("movimiento_caja").select("tipo, monto, moneda, anulado").eq("fecha", hoy),
         supabaseClient.rpc("cuotas_pendientes_cobro", { p_q: null }),
@@ -63,9 +64,10 @@ const AdminHoy = (() => {
         supabaseClient.from("propiedades").select("id, codigo, titulo_publico, calle, barrio").eq("activo", true).eq("estado", "alquilada"),
         supabaseClient.from("contratos").select("propiedad_id").eq("estado", "vigente"),
         supabaseClient.from("gastos").select("monto").eq("liquidado", false).eq("anulado", false),
+        supabaseClient.from("testimonios").select("id", { count: "exact", head: true }).eq("aprobado", false),
       ]);
 
-    const primerError = [cajaRes, cuotasRes, deudasRes, vencerRes, eventosRes, mensajesRes, alquiladasRes, vigentesRes, gastosRes]
+    const primerError = [cajaRes, cuotasRes, deudasRes, vencerRes, eventosRes, mensajesRes, alquiladasRes, vigentesRes, gastosRes, testimoniosRes]
       .map((r) => r.error).find(Boolean);
     if (primerError) {
       box.innerHTML = `<p style="color:var(--color-danger);">No se pudo cargar el resumen: ${primerError.message}</p>`;
@@ -106,6 +108,9 @@ const AdminHoy = (() => {
     const gastosPend = gastosRes.data || [];
     const gastosPendMonto = gastosPend.reduce((acc, g) => acc + g.monto, 0);
 
+    // Comentarios de la home esperando aprobación.
+    const testimoniosPend = testimoniosRes.count || 0;
+
     const avisos = [];
     if (atrasadas > 0) avisos.push(aviso(`${atrasadas} cuota${atrasadas === 1 ? "" : "s"} atrasada${atrasadas === 1 ? "" : "s"} de cobro.`, "cobranzas"));
     if (deudaTotal > 0) avisos.push(aviso(`Hay ${Dinero.formatear(deudaTotal, "ARS")} pendiente de liquidar a propietarios.`, "liquidaciones"));
@@ -114,6 +119,7 @@ const AdminHoy = (() => {
     if (sinContrato.length > 0) avisos.push(aviso(`${sinContrato.length} inmueble${sinContrato.length === 1 ? "" : "s"} marcado${sinContrato.length === 1 ? "" : "s"} "alquilada" sin contrato vigente.`, "contratos"));
     if (gastosPend.length > 0) avisos.push(aviso(`${gastosPend.length} gasto${gastosPend.length === 1 ? "" : "s"} pendiente${gastosPend.length === 1 ? "" : "s"} de liquidar (${Dinero.formatear(gastosPendMonto, "ARS")}).`, "gastos"));
     if (mensajesRecientes.length > 0) avisos.push(aviso(`${mensajesRecientes.length} consulta${mensajesRecientes.length === 1 ? "" : "s"} nueva${mensajesRecientes.length === 1 ? "" : "s"} por el formulario de contacto (últimos 7 días).`, "mensajes"));
+    if (testimoniosPend > 0) avisos.push(aviso(`${testimoniosPend} comentario${testimoniosPend === 1 ? "" : "s"} de la home esperando aprobación.`, "testimonios"));
 
     box.innerHTML = `
       <div class="admin-hoy-tiles" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:22px;">
@@ -125,6 +131,7 @@ const AdminHoy = (() => {
         ${tile("Contratos por vencer (30 días)", porVencer.length, porVencer.length ? "#c98a1c" : "#1a9c4a", "contratos")}
         ${tile("Eventos de agenda hoy", eventosHoy.length, undefined, "agenda")}
         ${tile("Consultas nuevas (7 días)", mensajesRecientes.length, undefined, "mensajes")}
+        ${tile("Comentarios sin aprobar", testimoniosPend, testimoniosPend ? "#c98a1c" : "#1a9c4a", "testimonios")}
       </div>
 
       <div class="admin-card" style="margin-bottom:22px;">

@@ -6,6 +6,16 @@
    ===================================================================== */
 
 const V = {
+  // Texto que viene de un visitante (nombre, comentario, mensaje) y se va a
+  // insertar como HTML (innerHTML) en la pantalla de alguien más — sin esto,
+  // un "<script>" en un comentario se ejecutaría en el navegador de quien
+  // lo lea (XSS). Nunca insertar texto de terceros sin pasarlo por acá.
+  escaparHtml(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  },
+
   texto(valor, { max = 255 } = {}) {
     if (valor === null || valor === undefined) return null;
     const limpio = String(valor).trim();

@@ -106,6 +106,9 @@
           <button type="button" class="admin-sidebar-link" data-tab="mensajes">
             <span class="admin-sidebar-ico">📩</span> Mensajes
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="testimonios">
+            <span class="admin-sidebar-ico">💬</span> Comentarios
+          </button>
           <button type="button" class="admin-sidebar-link" data-tab="cobranzas">
             <span class="admin-sidebar-ico">💰</span> Cobranzas
           </button>
@@ -396,6 +399,22 @@
               <h2 class="admin-section-title">📩 Mensajes de contacto</h2>
               <p class="admin-section-help">Estas son las consultas que la gente mandó desde el formulario de "Contacto" del sitio, con la más reciente primero.</p>
               <div id="admin-messages-list"></div>
+            </div>
+          </section>
+
+          <!-- ---------- Comentarios (testimonios) ---------- -->
+          <section id="tab-panel-testimonios" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">💬 Comentarios</h2>
+              <p class="admin-section-help">Comentarios que la gente dejó desde la home. Los pendientes no se ven en el sitio hasta que los apruebes.</p>
+            </div>
+            <div class="admin-card">
+              <h2>Pendientes de aprobar</h2>
+              <div id="admin-testimonios-pendientes"></div>
+            </div>
+            <div class="admin-card">
+              <h2>Publicados en el sitio</h2>
+              <div id="admin-testimonios-aprobados"></div>
             </div>
           </section>
 
@@ -1356,6 +1375,7 @@
 <script src="js/admin-agenda.js"></script>
 <script src="js/admin-informes.js"></script>
 <script src="js/admin-configuracion.js"></script>
+<script src="js/admin-testimonios.js"></script>
 <script src="js/admin-hoy.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/main.js"></script>

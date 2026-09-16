@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "contratos") AdminContratos.loadList();
     if (tabName === "indices") AdminContratos.loadIndices();
     if (tabName === "mensajes") loadMessages();
+    if (tabName === "testimonios") AdminTestimonios.loadList();
     if (tabName === "cobranzas") { AdminCobranzas.loadCuotas(); AdminCobranzas.loadHistorial(); }
     if (tabName === "gastos") AdminGastos.loadList();
     if (tabName === "liquidaciones") { AdminLiquidaciones.poblarPersonas(); AdminLiquidaciones.loadList(); AdminLiquidaciones.loadPendientes(); }
@@ -127,13 +128,13 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="admin-message-card">
         <div class="admin-message-header">
           <div>
-            <span class="admin-message-who">${m.name}</span>
-            ${contactParts ? `<span class="admin-message-contact"> · ${contactParts}</span>` : ""}
-            ${m.reason ? `<span class="admin-message-contact"> · Motivo: ${m.reason}</span>` : ""}
+            <span class="admin-message-who">${V.escaparHtml(m.name)}</span>
+            ${contactParts ? `<span class="admin-message-contact"> · ${V.escaparHtml(contactParts)}</span>` : ""}
+            ${m.reason ? `<span class="admin-message-contact"> · Motivo: ${V.escaparHtml(m.reason)}</span>` : ""}
           </div>
           <span class="admin-message-date">${date}</span>
         </div>
-        <p>${m.message || ""}</p>
+        <p>${V.escaparHtml(m.message || "")}</p>
       </div>`;
       })
       .join("");
@@ -153,5 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminAgenda.init();
   AdminInformes.init();
   AdminConfiguracion.init();
+  AdminTestimonios.init();
   AdminHoy.init();
 });

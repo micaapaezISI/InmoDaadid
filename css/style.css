@@ -541,16 +541,21 @@ h1, h2, h3, h4 {
 }
 
 .field select,
-.field input {
+.field input,
+.field textarea {
   padding: 12px 14px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-alt);
   color: var(--color-text);
+  width: 100%;
+  font-family: inherit;
+  resize: vertical;
 }
 
 .field select:focus,
-.field input:focus {
+.field input:focus,
+.field textarea:focus {
   outline: 2px solid var(--color-primary-light);
   outline-offset: 1px;
 }
@@ -925,6 +930,47 @@ h1, h2, h3, h4 {
   flex-wrap: wrap;
 }
 
+/* La de la calculadora, más grande y llamativa que el resto de las bandas. */
+.cta-band--verde {
+  padding: 58px 52px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #7a0d0d 55%, var(--color-primary) 100%);
+}
+
+.cta-band--verde h3 {
+  font-size: 2.1rem;
+}
+
+.cta-band--verde p {
+  font-size: 1.05rem;
+  max-width: 540px;
+}
+
+.btn-cta-grande {
+  font-size: 1.1rem;
+  padding: 20px 38px;
+  animation: ctaPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35); }
+  50% { box-shadow: 0 0 0 16px rgba(255, 255, 255, 0); }
+}
+
+@media (max-width: 640px) {
+  .cta-band--verde {
+    padding: 40px 26px;
+  }
+
+  .cta-band--verde h3 {
+    font-size: 1.6rem;
+  }
+
+  .btn-cta-grande {
+    font-size: 1rem;
+    padding: 16px 28px;
+  }
+}
+
 /* ===== Filtros página propiedades ===== */
 .filters-bar {
   background: #fff;
@@ -1246,38 +1292,62 @@ h1, h2, h3, h4 {
   margin-right: 4px;
 }
 
-/* ===== Testimonios en formato de cita editorial ===== */
-.quote-stack {
-  max-width: 660px;
-  margin-bottom: 8px;
+/* ===== Testimonios: tarjetas flotantes + formulario de comentario ===== */
+.testimonios-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 44px;
+  align-items: start;
 }
 
-.quote-stack .eyebrow-plain {
-  margin-bottom: 26px;
+.testimonios-grid {
+  display: grid;
+  gap: 26px;
 }
 
-.quote-block {
-  padding: 26px 0;
-  border-top: 1px solid var(--color-border);
+.testimonio-card {
+  position: relative;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 28px 30px 24px;
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
-.quote-block:last-of-type {
-  border-bottom: 1px solid var(--color-border);
+.testimonio-card:nth-child(even) {
+  transform: translateX(22px);
 }
 
-.quote-block p {
+.testimonio-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 60px rgba(20, 20, 20, 0.18);
+}
+
+.testimonio-card:nth-child(even):hover {
+  transform: translateX(22px) translateY(-4px);
+}
+
+.testimonio-card::before {
+  content: "“";
+  position: absolute;
+  top: -8px;
+  left: 22px;
+  font-size: 3.4rem;
+  font-family: Georgia, serif;
+  color: var(--color-primary-light);
+  line-height: 1;
+}
+
+.testimonio-card p {
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1.5;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  color: var(--color-text);
 }
 
-.quote-block--lead p {
-  font-size: 1.4rem;
-}
-
-.quote-block cite {
+.testimonio-card cite {
   display: block;
   font-style: normal;
   font-size: 0.8rem;
@@ -1286,10 +1356,47 @@ h1, h2, h3, h4 {
   color: var(--color-primary);
 }
 
-.quote-disclaimer {
-  margin-top: 18px;
-  font-size: 0.78rem;
+.testimonio-form-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 30px;
+  position: sticky;
+  top: calc(var(--header-height) + 20px);
+}
+
+.testimonio-form-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.testimonio-form-card > p {
   color: var(--color-text-light);
+  font-size: 0.88rem;
+  margin-bottom: 20px;
+}
+
+.testimonio-form-card .field {
+  margin-bottom: 14px;
+}
+
+@media (max-width: 780px) {
+  .testimonios-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .testimonio-card:nth-child(even) {
+    transform: none;
+  }
+
+  .testimonio-card:nth-child(even):hover {
+    transform: translateY(-4px);
+  }
+
+  .testimonio-form-card {
+    position: static;
+  }
 }
 
 /* ===== Lista de principios numerada ===== */
