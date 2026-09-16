@@ -1096,6 +1096,17 @@ h1, h2, h3, h4 {
   color: #ff8a97;
 }
 
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  text-decoration: underline;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-block;
+}
+
 .field-help {
   margin-top: 4px;
   font-size: 0.78rem;

@@ -15,8 +15,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginWrap = document.getElementById("admin-login-wrap");
   const loginForm = document.getElementById("admin-login-form");
   const loginError = document.getElementById("admin-login-error");
+  const loginLockout = document.getElementById("admin-login-lockout");
   const panel = document.getElementById("admin-panel");
   const logoutBtn = document.getElementById("admin-logout");
+
+  const forgotLink = document.getElementById("admin-forgot-link");
+  const recoverForm = document.getElementById("admin-recover-form");
+  const recoverMsg = document.getElementById("admin-recover-msg");
+  const recoverCancel = document.getElementById("admin-recover-cancel");
+  const resetWrap = document.getElementById("admin-reset-wrap");
+  const resetForm = document.getElementById("admin-reset-form");
+  const resetError = document.getElementById("admin-reset-error");
 
   const tabButtons = document.querySelectorAll(".admin-sidebar-link[data-tab]");
   const tabPanels = document.querySelectorAll(".admin-tab-panel");
@@ -65,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ------------------------------ Sesión ----------------------------- */
   function showLoggedIn() {
     loginWrap.style.display = "none";
+    resetWrap.style.display = "none";
     panel.style.display = "block";
     AdminHoy.loadResumen();
     AdminPersonas.loadList();
@@ -75,7 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showLoggedOut() {
     loginWrap.style.display = "block";
+    resetWrap.style.display = "none";
     panel.style.display = "none";
+    loginForm.style.display = "block";
+    forgotLink.style.display = "inline-block";
+    recoverForm.style.display = "none";
+    recoverCancel.style.display = "none";
+  }
+
+  function showResetPassword() {
+    loginWrap.style.display = "none";
+    panel.style.display = "none";
+    resetWrap.style.display = "block";
   }
 
   supabaseClient.auth.getSession().then(({ data }) => {
@@ -83,29 +104,174 @@ document.addEventListener("DOMContentLoaded", () => {
     else showLoggedOut();
   });
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    // Al tocar el link del mail de recuperación, Supabase abre esta misma
+    // página con una sesión temporal de tipo "recovery" — no es un login
+    // normal, así que en vez de mandarla al panel le mostramos el
+    // formulario para elegir la contraseña nueva.
+    if (event === "PASSWORD_RECOVERY") {
+      showResetPassword();
+      return;
+    }
     if (session) showLoggedIn();
     else showLoggedOut();
   });
+
+  /* ------------------- Límite de intentos de login ------------------- */
+  // Protección del lado del cliente (además del límite que ya aplica
+  // Supabase Auth del lado del servidor): frena reintentos automáticos
+  // desde el mismo navegador sin tener que tocar nada en el backend.
+  const LOGIN_LOCK_KEY = "admin_login_lock";
+  const LOGIN_MAX_ATTEMPTS = 5;
+  const LOGIN_LOCK_MINUTES = 5;
+  let lockoutInterval;
+
+  function leerEstadoBloqueo() {
+    try {
+      const st = JSON.parse(localStorage.getItem(LOGIN_LOCK_KEY));
+      if (st && typeof st.attempts === "number" && typeof st.lockedUntil === "number") return st;
+    } catch {}
+    return { attempts: 0, lockedUntil: 0 };
+  }
+
+  function guardarEstadoBloqueo(st) {
+    try { localStorage.setItem(LOGIN_LOCK_KEY, JSON.stringify(st)); } catch {}
+  }
+
+  function actualizarBloqueoUI() {
+    clearInterval(lockoutInterval);
+    const submitBtn = loginForm.querySelector("button[type=submit]");
+
+    const mostrarRestante = () => {
+      const ms = leerEstadoBloqueo().lockedUntil - Date.now();
+      if (ms <= 0) {
+        loginLockout.style.display = "none";
+        submitBtn.disabled = false;
+        clearInterval(lockoutInterval);
+        return;
+      }
+      const min = Math.floor(ms / 60000);
+      const seg = Math.ceil((ms % 60000) / 1000);
+      loginLockout.textContent = `Demasiados intentos fallidos. Probá de nuevo en ${min > 0 ? `${min} min ` : ""}${seg}s.`;
+      loginLockout.style.display = "block";
+      submitBtn.disabled = true;
+    };
+
+    mostrarRestante();
+    if (leerEstadoBloqueo().lockedUntil > Date.now()) {
+      lockoutInterval = setInterval(mostrarRestante, 1000);
+    }
+  }
+
+  function registrarIntentoFallido() {
+    const st = leerEstadoBloqueo();
+    const attempts = st.attempts + 1;
+    if (attempts >= LOGIN_MAX_ATTEMPTS) {
+      guardarEstadoBloqueo({ attempts: 0, lockedUntil: Date.now() + LOGIN_LOCK_MINUTES * 60000 });
+    } else {
+      guardarEstadoBloqueo({ attempts, lockedUntil: st.lockedUntil });
+    }
+    actualizarBloqueoUI();
+  }
+
+  function limpiarBloqueo() {
+    guardarEstadoBloqueo({ attempts: 0, lockedUntil: 0 });
+    actualizarBloqueoUI();
+  }
+
+  actualizarBloqueoUI();
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     loginError.style.display = "none";
     const data = new FormData(loginForm);
+
+    // Trampa para bots: un visitante real nunca completa este campo (está
+    // oculto por CSS). Si viene con algo, se descarta sin gastar un intento
+    // de verdad contra Supabase Auth.
+    if (data.get("website")) return;
+
+    if (leerEstadoBloqueo().lockedUntil > Date.now()) {
+      actualizarBloqueoUI();
+      return;
+    }
+
     const { error } = await supabaseClient.auth.signInWithPassword({
       email: data.get("email"),
       password: data.get("password"),
     });
     if (error) {
+      registrarIntentoFallido();
       loginError.textContent = "No se pudo ingresar: " + error.message;
       loginError.style.display = "block";
     } else {
+      limpiarBloqueo();
       loginForm.reset();
     }
   });
 
   logoutBtn.addEventListener("click", async () => {
     await supabaseClient.auth.signOut();
+  });
+
+  /* ------------------------ Recuperar contraseña ---------------------- */
+  forgotLink.addEventListener("click", () => {
+    loginForm.style.display = "none";
+    forgotLink.style.display = "none";
+    loginError.style.display = "none";
+    recoverMsg.style.display = "none";
+    recoverForm.style.display = "block";
+    recoverCancel.style.display = "inline-block";
+  });
+
+  recoverCancel.addEventListener("click", () => {
+    recoverForm.style.display = "none";
+    recoverCancel.style.display = "none";
+    loginForm.style.display = "block";
+    forgotLink.style.display = "inline-block";
+  });
+
+  recoverForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = new FormData(recoverForm);
+    const submitBtn = recoverForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(data.get("email"), {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    if (error) console.error("resetPasswordForEmail:", error);
+
+    submitBtn.disabled = false;
+    // Mismo mensaje haya error o no: no delatar si ese email tiene cuenta acá.
+    recoverMsg.textContent = "Si ese email tiene una cuenta, te llega un link para elegir una contraseña nueva.";
+    recoverMsg.style.display = "block";
+    recoverForm.reset();
+  });
+
+  /* ------------------------ Elegir contraseña nueva -------------------- */
+  resetForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    resetError.style.display = "none";
+    const data = new FormData(resetForm);
+    const password = data.get("password");
+    const passwordConfirm = data.get("passwordConfirm");
+
+    if (password !== passwordConfirm) {
+      resetError.textContent = "Las dos contraseñas no coinciden.";
+      resetError.style.display = "block";
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if (error) {
+      resetError.textContent = "No se pudo guardar la contraseña: " + error.message;
+      resetError.style.display = "block";
+      return;
+    }
+
+    resetForm.reset();
+    showLoggedIn();
   });
 
   /* --------------------------- Mensajes de contacto -------------------- */
