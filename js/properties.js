@@ -69,8 +69,8 @@ function renderFeatured() {
 }
 
 function applyFilters(params) {
-  const priceMin = params.priceMin !== "" && params.priceMin != null ? parseFloat(params.priceMin) : null;
-  const priceMax = params.priceMax !== "" && params.priceMax != null ? parseFloat(params.priceMax) : null;
+  const priceMin = params.priceMin !== "" && params.priceMin != null ? V.decimalGrande(params.priceMin) : null;
+  const priceMax = params.priceMax !== "" && params.priceMax != null ? V.decimalGrande(params.priceMax) : null;
 
   return PROPERTIES.filter((p) => {
     if (params.operation && params.operation !== "todas" && p.operation !== params.operation) return false;

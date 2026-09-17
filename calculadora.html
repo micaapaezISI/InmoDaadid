@@ -72,12 +72,13 @@
       <form class="calc-form" id="calc-form">
         <div class="field">
           <label for="calc-amount">Valor inicial del alquiler (ARS)</label>
-          <input type="number" id="calc-amount" name="amount" min="0" step="1" placeholder="Ej: 150000" required>
-          <p class="field-help">El monto que se pactó al firmar el contrato, antes de cualquier ajuste.</p>
+          <input type="text" inputmode="decimal" id="calc-amount" name="amount" placeholder="Ej: 350.000" required>
+          <p class="field-help">El monto que se pactó al firmar el contrato, antes de cualquier ajuste. Podés escribirlo con puntos de miles (350.000) o corrido (350000).</p>
         </div>
         <div class="field">
           <label for="calc-start-date">Fecha de inicio de contrato</label>
           <input type="date" id="calc-start-date" name="startDate" required>
+          <p class="field-help">Tocá el calendario 📅 del campo en vez de escribir la fecha a mano.</p>
         </div>
         <div class="field">
           <label for="calc-index">Índice de actualización</label>
@@ -89,7 +90,7 @@
         </div>
         <div class="field" id="calc-fixed-wrap" style="display:none;">
           <label for="calc-fixed">Porcentaje anual fijo (%)</label>
-          <input type="number" id="calc-fixed" name="fixedPct" min="0" step="0.1" placeholder="Ej: 40">
+          <input type="text" inputmode="decimal" id="calc-fixed" name="fixedPct" placeholder="Ej: 40">
         </div>
         <div class="field">
           <label for="calc-frequency">Cada cuánto se actualiza</label>

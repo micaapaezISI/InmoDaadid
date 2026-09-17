@@ -2191,6 +2191,30 @@ h1, h2, h3, h4 {
   margin-bottom: 26px;
 }
 
+.admin-card--guia {
+  border: 1.5px solid var(--color-primary-light);
+  background: #fffaf9;
+}
+
+.admin-guia-pasos {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-guia-pasos li {
+  line-height: 1.55;
+}
+
+.admin-guia-pasos em {
+  font-style: normal;
+  background: var(--color-primary-light);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
 .admin-hoy-tile {
   transition: box-shadow var(--transition), transform var(--transition);
 }

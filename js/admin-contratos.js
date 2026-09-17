@@ -183,15 +183,16 @@ const AdminContratos = (() => {
     const calle = V.texto(document.getElementById("ni-calle").value);
     const numero = V.texto(document.getElementById("ni-numero").value);
     const precio = document.getElementById("ni-precio").value;
+    const precioCentavos = Dinero.aCentavos(precio);
     if (!calle) return avisar("Escribí al menos la calle.", "error");
-    if (!precio) return avisar("Cargá el valor del alquiler.", "error");
+    if (precioCentavos === null) return avisar("El valor del alquiler no es un número válido. Escribilo solo con números, por ejemplo 350.000.", "error");
 
     propiedadGuardarBtn.disabled = true;
     try {
       const { data: codigo } = await supabaseClient.rpc("siguiente_codigo_propiedad");
       const { data: creada, error } = await supabaseClient.from("propiedades").insert({
         codigo, tipo, calle, numero, operacion: "alquiler", estado: "disponible",
-        precio_alquiler: Dinero.aCentavos(precio), moneda_alquiler: "ARS", publicar_web: false,
+        precio_alquiler: precioCentavos, moneda_alquiler: "ARS", publicar_web: false,
       }).select("id").single();
       if (error) throw error;
 
@@ -238,13 +239,15 @@ const AdminContratos = (() => {
       ajuste_meses: V.entero(data.get("ajuste_meses")),
       ajuste_valor: data.get("ajuste_tipo") === "porcentaje" ? V.decimal(data.get("ajuste_valor")) : null,
       indice_codigo: data.get("ajuste_tipo") === "indice" ? data.get("indice_codigo") : null,
-      indice_valor_base: data.get("ajuste_tipo") === "indice" ? V.decimal(data.get("indice_valor_base")) : null,
+      indice_valor_base: data.get("ajuste_tipo") === "indice" ? V.decimalGrande(data.get("indice_valor_base")) : null,
       fecha_inicio_generacion: data.get("fecha_inicio_generacion") || null,
       monto_actual: data.get("monto_actual") ? Dinero.aCentavos(data.get("monto_actual")) : null,
       notas: V.texto(data.get("notas"), { max: 4000 }),
     };
 
     if (!datos.propiedad_id || !datos.inquilino_id) return avisar("Elegí el inmueble y el inquilino.", "error");
+    if (datos.monto_inicial === null) return avisar("El monto mensual inicial no es un número válido. Escribilo solo con números, por ejemplo 350.000.", "error");
+    if (datos.ajuste_tipo === "indice" && datos.indice_valor_base === null) return avisar("El valor del índice al firmar no es un número válido.", "error");
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Guardando…";
@@ -445,7 +448,13 @@ const AdminContratos = (() => {
       fecha_fin: data.get("fecha_fin"),
       monto_inicial: Dinero.aCentavos(data.get("monto_inicial")),
     };
-    if (data.get("indice_valor_base")) cambios.indice_valor_base = V.decimal(data.get("indice_valor_base"));
+    if (data.get("indice_valor_base")) cambios.indice_valor_base = V.decimalGrande(data.get("indice_valor_base"));
+
+    if (cambios.monto_inicial === null) {
+      errorBox.textContent = "El nuevo monto mensual no es un número válido. Escribilo solo con números, por ejemplo 350.000.";
+      errorBox.style.display = "block";
+      return;
+    }
 
     const { error } = await supabaseClient.rpc("renovar_contrato", {
       p_contrato_origen_id: contratoParaAccion,
@@ -530,10 +539,16 @@ const AdminContratos = (() => {
       excepcionErrorBox.style.display = "block";
       return;
     }
+    const monto_congelado = Dinero.aCentavos(data.get("monto_congelado"));
+    if (monto_congelado === null) {
+      excepcionErrorBox.textContent = "Ese monto no es un número válido. Escribilo solo con números, por ejemplo 300.000.";
+      excepcionErrorBox.style.display = "block";
+      return;
+    }
     const { error } = await supabaseClient.from("contrato_excepcion_cobro").insert({
       contrato_id: excepcionContratoId,
       fecha_desde, fecha_hasta,
-      monto_congelado: Dinero.aCentavos(data.get("monto_congelado")),
+      monto_congelado,
       motivo: V.texto(data.get("motivo"), { max: 500 }),
     });
     if (error) {
@@ -581,7 +596,7 @@ const AdminContratos = (() => {
     const { error } = await supabaseClient.from("indice_valores").insert({
       indice_codigo: data.get("indice_codigo"),
       fecha: data.get("fecha"),
-      valor: V.decimal(data.get("valor")),
+      valor: V.decimalGrande(data.get("valor")),
     });
     if (error) return avisar("No se pudo guardar: " + error.message, "error");
     indiceForm.reset();

@@ -198,6 +198,9 @@ const AdminInmuebles = (() => {
     const amenities = (data.get("amenities") || "").split(",").map((a) => a.trim()).filter(Boolean);
     const propietarios = leerPropietariosDelForm();
 
+    if (precioCentavos === null) return avisar("El precio no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
+    if (data.get("area") && V.decimalGrande(data.get("area")) === null) return avisar("La superficie total no es un número válido.", "error");
+
     if (propietarios.length) {
       const suma = propietarios.reduce((t, p) => t + (p.porcentaje || 0), 0);
       if (Math.abs(suma - 100) > 0.01) {
@@ -228,8 +231,8 @@ const AdminInmuebles = (() => {
         banos: V.entero(data.get("bathrooms")) || 0,
         cocheras: V.entero(data.get("cocheras")) || 0,
         ambientes: V.entero(data.get("ambientes")),
-        superficie_total: V.decimal(data.get("area")),
-        superficie_cubierta: V.decimal(data.get("superficie_cubierta")),
+        superficie_total: V.decimalGrande(data.get("area")),
+        superficie_cubierta: V.decimalGrande(data.get("superficie_cubierta")),
         antiguedad: V.entero(data.get("antiguedad")),
         descripcion: V.texto(data.get("description"), { max: 4000 }),
         precio_alquiler: esVenta ? null : precioCentavos,

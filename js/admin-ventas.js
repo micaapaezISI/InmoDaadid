@@ -115,6 +115,7 @@ const AdminVentas = (() => {
       notas: V.texto(data.get("notas"), { max: 2000 }),
     };
     if (!datos.propiedad_id) return avisar("Elegí el inmueble.", "error");
+    if (datos.monto_operacion === null) return avisar("El monto de la operación no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
 
     submitBtn.disabled = true;
     try {

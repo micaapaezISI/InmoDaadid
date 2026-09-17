@@ -29,9 +29,22 @@ const V = {
     return Number.isFinite(n) ? n : null;
   },
 
+  // Para porcentajes (siempre menores a 100): la coma es el decimal
+  // argentino, y un punto que aparezca se deja tal cual (no hacen falta
+  // miles en un porcentaje) — así "10,5" y "10.5" dan lo mismo.
   decimal(valor) {
     if (valor === null || valor === undefined || valor === "") return null;
     const n = Number(String(valor).replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  },
+
+  // Para valores de índice (UVA, etc.) que sí pueden superar los miles:
+  // acá el punto es separador de miles como en un monto, no un decimal
+  // ("1.523,4567" tiene que dar 1523.4567, no NaN).
+  decimalGrande(valor) {
+    if (valor === null || valor === undefined || valor === "") return null;
+    const limpio = String(valor).trim().replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+    const n = Number(limpio);
     return Number.isFinite(n) ? n : null;
   },
 

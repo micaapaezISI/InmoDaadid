@@ -19,6 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const panel = document.getElementById("admin-panel");
   const logoutBtn = document.getElementById("admin-logout");
 
+  const guiaCard = document.getElementById("admin-guia-primeros-pasos");
+  const guiaCerrarBtn = document.getElementById("admin-guia-cerrar");
+  const guiaVerBtn = document.getElementById("admin-ver-guia");
+
   const forgotLink = document.getElementById("admin-forgot-link");
   const recoverForm = document.getElementById("admin-recover-form");
   const recoverMsg = document.getElementById("admin-recover-msg");
@@ -81,7 +85,22 @@ document.addEventListener("DOMContentLoaded", () => {
     AdminInmuebles.loadList();
     AdminInmuebles.loadFeatured();
     loadMessages();
+
+    let yaVioGuia = false;
+    try { yaVioGuia = localStorage.getItem("admin_guia_vista") === "1"; } catch {}
+    guiaCard.style.display = yaVioGuia ? "none" : "block";
   }
+
+  guiaCerrarBtn.addEventListener("click", () => {
+    guiaCard.style.display = "none";
+    try { localStorage.setItem("admin_guia_vista", "1"); } catch {}
+  });
+
+  guiaVerBtn.addEventListener("click", () => {
+    switchTab("hoy");
+    guiaCard.style.display = "block";
+    guiaCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   function showLoggedOut() {
     loginWrap.style.display = "block";

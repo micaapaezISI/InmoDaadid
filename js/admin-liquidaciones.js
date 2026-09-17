@@ -293,7 +293,7 @@ const AdminLiquidaciones = (() => {
       <select data-medio-tipo style="padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
         ${MEDIOS.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
       </select>
-      <input type="number" data-medio-monto placeholder="Monto" min="0" style="width:140px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
+      <input type="text" inputmode="decimal" data-medio-monto placeholder="Monto (ej: 45.000)" style="width:150px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
       <input type="text" data-medio-referencia placeholder="Referencia (opcional)" style="flex:1; min-width:120px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
       <button type="button" class="admin-delete-link" data-medio-quitar>Quitar</button>
     `;
@@ -322,11 +322,21 @@ const AdminLiquidaciones = (() => {
 
   confirmarBtn.addEventListener("click", async () => {
     errorEl.style.display = "none";
-    const medios = Array.from(mediosList.querySelectorAll("[data-medio-row]")).map((row) => ({
-      medio_pago: row.querySelector("[data-medio-tipo]").value,
-      monto: Dinero.aCentavos(row.querySelector("[data-medio-monto]").value) || 0,
-      referencia: V.texto(row.querySelector("[data-medio-referencia]").value),
-    }));
+    let huboError = false;
+    const medios = Array.from(mediosList.querySelectorAll("[data-medio-row]")).map((row) => {
+      const monto = Dinero.aCentavos(row.querySelector("[data-medio-monto]").value);
+      if (monto === null) huboError = true;
+      return {
+        medio_pago: row.querySelector("[data-medio-tipo]").value,
+        monto: monto || 0,
+        referencia: V.texto(row.querySelector("[data-medio-referencia]").value),
+      };
+    });
+    if (huboError) {
+      errorEl.textContent = "Algún monto no es un número válido. Escribilo solo con números, por ejemplo 45.000.";
+      errorEl.style.display = "block";
+      return;
+    }
 
     confirmarBtn.disabled = true;
     try {

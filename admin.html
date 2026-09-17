@@ -112,7 +112,8 @@
           <strong>Estás dentro del panel.</strong>
           Todo lo que cargues, edites o borres acá se guarda de verdad y se muestra (o se saca) del sitio al instante.
         </div>
-        <button type="button" id="admin-logout" class="btn btn-sm btn-dark" style="margin-left:auto;">Cerrar sesión</button>
+        <button type="button" id="admin-ver-guia" class="btn btn-sm btn-dark" style="margin-left:auto;">❓ ¿Cómo empiezo?</button>
+        <button type="button" id="admin-logout" class="btn btn-sm btn-dark">Cerrar sesión</button>
       </div>
 
       <div class="admin-shell">
@@ -179,6 +180,35 @@
 
           <!-- ---------- Hoy (resumen) ---------- -->
           <section id="tab-panel-hoy" class="admin-tab-panel">
+
+            <!-- ---------- Guía de primeros pasos ---------- -->
+            <div class="admin-card admin-card--guia" id="admin-guia-primeros-pasos" style="margin-bottom:22px; display:none;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                <h2 class="admin-section-title">👋 Para arrancar</h2>
+                <button type="button" id="admin-guia-cerrar" class="btn btn-sm btn-dark" aria-label="Cerrar la guía">Entendido, cerrar ✕</button>
+              </div>
+              <p class="admin-section-help">Este panel reemplaza la planilla de Excel y los cuadernos: acá vas a cargar tus inmuebles, tus contratos y vas a ir registrando cada cobro. El orden que más conviene para no perderte es este:</p>
+              <ol class="admin-guia-pasos">
+                <li>
+                  <strong>1. Cargá tus inmuebles.</strong> Anda a la pestaña <em>"＋ Nuevo inmueble"</em> del menú de la izquierda y completá los datos — tipo, dirección, precio y fotos. Podés cargar uno por uno, tranquila.
+                </li>
+                <li>
+                  <strong>2. Cargá a las personas.</strong> En <em>"Personas"</em> cargá a los propietarios y a los inquilinos con los que ya estás trabajando (nombre, documento, teléfono). Después los vas a elegir de una lista, no hace falta volver a tipearlos.
+                </li>
+                <li>
+                  <strong>3. Armá el contrato.</strong> En <em>"＋ Nuevo contrato"</em> elegís el inmueble y el inquilino que ya cargaste, la fecha, el monto y cada cuánto se ajusta. Las cuotas de todo el contrato se generan solas — no hay que cargarlas mes a mes.
+                </li>
+                <li>
+                  <strong>4. Registrá los cobros.</strong> Cuando un inquilino te paga, andá a <em>"Cobranzas"</em>, elegilo de la lista, tildá la cuota y registrá el cobro. De ahí sale el recibo y se actualiza la caja sola.
+                </li>
+                <li>
+                  <strong>5. Configurá lo general una sola vez.</strong> En <em>"Configuración"</em> cargá tu comisión habitual y los días de gracia para las cuotas atrasadas — así no tenés que repetirlo en cada contrato.
+                </li>
+              </ol>
+              <p class="admin-card-desc" style="margin-top:12px;">¿Vendés una propiedad en vez de alquilarla? No hace falta armar un contrato — cargá la operación directo en <em>"Ventas"</em>. Y esta pantalla ("Hoy") siempre te va a avisar lo urgente: cobros atrasados, contratos por vencer y consultas nuevas.</p>
+              <p class="admin-card-desc">¿Cerraste esta guía sin querer? Tocá el botón <strong>"❓ ¿Cómo empiezo?"</strong> de arriba a la derecha para volver a verla cuando quieras.</p>
+            </div>
+
             <div class="admin-card" style="margin-bottom:22px;">
               <h2 class="admin-section-title">☀️ Hoy</h2>
               <p class="admin-section-help">Un pantallazo de cómo está todo: caja, cobranzas atrasadas, deudas a propietarios, contratos por vencer, agenda y consultas nuevas — con acceso directo a cada sección.</p>
@@ -261,7 +291,7 @@
                         </div>
                         <div class="field"><label for="ni-calle">Calle *</label><input type="text" id="ni-calle" placeholder="Nombre de la calle"></div>
                         <div class="field"><label for="ni-numero">Número</label><input type="text" id="ni-numero"></div>
-                        <div class="field"><label for="ni-precio">Valor del alquiler *</label><input type="number" id="ni-precio" min="0"></div>
+                        <div class="field"><label for="ni-precio">Valor del alquiler *</label><input type="text" inputmode="decimal" id="ni-precio" placeholder="Ej: 350.000"></div>
                       </div>
                       <p class="admin-card-desc" style="margin-top:8px;">Solo lo básico para poder elegirlo ya — el resto (fotos, propietario, publicación web) se completa después desde "Inmuebles".</p>
                       <div style="display:flex; gap:10px; margin-top:10px;">
@@ -296,10 +326,12 @@
                   <div class="field">
                     <label for="ct-inicio">Fecha de inicio *</label>
                     <input type="date" id="ct-inicio" name="fecha_inicio" required>
+                    <p class="field-help">Tocá el calendario 📅 del campo en vez de escribir la fecha a mano.</p>
                   </div>
                   <div class="field">
                     <label for="ct-fin">Fecha de fin *</label>
                     <input type="date" id="ct-fin" name="fecha_fin" required>
+                    <p class="field-help">Tocá el calendario 📅 del campo en vez de escribir la fecha a mano.</p>
                   </div>
                   <div class="field">
                     <label for="ct-dia-venc">Día de vencimiento mensual</label>
@@ -313,15 +345,16 @@
                   </div>
                   <div class="field">
                     <label for="ct-monto">Monto mensual inicial *</label>
-                    <input type="number" id="ct-monto" name="monto_inicial" min="0" required>
+                    <input type="text" inputmode="decimal" id="ct-monto" name="monto_inicial" placeholder="Ej: 350.000" required>
+                    <p class="field-help">Podés escribirlo con puntos de miles (350.000) o corrido (350000) — las dos formas andan. Sin centavos.</p>
                   </div>
                   <div class="field">
                     <label for="ct-deposito">Depósito</label>
-                    <input type="number" id="ct-deposito" name="deposito" min="0">
+                    <input type="text" inputmode="decimal" id="ct-deposito" name="deposito" placeholder="Ej: 350.000">
                   </div>
                   <div class="field">
                     <label for="ct-comision">Comisión de administración (%)</label>
-                    <input type="number" id="ct-comision" name="comision_admin_pct" min="0" max="100" step="0.1" placeholder="Vacío = usar la general">
+                    <input type="text" inputmode="decimal" id="ct-comision" name="comision_admin_pct" placeholder="Vacío = usar la general (ej: 10,5)">
                   </div>
                   <div class="field">
                     <label for="ct-garantizada" style="flex-direction:row; align-items:center; gap:8px;">
@@ -335,7 +368,7 @@
 
               <div class="admin-card">
                 <h2>3. Ajuste del monto</h2>
-                <p class="admin-card-desc">Cada cuánto y cómo se actualiza el alquiler.</p>
+                <p class="admin-card-desc">Cada cuánto y cómo se actualiza el alquiler. Si el contrato no ajusta por índice, no hace falta que sepas nada de la pestaña "Índices BCRA" — elegí "Porcentaje fijo" o "Sin ajuste" y listo.</p>
                 <div class="admin-form-grid">
                   <div class="field">
                     <label for="ct-ajuste-tipo">Tipo de ajuste</label>
@@ -351,7 +384,7 @@
                   </div>
                   <div class="field" id="ct-ajuste-valor-wrap">
                     <label for="ct-ajuste-valor">Porcentaje por ajuste (%)</label>
-                    <input type="number" id="ct-ajuste-valor" name="ajuste_valor" min="0" step="0.1">
+                    <input type="text" inputmode="decimal" id="ct-ajuste-valor" name="ajuste_valor" placeholder="Ej: 10,5">
                   </div>
                   <div class="field" id="ct-indice-wrap" style="display:none;">
                     <label for="ct-indice">Índice</label>
@@ -365,7 +398,8 @@
                   </div>
                   <div class="field" id="ct-indice-base-wrap" style="display:none;">
                     <label for="ct-indice-base">Valor del índice al firmar (base)</label>
-                    <input type="number" id="ct-indice-base" name="indice_valor_base" step="0.0001">
+                    <input type="text" inputmode="decimal" id="ct-indice-base" name="indice_valor_base" placeholder="Ej: 1.523,4567">
+                    <p class="field-help">Copiá el valor tal como lo publica el BCRA a la fecha de la firma, con todos sus decimales. Después, para que los ajustes se calculen solos, tenés que ir cargando los valores nuevos del índice a medida que salgan, en la pestaña "Índices BCRA".</p>
                   </div>
                 </div>
               </div>
@@ -380,7 +414,7 @@
                   </div>
                   <div class="field">
                     <label for="ct-monto-actual">Monto vigente a esa fecha</label>
-                    <input type="number" id="ct-monto-actual" name="monto_actual" min="0">
+                    <input type="text" inputmode="decimal" id="ct-monto-actual" name="monto_actual" placeholder="Ej: 420.000">
                     <p class="admin-card-desc" style="margin-top:4px;">No el monto original del contrato — el que realmente se estaba cobrando en la fecha de arriba, después de los ajustes que ya tuvo antes de cargarlo acá.</p>
                   </div>
                 </div>
@@ -424,7 +458,7 @@
                 </div>
                 <div class="field">
                   <label for="iv-valor">Valor</label>
-                  <input type="number" id="iv-valor" name="valor" step="0.0001" required>
+                  <input type="text" inputmode="decimal" id="iv-valor" name="valor" placeholder="Ej: 36,2100" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Guardar valor</button>
               </form>
@@ -522,7 +556,7 @@
                 </div>
                 <div class="field">
                   <label for="ga-monto">Monto *</label>
-                  <input type="number" id="ga-monto" name="monto" min="0" required>
+                  <input type="text" inputmode="decimal" id="ga-monto" name="monto" placeholder="Ej: 45.000" required>
                 </div>
                 <div class="field">
                   <label for="ga-medio">Medio de pago</label>
@@ -638,7 +672,7 @@
                 </div>
                 <div class="field">
                   <label for="cj-monto">Monto *</label>
-                  <input type="number" id="cj-monto" name="monto" min="0" required>
+                  <input type="text" inputmode="decimal" id="cj-monto" name="monto" placeholder="Ej: 45.000" required>
                 </div>
                 <div class="field">
                   <label for="cj-medio">Medio de pago</label>
@@ -713,7 +747,7 @@
                 </div>
                 <div class="field">
                   <label for="ve-monto-operacion">Monto de la operación *</label>
-                  <input type="number" id="ve-monto-operacion" name="monto_operacion" min="0" required>
+                  <input type="text" inputmode="decimal" id="ve-monto-operacion" name="monto_operacion" placeholder="Ej: 85.000" required>
                 </div>
                 <div class="field">
                   <label for="ve-moneda">Moneda</label>
@@ -725,7 +759,7 @@
                 </div>
                 <div class="field">
                   <label for="ve-monto-reserva">Monto de la seña</label>
-                  <input type="number" id="ve-monto-reserva" name="monto_reserva" min="0">
+                  <input type="text" inputmode="decimal" id="ve-monto-reserva" name="monto_reserva" placeholder="Ej: 5.000">
                 </div>
                 <div class="field">
                   <label for="ve-fecha-boleto">Fecha de boleto</label>
@@ -737,11 +771,11 @@
                 </div>
                 <div class="field">
                   <label for="ve-comision-pct">Comisión (%)</label>
-                  <input type="number" id="ve-comision-pct" name="comision_pct" min="0" max="100" step="0.1">
+                  <input type="text" inputmode="decimal" id="ve-comision-pct" name="comision_pct" placeholder="Ej: 4,5">
                 </div>
                 <div class="field">
                   <label for="ve-comision-monto">Comisión (monto, opcional)</label>
-                  <input type="number" id="ve-comision-monto" name="comision_monto" min="0" placeholder="Se calcula solo del % si lo dejás vacío">
+                  <input type="text" inputmode="decimal" id="ve-comision-monto" name="comision_monto" placeholder="Se calcula solo del % si lo dejás vacío">
                 </div>
                 <div class="field field-full">
                   <label for="ve-notas">Notas</label>
@@ -871,7 +905,7 @@
               <form id="config-general-form" class="admin-form-grid">
                 <div class="field">
                   <label for="cg-punitorio">Interés punitorio diario (%)</label>
-                  <input type="number" id="cg-punitorio" name="punitorio_diario_pct" min="0" step="0.01">
+                  <input type="text" inputmode="decimal" id="cg-punitorio" name="punitorio_diario_pct" placeholder="Ej: 0,5">
                   <p class="admin-card-desc" style="margin-top:4px;">Lo que se le suma por día de atraso a una cuota vencida, en Cobranzas.</p>
                 </div>
                 <div class="field">
@@ -881,8 +915,8 @@
                 </div>
                 <div class="field">
                   <label for="cg-comision">Comisión de administración (%)</label>
-                  <input type="number" id="cg-comision" name="comision_admin_pct" min="0" step="0.1">
-                  <p class="admin-card-desc" style="margin-top:4px;">Lo que te queda a vos de cada alquiler cobrado, cuando el inmueble o el contrato no tienen una comisión propia cargada.</p>
+                  <input type="text" inputmode="decimal" id="cg-comision" name="comision_admin_pct" placeholder="Ej: 10,5">
+                  <p class="admin-card-desc" style="margin-top:4px;">Lo que te queda a vos de cada alquiler cobrado. Es la que se usa por defecto — si un inmueble o un contrato puntual tienen su propio porcentaje cargado, ese manda por encima de este.</p>
                 </div>
                 <div class="field">
                   <label for="cg-aviso-vencimiento">Aviso de vencimiento de contrato (días)</label>
@@ -961,11 +995,11 @@
                   </div>
                   <div class="field">
                     <label for="p-area">Superficie total (m²) *</label>
-                    <input type="number" id="p-area" name="area" min="0" step="1" required>
+                    <input type="text" inputmode="decimal" id="p-area" name="area" placeholder="Ej: 250" required>
                   </div>
                   <div class="field">
                     <label for="p-area-cubierta">Superficie cubierta (m²)</label>
-                    <input type="number" id="p-area-cubierta" name="superficie_cubierta" min="0" step="1">
+                    <input type="text" inputmode="decimal" id="p-area-cubierta" name="superficie_cubierta" placeholder="Ej: 180">
                   </div>
                   <div class="field">
                     <label for="p-antiguedad">Antigüedad (años)</label>
@@ -1010,15 +1044,16 @@
                   </div>
                   <div class="field">
                     <label for="p-price">Precio *</label>
-                    <input type="number" id="p-price" name="price" min="0" step="1" required>
+                    <input type="text" inputmode="decimal" id="p-price" name="price" placeholder="Ej: 85.000" required>
+                    <p class="field-help">Podés escribirlo con puntos de miles (85.000) o corrido (85000).</p>
                   </div>
                   <div class="field">
                     <label for="p-expensas">Expensas (opcional)</label>
-                    <input type="number" id="p-expensas" name="expensas" min="0" step="1">
+                    <input type="text" inputmode="decimal" id="p-expensas" name="expensas" placeholder="Ej: 45.000">
                   </div>
                   <div class="field">
                     <label for="p-comision">Comisión de administración (%)</label>
-                    <input type="number" id="p-comision" name="comision_admin_pct" min="0" max="100" step="0.1" placeholder="Deja vacío para usar la comisión general">
+                    <input type="text" inputmode="decimal" id="p-comision" name="comision_admin_pct" placeholder="Deja vacío para usar la comisión general (ej: 10,5)">
                   </div>
                 </div>
               </div>
@@ -1222,11 +1257,11 @@
         </div>
         <div class="field field-full">
           <label for="rn-monto">Nuevo monto mensual *</label>
-          <input type="number" id="rn-monto" name="monto_inicial" min="0" required>
+          <input type="text" inputmode="decimal" id="rn-monto" name="monto_inicial" placeholder="Ej: 420.000" required>
         </div>
         <div class="field field-full" id="rn-indice-base-wrap" style="display:none;">
           <label for="rn-indice-base">Nuevo valor base del índice *</label>
-          <input type="number" id="rn-indice-base" name="indice_valor_base" step="0.0001">
+          <input type="text" inputmode="decimal" id="rn-indice-base" name="indice_valor_base" placeholder="Ej: 1.523,4567">
         </div>
       </div>
       <div style="display:flex; gap:10px; margin-top:18px;">
@@ -1247,7 +1282,7 @@
       <div class="admin-form-grid">
         <div class="field field-full">
           <label for="bo-monto">Monto de la bonificación *</label>
-          <input type="number" id="bo-monto" name="monto" min="0" required>
+          <input type="text" inputmode="decimal" id="bo-monto" name="monto" placeholder="Ej: 20.000" required>
         </div>
         <div class="field field-full">
           <label for="bo-motivo">Motivo</label>
@@ -1281,7 +1316,7 @@
         </div>
         <div class="field field-full">
           <label for="ex-monto">Monto congelado (mensual) *</label>
-          <input type="number" id="ex-monto" name="monto_congelado" min="0" required>
+          <input type="text" inputmode="decimal" id="ex-monto" name="monto_congelado" placeholder="Ej: 300.000" required>
         </div>
         <div class="field field-full">
           <label for="ex-motivo">Motivo *</label>

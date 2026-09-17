@@ -231,7 +231,12 @@ const AdminCobranzas = (() => {
     e.preventDefault();
     bonifErrorEl.style.display = "none";
     const data = new FormData(bonifForm);
-    const monto = Dinero.aCentavos(data.get("monto")) || 0;
+    const monto = Dinero.aCentavos(data.get("monto"));
+    if (monto === null) {
+      bonifErrorEl.textContent = "Ese monto no es un número válido. Escribilo solo con números, por ejemplo 20.000.";
+      bonifErrorEl.style.display = "block";
+      return;
+    }
     const motivo = V.texto(data.get("motivo"), { max: 500 });
     const { error } = await supabaseClient.rpc("bonificar_cuota", { p_cuota_id: bonifCuotaId, p_monto: monto, p_motivo: motivo });
     if (error) {
@@ -271,12 +276,12 @@ const AdminCobranzas = (() => {
         <select data-medio-tipo style="padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
           ${MEDIOS.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
         </select>
-        <input type="number" data-medio-monto placeholder="Monto" min="0" style="width:140px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
+        <input type="text" inputmode="decimal" data-medio-monto placeholder="Monto (ej: 45.000)" style="width:150px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
         <input type="text" data-medio-referencia placeholder="Referencia (opcional)" style="flex:1; min-width:140px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
         <button type="button" class="admin-delete-link" data-medio-quitar>Quitar</button>
       </div>
       <div data-medio-comision-wrap style="display:none; gap:10px;">
-        <input type="number" data-medio-comision placeholder="Comisión retenida" min="0" style="width:180px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
+        <input type="text" inputmode="decimal" data-medio-comision placeholder="Comisión retenida (ej: 4.500)" style="width:190px; padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
       </div>
       <div data-medio-cheque-wrap style="display:none; gap:10px; flex-wrap:wrap;">
         <input type="text" data-cheque-banco placeholder="Banco" style="padding:10px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); background:var(--color-bg-alt);">
@@ -298,16 +303,26 @@ const AdminCobranzas = (() => {
   }
   medioAgregarBtn.addEventListener("click", addMedioRow);
 
+  // Devuelve null si algún monto cargado no se pudo interpretar como número
+  // (en vez de convertirlo en 0 en silencio, que registraría el cobro con
+  // menos plata de la que en realidad se cobró).
   function leerMedios() {
-    return Array.from(mediosList.querySelectorAll("[data-medio-row]")).map((row) => {
+    let huboError = false;
+    const medios = Array.from(mediosList.querySelectorAll("[data-medio-row]")).map((row) => {
       const tipo = row.querySelector("[data-medio-tipo]").value;
+      const montoTexto = row.querySelector("[data-medio-monto]").value;
+      const monto = Dinero.aCentavos(montoTexto);
+      if (monto === null) huboError = true;
       const medio = {
         medio_pago: tipo,
-        monto: Dinero.aCentavos(row.querySelector("[data-medio-monto]").value) || 0,
+        monto: monto || 0,
         referencia: V.texto(row.querySelector("[data-medio-referencia]").value),
       };
       if (tipo === "tarjeta" || tipo === "digital") {
-        medio.comision_monto = Dinero.aCentavos(row.querySelector("[data-medio-comision]").value) || 0;
+        const comisionTexto = row.querySelector("[data-medio-comision]").value;
+        const comision = comisionTexto ? Dinero.aCentavos(comisionTexto) : 0;
+        if (comision === null) huboError = true;
+        medio.comision_monto = comision || 0;
       }
       if (tipo === "cheque") {
         medio.cheque = {
@@ -318,6 +333,7 @@ const AdminCobranzas = (() => {
       }
       return medio;
     });
+    return huboError ? null : medios;
   }
 
   cancelarCobroBtn.addEventListener("click", () => {
@@ -330,6 +346,11 @@ const AdminCobranzas = (() => {
     cobroErrorEl.style.display = "none";
 
     const medios = leerMedios();
+    if (medios === null) {
+      cobroErrorEl.textContent = "Algún monto de los medios de pago no es un número válido. Revisalo y escribilo solo con números, por ejemplo 45.000.";
+      cobroErrorEl.style.display = "block";
+      return;
+    }
     const datos = {
       persona_id: seleccionPersonaId,
       cuota_ids: [...seleccionCuotaIds],

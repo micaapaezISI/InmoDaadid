@@ -56,6 +56,25 @@ function formatPct(factor) {
   return `${(factor * 100).toFixed(2)}%`;
 }
 
+// El campo de monto es <input type="text">, no type="number", justamente para
+// poder escribir puntos de miles a la argentina (1.500.000) — un
+// <input type="number"> nativo solo admite UN punto decimal, así que un
+// segundo punto de miles se pierde y "1.500.000" queda en 1.5.
+function montoDesdeTexto(valor) {
+  if (valor === null || valor === undefined || valor === "") return 0;
+  const limpio = String(valor).trim().replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+  const n = Number(limpio);
+  return Number.isFinite(n) ? n : 0;
+}
+
+// El porcentaje fijo es chico (nunca llega a los miles), así que acá el
+// punto se deja como separador decimal y solo la coma se traduce.
+function porcentajeDesdeTexto(valor) {
+  if (valor === null || valor === undefined || valor === "") return 0;
+  const n = Number(String(valor).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
 // Fechas de corte del contrato: inicio, inicio+f, inicio+2f… hasta hoy.
 // Devuelve también la primera que todavía no venció (la próxima actualización).
 function fechasDeAjuste(inicio, frecuenciaMeses, hasta) {
@@ -184,10 +203,10 @@ function initCalculator() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const data = new FormData(form);
-    const montoInicial = parseFloat(data.get("amount")) || 0;
+    const montoInicial = montoDesdeTexto(data.get("amount"));
     const indexKey = data.get("index");
     const frecuenciaMeses = parseInt(data.get("frequency"), 10) || 12;
-    const porcentajeFijo = parseFloat(data.get("fixedPct")) || 0;
+    const porcentajeFijo = porcentajeDesdeTexto(data.get("fixedPct"));
     const startDateStr = data.get("startDate");
 
     errorBox.style.display = "none";
