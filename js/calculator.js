@@ -91,19 +91,35 @@ function fechasDeAjuste(inicio, frecuenciaMeses, hasta) {
   return { cortes, proxima };
 }
 
+const BCRA_REINTENTOS = 2;
+const BCRA_ESPERA_REINTENTO_MS = 900;
+
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// La API pública del BCRA falla de tanto en tanto de forma momentánea (error
+// 500, o corta la conexión) — no es un problema del sitio. Reintentamos un par
+// de veces antes de mostrarle el error a quien esté usando la calculadora.
 async function fetchBcraSeries(variableId, desde, hasta) {
   const url = `${BCRA_API_BASE}/${variableId}?desde=${desde}&hasta=${hasta}&limit=3000`;
-  let res;
-  try {
-    res = await fetch(url);
-  } catch {
-    throw new Error("No se pudo conectar con la API del BCRA. Probá de nuevo en un momento.");
+
+  let ultimoError;
+  for (let intento = 0; intento <= BCRA_REINTENTOS; intento++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const detalle = (json.results && json.results[0] && json.results[0].detalle) || [];
+      // La API devuelve el detalle de más reciente a más antiguo; lo damos vuelta.
+      return detalle.slice().reverse();
+    } catch (err) {
+      ultimoError = err;
+      if (intento < BCRA_REINTENTOS) await esperar(BCRA_ESPERA_REINTENTO_MS);
+    }
   }
-  if (!res.ok) throw new Error("La API del BCRA no respondió correctamente. Probá de nuevo en un momento.");
-  const json = await res.json();
-  const detalle = (json.results && json.results[0] && json.results[0].detalle) || [];
-  // La API devuelve el detalle de más reciente a más antiguo; lo damos vuelta.
-  return detalle.slice().reverse();
+  console.error("BCRA fetch falló tras reintentar:", ultimoError);
+  throw new Error("La API del BCRA no respondió correctamente. Probá de nuevo en un momento.");
 }
 
 function valorIndiceEn(series, fecha) {
