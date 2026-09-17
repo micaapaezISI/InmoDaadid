@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Solo las páginas estáticas del sitio — las propiedades individuales
+  (propiedad.html?id=...) salen de Supabase y ya son rastreables siguiendo
+  los links desde propiedades.html, así que no hace falta listarlas acá
+  (y si las listáramos a mano, este archivo quedaría desactualizado apenas
+  se dé de baja o se cargue una propiedad nueva).
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://inmobiliariadaadin.com.ar/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://inmobiliariadaadin.com.ar/propiedades.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://inmobiliariadaadin.com.ar/tasaciones.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inmobiliariadaadin.com.ar/calculadora.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inmobiliariadaadin.com.ar/nosotros.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://inmobiliariadaadin.com.ar/contacto.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

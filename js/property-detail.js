@@ -7,6 +7,66 @@
 
 const WHATSAPP_NUMBER = "5493885839785";
 
+/* ===========================================================================
+   SEO por propiedad
+   El HTML de esta página trae etiquetas og:/twitter: y un <title> genéricos
+   (ver propiedad.html) para cuando un buscador o WhatsApp la lee sin correr
+   este JS. Acá las pisamos con los datos reales apenas se conoce la
+   propiedad — le sirve a Google (que sí ejecuta JavaScript al indexar) y al
+   título de la pestaña/favoritos del navegador. A WhatsApp/Facebook esto NO
+   les llega (arman la vista previa del link sin ejecutar JS), así que la
+   card que se comparte sigue mostrando la foto genérica del sitio, no la de
+   esta propiedad puntual — eso requeriría generar el HTML del lado del
+   servidor, algo que un sitio 100% estático no puede hacer.
+   =========================================================================== */
+function actualizarMetaPropiedad(property) {
+  const titulo = `${property.title} — Patricia Daadin`;
+  const descripcion = (property.description || "").slice(0, 160) || `${typeLabel(property.type)} en ${property.zone || "San Salvador de Jujuy"}.`;
+  const imagen = property.images && property.images[0];
+
+  document.title = `${property.title} · Patricia Daadin`;
+
+  const setContent = (selector, content) => {
+    const el = document.querySelector(selector);
+    if (el && content) el.setAttribute("content", content);
+  };
+
+  setContent('meta[name="description"]', descripcion);
+  setContent('meta[property="og:title"]', titulo);
+  setContent('meta[property="og:description"]', descripcion);
+  setContent('meta[property="og:url"]', window.location.href);
+  setContent('meta[name="twitter:title"]', titulo);
+  setContent('meta[name="twitter:description"]', descripcion);
+  if (imagen) {
+    setContent('meta[property="og:image"]', imagen);
+    setContent('meta[name="twitter:image"]', imagen);
+  }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: property.title,
+    description: descripcion,
+    category: typeLabel(property.type),
+    ...(property.images && property.images.length ? { image: property.images } : {}),
+    offers: {
+      "@type": "Offer",
+      price: property.price,
+      priceCurrency: property.currency,
+      availability: "https://schema.org/InStock",
+      url: window.location.href,
+    },
+  };
+  let script = document.getElementById("property-jsonld");
+  if (!script) {
+    script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "property-jsonld";
+    document.head.appendChild(script);
+  }
+  script.textContent = JSON.stringify(jsonLd);
+}
+
 async function initPropertyDetail() {
   const root = document.getElementById("property-detail-root");
   if (!root) return;
@@ -19,7 +79,7 @@ async function initPropertyDetail() {
     return;
   }
 
-  document.title = `${property.title} · Patricia Daadin`;
+  actualizarMetaPropiedad(property);
 
   document.getElementById("breadcrumb-title").textContent = property.title;
 
