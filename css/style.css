@@ -8,7 +8,8 @@
    humana, sin look de plantilla genérica.
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Mulish:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+/* La fuente ya no se importa acá (bloqueaba el render): se carga sin
+   bloquear desde el <head> de cada página, ver comentario "Fuentes". */
 
 :root {
   /* --- Color: rojo / negro / blanco, extraídos del isologo real --- */
@@ -356,19 +357,23 @@ h1, h2, h3, h4 {
   z-index: 0;
 }
 
-.hero-slideshow img {
+.hero-slideshow picture {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: block;
   opacity: 0;
   animation: heroSlideshowFade 18s infinite;
 }
 
-.hero-slideshow img:nth-child(1) { animation-delay: 0s; }
-.hero-slideshow img:nth-child(2) { animation-delay: 6s; }
-.hero-slideshow img:nth-child(3) { animation-delay: 12s; }
+.hero-slideshow picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-slideshow picture:nth-child(1) { animation-delay: 0s; }
+.hero-slideshow picture:nth-child(2) { animation-delay: 6s; }
+.hero-slideshow picture:nth-child(3) { animation-delay: 12s; }
 
 @keyframes heroSlideshowFade {
   0%,
@@ -430,12 +435,12 @@ h1, h2, h3, h4 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-slideshow img {
+  .hero-slideshow picture {
     animation: none;
     opacity: 0;
   }
 
-  .hero-slideshow img:first-child {
+  .hero-slideshow picture:first-child {
     opacity: 1;
   }
 }
@@ -2100,7 +2105,7 @@ h1, h2, h3, h4 {
   max-width: 280px;
 }
 
-.footer-col h4 {
+.footer-col h3 {
   color: #fff;
   font-size: 0.95rem;
   margin-bottom: 16px;
