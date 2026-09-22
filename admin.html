@@ -177,6 +177,9 @@
           <button type="button" class="admin-sidebar-link" data-tab="configuracion">
             <span class="admin-sidebar-ico">⚙️</span> Configuración
           </button>
+          <button type="button" class="admin-sidebar-link" data-tab="contenido">
+            <span class="admin-sidebar-ico">📝</span> Textos del sitio
+          </button>
         </nav>
 
         <!-- ===================== CONTENIDO ===================== -->
@@ -934,6 +937,36 @@
             </div>
           </section>
 
+          <!-- ---------- Textos del sitio ---------- -->
+          <section id="tab-panel-contenido" class="admin-tab-panel" style="display:none;">
+            <div class="admin-card">
+              <h2 class="admin-section-title">📝 Textos del sitio</h2>
+              <p class="admin-section-help">Estos textos se ven en la web pública, tal como los escribas acá (sin negrita ni links — solo texto simple). Si dejás un campo vacío, se muestra el texto original de la página.</p>
+              <form id="contenido-sitio-form" class="admin-form-grid">
+                <div class="field field-full">
+                  <label for="ct-home-hero-titulo">Home — Título grande de la portada</label>
+                  <textarea id="ct-home-hero-titulo" name="home_hero_titulo" rows="2"></textarea>
+                </div>
+                <div class="field field-full">
+                  <label for="ct-home-hero-texto">Home — Texto debajo del título</label>
+                  <textarea id="ct-home-hero-texto" name="home_hero_texto" rows="3"></textarea>
+                </div>
+                <div class="field field-full">
+                  <label for="ct-nosotros-historia-p1">Nosotros — "Mi historia", primer párrafo</label>
+                  <textarea id="ct-nosotros-historia-p1" name="nosotros_historia_p1" rows="4"></textarea>
+                </div>
+                <div class="field field-full">
+                  <label for="ct-nosotros-historia-p2">Nosotros — "Mi historia", segundo párrafo</label>
+                  <textarea id="ct-nosotros-historia-p2" name="nosotros_historia_p2" rows="4"></textarea>
+                </div>
+                <div class="field field-full">
+                  <button type="submit" class="btn btn-primary">Guardar textos</button>
+                  <span id="contenido-sitio-guardado" style="display:none; margin-left:10px; color:var(--color-whatsapp-dark); font-size:0.9rem; font-weight:600;">✓ Guardado</span>
+                </div>
+              </form>
+            </div>
+          </section>
+
           <!-- ---------- Nuevo / editar inmueble ---------- -->
           <section id="tab-panel-nueva" class="admin-tab-panel" style="display:none;">
             <div class="admin-card">
@@ -1453,6 +1486,7 @@
 <script src="js/admin-agenda.js"></script>
 <script src="js/admin-informes.js"></script>
 <script src="js/admin-configuracion.js"></script>
+<script src="js/admin-contenido.js"></script>
 <script src="js/admin-testimonios.js"></script>
 <script src="js/admin-hoy.js"></script>
 <script src="js/admin.js"></script>

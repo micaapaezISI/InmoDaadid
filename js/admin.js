@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "ventas") AdminVentas.loadList();
     if (tabName === "agenda") AdminAgenda.loadList();
     if (tabName === "configuracion") AdminConfiguracion.loadConfig();
+    if (tabName === "contenido") AdminContenido.loadContenido();
   }
 
   tabButtons.forEach((btn) => {
@@ -339,6 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
   AdminAgenda.init();
   AdminInformes.init();
   AdminConfiguracion.init();
+  AdminContenido.init();
   AdminTestimonios.init();
   AdminHoy.init();
 });
