@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "caja") { AdminCaja.loadMovimientos(); AdminCaja.loadSaldosHoy(); }
     if (tabName === "ventas") AdminVentas.loadList();
     if (tabName === "agenda") AdminAgenda.loadList();
-    if (tabName === "configuracion") AdminConfiguracion.loadConfig();
+    if (tabName === "configuracion") { AdminConfiguracion.loadConfig(); loadCuentaUsuario(); }
     if (tabName === "contenido") AdminContenido.loadContenido();
   }
 
@@ -201,6 +201,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   actualizarBloqueoUI();
 
+  // El login pide "usuario" (elegido desde Configuración → Mi cuenta), pero
+  // Supabase Auth sigue siendo por email por dentro. Si lo que escribió
+  // parece un email (tiene "@"), se usa tal cual — así el primer ingreso,
+  // antes de elegir un usuario, sigue funcionando con el email de siempre.
+  async function resolverEmailDeLogin(valor) {
+    const texto = (valor || "").trim();
+    if (texto.includes("@")) return texto;
+    const { data, error } = await supabaseClient.rpc("usuario_a_email", { p_usuario: texto });
+    if (error || !data) return null;
+    return data;
+  }
+
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     loginError.style.display = "none";
@@ -216,13 +228,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const email = await resolverEmailDeLogin(data.get("email"));
+    if (!email) {
+      registrarIntentoFallido();
+      loginError.textContent = "No se pudo ingresar: usuario o contraseña incorrectos.";
+      loginError.style.display = "block";
+      return;
+    }
+
     const { error } = await supabaseClient.auth.signInWithPassword({
-      email: data.get("email"),
+      email,
       password: data.get("password"),
     });
     if (error) {
       registrarIntentoFallido();
-      loginError.textContent = "No se pudo ingresar: " + error.message;
+      loginError.textContent = "No se pudo ingresar: usuario o contraseña incorrectos.";
       loginError.style.display = "block";
     } else {
       limpiarBloqueo();
@@ -257,14 +277,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = recoverForm.querySelector("button[type=submit]");
     submitBtn.disabled = true;
 
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(data.get("email"), {
-      redirectTo: window.location.origin + window.location.pathname,
-    });
-    if (error) console.error("resetPasswordForEmail:", error);
+    const email = await resolverEmailDeLogin(data.get("email"));
+    if (email) {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname,
+      });
+      if (error) console.error("resetPasswordForEmail:", error);
+    }
 
     submitBtn.disabled = false;
-    // Mismo mensaje haya error o no: no delatar si ese email tiene cuenta acá.
-    recoverMsg.textContent = "Si ese email tiene una cuenta, te llega un link para elegir una contraseña nueva.";
+    // Mismo mensaje haya error o no: no delatar si ese usuario tiene cuenta acá.
+    recoverMsg.textContent = "Si ese usuario tiene una cuenta, te llega un link por email para elegir una contraseña nueva.";
     recoverMsg.style.display = "block";
     recoverForm.reset();
   });
@@ -292,6 +315,90 @@ document.addEventListener("DOMContentLoaded", () => {
 
     resetForm.reset();
     showLoggedIn();
+  });
+
+  /* ----------------------------- Mi cuenta ------------------------------ */
+  const cuentaUsuarioForm = document.getElementById("cuenta-usuario-form");
+  const cuentaUsuarioInput = document.getElementById("cuenta-usuario");
+  const cuentaUsuarioError = document.getElementById("cuenta-usuario-error");
+  const cuentaUsuarioGuardado = document.getElementById("cuenta-usuario-guardado");
+  const cuentaPasswordForm = document.getElementById("cuenta-password-form");
+  const cuentaPasswordError = document.getElementById("cuenta-password-error");
+  const cuentaPasswordGuardado = document.getElementById("cuenta-password-guardado");
+
+  async function loadCuentaUsuario() {
+    cuentaUsuarioError.style.display = "none";
+    const { data: userData } = await supabaseClient.auth.getUser();
+    if (!userData || !userData.user) return;
+
+    const { data } = await supabaseClient.from("admin_usuarios").select("usuario").eq("user_id", userData.user.id).maybeSingle();
+    cuentaUsuarioInput.value = data ? data.usuario : "";
+  }
+
+  cuentaUsuarioForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    cuentaUsuarioError.style.display = "none";
+    const usuario = cuentaUsuarioInput.value.trim();
+
+    if (usuario.includes("@")) {
+      cuentaUsuarioError.textContent = "El usuario no puede tener un \"@\" (para no confundirlo con un email).";
+      cuentaUsuarioError.style.display = "block";
+      return;
+    }
+
+    const { data: userData } = await supabaseClient.auth.getUser();
+    if (!userData || !userData.user) return;
+
+    const submitBtn = cuentaUsuarioForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    const { error } = await supabaseClient
+      .from("admin_usuarios")
+      .upsert({ usuario, user_id: userData.user.id }, { onConflict: "user_id" });
+
+    submitBtn.disabled = false;
+
+    if (error) {
+      cuentaUsuarioError.textContent = error.code === "23505"
+        ? "Ese usuario ya lo está usando otra cuenta — probá con otro."
+        : "No se pudo guardar: " + error.message;
+      cuentaUsuarioError.style.display = "block";
+      return;
+    }
+
+    cuentaUsuarioGuardado.style.display = "inline";
+    setTimeout(() => { cuentaUsuarioGuardado.style.display = "none"; }, 3000);
+  });
+
+  cuentaPasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    cuentaPasswordError.style.display = "none";
+    const data = new FormData(cuentaPasswordForm);
+    const password = data.get("password");
+    const passwordConfirm = data.get("passwordConfirm");
+
+    if (password !== passwordConfirm) {
+      cuentaPasswordError.textContent = "Las dos contraseñas no coinciden.";
+      cuentaPasswordError.style.display = "block";
+      return;
+    }
+
+    const submitBtn = cuentaPasswordForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    const { error } = await supabaseClient.auth.updateUser({ password });
+
+    submitBtn.disabled = false;
+
+    if (error) {
+      cuentaPasswordError.textContent = "No se pudo cambiar la contraseña: " + error.message;
+      cuentaPasswordError.style.display = "block";
+      return;
+    }
+
+    cuentaPasswordForm.reset();
+    cuentaPasswordGuardado.style.display = "inline";
+    setTimeout(() => { cuentaPasswordGuardado.style.display = "none"; }, 3000);
   });
 
   /* --------------------------- Mensajes de contacto -------------------- */

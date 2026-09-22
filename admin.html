@@ -64,8 +64,8 @@
         </div>
         <div class="admin-form-grid">
           <div class="field field-full">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" name="email" required autocomplete="username">
+            <label for="login-email">Usuario</label>
+            <input type="text" id="login-email" name="email" required autocomplete="username">
           </div>
           <div class="field field-full">
             <label for="login-password">Contraseña</label>
@@ -81,8 +81,8 @@
       <form id="admin-recover-form" style="display:none;">
         <p class="admin-card-desc">Te mandamos un link a tu email para elegir una contraseña nueva.</p>
         <div class="field field-full">
-          <label for="recover-email">Email</label>
-          <input type="email" id="recover-email" name="email" required autocomplete="username">
+          <label for="recover-email">Usuario</label>
+          <input type="text" id="recover-email" name="email" required autocomplete="username">
         </div>
         <button type="submit" class="btn btn-primary" style="margin-top:10px;">Enviar link de recuperación</button>
         <p id="admin-recover-msg" style="display:none; margin-top:12px;"></p>
@@ -933,6 +933,39 @@
                 <div class="field field-full">
                   <button type="submit" class="btn btn-primary">Guardar configuración</button>
                 </div>
+              </form>
+            </div>
+
+            <div class="admin-card">
+              <h2 class="admin-section-title">🔑 Mi cuenta</h2>
+              <p class="admin-section-help">Elegí con qué usuario entrás al panel y cambiá tu contraseña cuando quieras — no hace falta esperar a olvidarla.</p>
+              <form id="cuenta-usuario-form" class="admin-form-grid">
+                <div class="field field-full">
+                  <label for="cuenta-usuario">Usuario para entrar al panel</label>
+                  <input type="text" id="cuenta-usuario" name="usuario" minlength="3" maxlength="40" placeholder="Ej: patricia" required autocomplete="username">
+                  <p class="admin-card-desc" style="margin-top:4px;">La próxima vez que entres, usá este usuario en vez del email. Sin espacios ni acentos, ideal.</p>
+                </div>
+                <div class="field field-full">
+                  <button type="submit" class="btn btn-primary">Guardar usuario</button>
+                  <span id="cuenta-usuario-guardado" style="display:none; margin-left:10px; color:var(--color-whatsapp-dark); font-size:0.9rem; font-weight:600;">✓ Guardado</span>
+                </div>
+                <p id="cuenta-usuario-error" style="display:none; color:var(--color-danger);"></p>
+              </form>
+
+              <form id="cuenta-password-form" class="admin-form-grid" style="margin-top:24px; padding-top:24px; border-top:1px solid var(--color-border);">
+                <div class="field field-full">
+                  <label for="cuenta-password">Contraseña nueva</label>
+                  <input type="password" id="cuenta-password" name="password" required minlength="8" autocomplete="new-password">
+                </div>
+                <div class="field field-full">
+                  <label for="cuenta-password-confirm">Repetila</label>
+                  <input type="password" id="cuenta-password-confirm" name="passwordConfirm" required minlength="8" autocomplete="new-password">
+                </div>
+                <div class="field field-full">
+                  <button type="submit" class="btn btn-primary">Cambiar contraseña</button>
+                  <span id="cuenta-password-guardado" style="display:none; margin-left:10px; color:var(--color-whatsapp-dark); font-size:0.9rem; font-weight:600;">✓ Contraseña cambiada</span>
+                </div>
+                <p id="cuenta-password-error" style="display:none; color:var(--color-danger);"></p>
               </form>
             </div>
           </section>
