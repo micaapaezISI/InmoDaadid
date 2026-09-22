@@ -470,7 +470,7 @@ h1, h2, h3, h4 {
   margin-bottom: 18px;
 }
 
-.hero h1 span {
+.hero h1 .hero-title-highlight {
   color: #ff8a97;
 }
 
@@ -2248,6 +2248,64 @@ h1, h2, h3, h4 {
 
 .admin-form-grid .field-full {
   grid-column: 1 / -1;
+}
+
+/* ===== Textos del sitio: color y tipografía por bloque ===== */
+.admin-content-field {
+  margin-bottom: 22px;
+}
+
+.admin-content-field:last-child {
+  margin-bottom: 0;
+}
+
+.admin-content-style-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.admin-content-color-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  cursor: pointer;
+}
+
+.admin-content-style-row input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+}
+
+.admin-content-style-row input[type="color"] {
+  width: 44px;
+  height: 34px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.admin-content-style-row input[type="color"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-content-font-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+}
+
+.admin-content-font-label select {
+  width: auto;
+  padding: 8px 10px;
 }
 
 .admin-banner {
