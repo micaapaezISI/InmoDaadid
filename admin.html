@@ -991,6 +991,7 @@
               <h2 class="admin-section-title" id="admin-form-heading">＋ Nuevo inmueble</h2>
               <p class="admin-section-help" id="admin-form-help">Completá estos datos para publicar un aviso nuevo. Los campos con <strong>*</strong> son obligatorios, el resto podés dejarlos en blanco si no aplican.</p>
             </div>
+            <div class="admin-form-with-preview">
             <form id="admin-property-form">
               <div class="admin-card" id="datos-generales">
                 <h2>1. Datos generales</h2>
@@ -1059,6 +1060,14 @@
                   <div class="field">
                     <label for="p-antiguedad">Antigüedad (años)</label>
                     <input type="number" id="p-antiguedad" name="antiguedad" min="0" step="1">
+                  </div>
+                  <div class="field">
+                    <label for="p-piso">Piso</label>
+                    <input type="text" id="p-piso" name="piso" placeholder="Ej: 3">
+                  </div>
+                  <div class="field">
+                    <label for="p-depto">Depto / Unidad</label>
+                    <input type="text" id="p-depto" name="departamento" placeholder="Ej: B">
                   </div>
                 </div>
               </div>
@@ -1139,8 +1148,30 @@
                     <textarea id="p-description" name="description" rows="4" placeholder="Describí la propiedad..."></textarea>
                   </div>
                   <div class="field field-full">
-                    <label for="p-amenities">Características (separadas por coma)</label>
-                    <input type="text" id="p-amenities" name="amenities" placeholder="Ej: Garage, Patio con parrilla, Calefacción a leña">
+                    <label>Características</label>
+                    <div class="admin-amenities-grid" id="p-amenities-checks">
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Garage"> Garage</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Patio"> Patio</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Parrilla"> Parrilla</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Pileta"> Pileta</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Balcón"> Balcón</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Terraza"> Terraza</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Calefacción"> Calefacción</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Aire acondicionado"> Aire acondicionado</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Baulera"> Baulera</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Ascensor"> Ascensor</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Seguridad 24hs"> Seguridad 24hs</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Amoblado"> Amoblado</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Apto crédito"> Apto crédito</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Apto profesional"> Apto profesional</label>
+                      <label class="admin-amenity-chip"><input type="checkbox" data-amenity-check value="Acepta mascotas"> Acepta mascotas</label>
+                    </div>
+                    <input type="hidden" id="p-amenities" name="amenities">
+                  </div>
+                  <div class="field field-full">
+                    <label for="p-amenities-otras">Otras características</label>
+                    <input type="text" id="p-amenities-otras" placeholder="Ej: Vista al río, Cochera doble">
+                    <p class="field-help">Sumá acá lo que no esté en la lista de arriba, separado por coma.</p>
                   </div>
                   <div class="field field-full">
                     <label for="p-notas">Notas internas (no se ven en la web)</label>
@@ -1186,6 +1217,14 @@
 
               <div id="admin-result" style="display:none; margin-top:26px;"></div>
             </form>
+
+            <aside class="admin-live-preview" id="admin-live-preview">
+              <span class="admin-live-preview-label">👁️ Vista previa en vivo</span>
+              <p class="admin-live-preview-help">Así se va a ver el aviso en la web a medida que completás el formulario.</p>
+              <div id="admin-preview-card"></div>
+              <div id="admin-preview-detail"></div>
+            </aside>
+            </div>
           </section>
 
         </div>

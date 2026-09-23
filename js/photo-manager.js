@@ -17,7 +17,9 @@
 
 const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|gif|bmp)$/i;
 
-function createPhotoManager(rootEl) {
+function createPhotoManager(rootEl, options) {
+  const onChange = (options && options.onChange) || (() => {});
+
   const fileInput = rootEl.querySelector("[data-pm-file-input]");
   const dropzone = rootEl.querySelector("[data-pm-dropzone]");
   const browseBtn = rootEl.querySelector("[data-pm-browse-btn]");
@@ -177,6 +179,7 @@ function createPhotoManager(rootEl) {
       .join("");
 
     updateBulkBar();
+    onChange();
   }
 
   // --- Eventos: elegir archivos ---

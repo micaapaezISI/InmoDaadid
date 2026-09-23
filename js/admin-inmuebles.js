@@ -31,6 +31,125 @@ const AdminInmuebles = (() => {
   const formHelp = document.getElementById("admin-form-help");
   const propietariosList = document.getElementById("p-propietarios-list");
   const propietarioAgregarBtn = document.getElementById("p-propietario-agregar");
+  const amenitiesHidden = document.getElementById("p-amenities");
+  const amenitiesOtras = document.getElementById("p-amenities-otras");
+  const previewCardBox = document.getElementById("admin-preview-card");
+  const previewDetailBox = document.getElementById("admin-preview-detail");
+
+  /* ----------------------------- Características ----------------------- */
+
+  function leerAmenitiesDelForm() {
+    const marcadas = Array.from(document.querySelectorAll("[data-amenity-check]:checked")).map((cb) => cb.value);
+    const otras = (amenitiesOtras.value || "").split(",").map((a) => a.trim()).filter(Boolean);
+    return [...marcadas, ...otras];
+  }
+
+  function sincronizarAmenitiesHidden() {
+    amenitiesHidden.value = leerAmenitiesDelForm().join(", ");
+  }
+
+  function sincronizarAmenitiesUI(lista) {
+    const checks = Array.from(document.querySelectorAll("[data-amenity-check]"));
+    const restantes = [];
+    (lista || []).forEach((item) => {
+      const match = checks.find((cb) => cb.value.toLowerCase() === String(item).trim().toLowerCase());
+      if (match) match.checked = true;
+      else restantes.push(item);
+    });
+    amenitiesOtras.value = restantes.join(", ");
+    sincronizarAmenitiesHidden();
+  }
+
+  /* ------------------------------ Vista previa --------------------------- */
+
+  function tituloAutomatico(tipo, zona) {
+    return `${typeLabel(tipo)} en ${zona || "San Salvador de Jujuy"}`;
+  }
+
+  function leerVistaPreviaDelForm() {
+    const fd = new FormData(form);
+    const operation = fd.get("operation") || "venta";
+    const type = fd.get("type") || "casa";
+    const zone = fd.get("zone") || "";
+    const ocultarDireccion = fd.get("ocultar_direccion") === "on";
+    const calle = fd.get("calle") || "";
+    const numero = fd.get("numero") || "";
+    const currency = fd.get("currency") === "ARS" ? "ARS" : "USD";
+    const precioCentavos = Dinero.aCentavos(fd.get("price"));
+
+    return {
+      title: fd.get("titulo_publico") || tituloAutomatico(type, zone),
+      operation,
+      type,
+      zone,
+      address: ocultarDireccion ? zone || "San Salvador de Jujuy" : [calle, numero].filter(Boolean).join(" ") || zone || "San Salvador de Jujuy",
+      price: Dinero.aPesos(precioCentavos) || 0,
+      currency,
+      bedrooms: parseInt(fd.get("bedrooms"), 10) || 0,
+      bathrooms: parseInt(fd.get("bathrooms"), 10) || 0,
+      area: fd.get("area") || "0",
+      piso: fd.get("piso") || "",
+      unidad: fd.get("departamento") || "",
+      description: fd.get("description") || "",
+      amenities: leerAmenitiesDelForm(),
+      images: photoManager ? photoManager.getImages().map((i) => i.url) : [],
+    };
+  }
+
+  function previewCardHTML(p) {
+    const badgeClass = p.operation === "venta" ? "badge-venta" : p.operation === "alquiler" ? "badge-alquiler" : "badge-temporal";
+    const media = p.images.length
+      ? `<img src="${p.images[0]}" alt="">`
+      : placeholderPhotoSVG(0, typeLabel(p.type));
+
+    return `
+      <article class="property-card">
+        <div class="property-media">
+          <span class="property-badge ${badgeClass}">${operationLabel(p.operation)}</span>
+          ${media}
+        </div>
+        <div class="property-body">
+          <div class="property-price">${formatPrice(p)}</div>
+          <span class="property-title">${V.escaparHtml(p.title)}</span>
+          <div class="property-location">${V.escaparHtml(p.address)}${p.piso ? ` · Piso ${V.escaparHtml(p.piso)}` : ""}${p.unidad ? ` "${V.escaparHtml(p.unidad)}"` : ""}</div>
+          <div class="property-features">
+            ${p.bedrooms ? `<span>${p.bedrooms} dorm.</span>` : ""}
+            ${p.bathrooms ? `<span>${p.bathrooms} baño${p.bathrooms === 1 ? "" : "s"}</span>` : ""}
+            <span>${p.area} m²</span>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function previewDetailHTML(p) {
+    return `
+      <div class="admin-preview-detail-block">
+        <h4>Descripción</h4>
+        <p>${p.description ? V.escaparHtml(p.description) : "Sin descripción todavía…"}</p>
+      </div>
+      ${p.amenities.length ? `
+      <div class="admin-preview-detail-block">
+        <h4>Características</h4>
+        <ul class="admin-preview-amenities">
+          ${p.amenities.map((a) => `<li>✓ ${V.escaparHtml(a)}</li>`).join("")}
+        </ul>
+      </div>` : ""}`;
+  }
+
+  function actualizarVistaPrevia() {
+    if (!previewCardBox || !previewDetailBox) return;
+    const p = leerVistaPreviaDelForm();
+    previewCardBox.innerHTML = previewCardHTML(p);
+    previewDetailBox.innerHTML = previewDetailHTML(p);
+  }
+
+  function onFormChange() {
+    sincronizarAmenitiesHidden();
+    actualizarVistaPrevia();
+  }
+
+  form.addEventListener("input", onFormChange);
+  form.addEventListener("change", onFormChange);
 
   /* ------------------------- Propietarios (filas) --------------------- */
 
@@ -92,12 +211,14 @@ const AdminInmuebles = (() => {
     await AdminPersonas.loadList();
     propietariosList.innerHTML = "";
     addPropietarioRow(null, 100);
+    amenitiesOtras.value = "";
     photoManager.reset();
     formHeading.textContent = "＋ Nuevo inmueble";
     formHelp.textContent = 'Completá estos datos para publicar un aviso nuevo. Los campos con * son obligatorios, el resto podés dejarlos en blanco si no aplican.';
     submitBtn.textContent = "Guardar inmueble";
     cancelEditBtn.style.display = "none";
     resultBox.style.display = "none";
+    onFormChange();
   }
 
   async function startEdit(id) {
@@ -131,6 +252,8 @@ const AdminInmuebles = (() => {
     form.elements.area.value = propiedad.superficie_total || "";
     form.elements.superficie_cubierta.value = propiedad.superficie_cubierta || "";
     form.elements.antiguedad.value = propiedad.antiguedad || "";
+    form.elements.piso.value = propiedad.piso || "";
+    form.elements.departamento.value = propiedad.departamento || "";
     form.elements.zone.value = propiedad.barrio || "Centro";
     form.elements.calle.value = propiedad.calle || "";
     form.elements.numero.value = propiedad.numero || "";
@@ -142,7 +265,7 @@ const AdminInmuebles = (() => {
     form.elements.publicar_web.checked = !!propiedad.publicar_web;
     form.elements.titulo_publico.value = propiedad.titulo_publico || "";
     form.elements.description.value = propiedad.descripcion || "";
-    form.elements.amenities.value = (propiedad.amenities || []).join(", ");
+    sincronizarAmenitiesUI(propiedad.amenities || []);
     form.elements.notas.value = propiedad.notas || "";
 
     propietariosList.innerHTML = "";
@@ -159,6 +282,7 @@ const AdminInmuebles = (() => {
     submitBtn.textContent = "Actualizar inmueble";
     cancelEditBtn.style.display = "inline-block";
     resultBox.style.display = "none";
+    onFormChange();
     window.adminSwitchTab("nueva");
   }
 
@@ -189,6 +313,7 @@ const AdminInmuebles = (() => {
   /* ------------------------------ Guardar ------------------------------ */
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    sincronizarAmenitiesHidden();
     const data = new FormData(form);
 
     const operation = data.get("operation");
@@ -234,6 +359,8 @@ const AdminInmuebles = (() => {
         superficie_total: V.decimalGrande(data.get("area")),
         superficie_cubierta: V.decimalGrande(data.get("superficie_cubierta")),
         antiguedad: V.entero(data.get("antiguedad")),
+        piso: V.texto(data.get("piso")),
+        departamento: V.texto(data.get("departamento")),
         descripcion: V.texto(data.get("description"), { max: 4000 }),
         precio_alquiler: esVenta ? null : precioCentavos,
         moneda_alquiler: esVenta ? "ARS" : currency,
@@ -412,5 +539,6 @@ const AdminInmuebles = (() => {
     startEdit,
     prepararNuevo,
     isEditing: () => !!editingId,
+    refreshPreview: actualizarVistaPrevia,
   };
 })();

@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const pmRoot = document.querySelector("[data-pm-root]");
   if (!pmRoot) return;
 
-  const photoManager = createPhotoManager(pmRoot);
+  const photoManager = createPhotoManager(pmRoot, { onChange: () => AdminInmuebles.refreshPreview() });
 
   const loginWrap = document.getElementById("admin-login-wrap");
   const loginForm = document.getElementById("admin-login-form");
