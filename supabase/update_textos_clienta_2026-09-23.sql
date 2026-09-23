@@ -12,3 +12,8 @@ where clave = 'nosotros_historia_p1';
 update public.contenido_sitio
 set valor = 'Además de la actividad inmobiliaria, llevo adelante otros emprendimientos propios y presto servicios administrativos a empresas de diversos rubros, en mi carácter de proveedora inscripta. Esa experiencia de gestión diversa es la que aplico a cada operación inmobiliaria que manejo.'
 where clave = 'nosotros_historia_p2';
+
+-- Revierte un cambio de prueba que había quedado pisado ("Somos los mejores").
+update public.contenido_sitio
+set valor = '25 años administrando propiedades ajenas. Ahora,'
+where clave = 'home_hero_titulo';
