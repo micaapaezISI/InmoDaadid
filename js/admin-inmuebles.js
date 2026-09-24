@@ -60,31 +60,80 @@ const AdminInmuebles = (() => {
     sincronizarAmenitiesHidden();
   }
 
+  /* ------------------------ Operación y precios ------------------------ */
+
+  // Qué precios pide cada operación: "ambas" (misma propiedad en venta y
+  // en alquiler) necesita los dos; "temporal" usa el precio de alquiler
+  // (por noche).
+  function llevaVenta(operation) {
+    return operation === "venta" || operation === "ambas";
+  }
+  function llevaAlquiler(operation) {
+    return operation === "alquiler" || operation === "temporal" || operation === "ambas";
+  }
+
+  // Muestra solo los campos de precio que corresponden, y solo esos quedan
+  // obligatorios (un campo oculto con "required" bloquearía el guardado).
+  function sincronizarCamposPrecio() {
+    const operation = form.elements.operation.value;
+    const venta = llevaVenta(operation);
+    const alquiler = llevaAlquiler(operation);
+    form.querySelectorAll("[data-precio-venta]").forEach((el) => (el.style.display = venta ? "" : "none"));
+    form.querySelectorAll("[data-precio-alquiler]").forEach((el) => (el.style.display = alquiler ? "" : "none"));
+    form.elements.price_venta.required = venta;
+    form.elements.price_alquiler.required = alquiler;
+    const label = form.querySelector("[data-precio-alquiler-label]");
+    if (label) label.textContent = operation === "temporal" ? "Precio de alquiler temporario (por noche) *" : "Precio de alquiler (por mes) *";
+  }
+
+  // Barrios ya usados en otros inmuebles, sumados a las sugerencias del
+  // campo "Barrio" (se puede escribir cualquiera, esto es solo ayuda).
+  function sumarBarriosSugeridos(barrios) {
+    const datalist = document.getElementById("p-zone-opciones");
+    if (!datalist) return;
+    const existentes = new Set(Array.from(datalist.options).map((o) => o.value.toLowerCase()));
+    barrios.filter(Boolean).forEach((b) => {
+      if (existentes.has(b.toLowerCase())) return;
+      existentes.add(b.toLowerCase());
+      const opt = document.createElement("option");
+      opt.value = b;
+      datalist.appendChild(opt);
+    });
+  }
+
   /* ------------------------------ Vista previa --------------------------- */
 
-  function tituloAutomatico(tipo, zona) {
-    return `${typeLabel(tipo)} en ${zona || "San Salvador de Jujuy"}`;
+  function tituloAutomatico(tipo, zona, localidad) {
+    return `${typeLabel(tipo)} en ${zona || localidad || "San Salvador de Jujuy"}`;
   }
 
   function leerVistaPreviaDelForm() {
     const fd = new FormData(form);
     const operation = fd.get("operation") || "venta";
     const type = fd.get("type") || "casa";
-    const zone = fd.get("zone") || "";
+    const zone = (fd.get("zone") || "").trim();
+    const localidad = (fd.get("localidad") || "").trim() || "San Salvador de Jujuy";
     const ocultarDireccion = fd.get("ocultar_direccion") === "on";
     const calle = fd.get("calle") || "";
     const numero = fd.get("numero") || "";
-    const currency = fd.get("currency") === "ARS" ? "ARS" : "USD";
-    const precioCentavos = Dinero.aCentavos(fd.get("price"));
+    const priceVenta = Dinero.aPesos(Dinero.aCentavos(fd.get("price_venta"))) || 0;
+    const currencyVenta = fd.get("currency_venta") === "ARS" ? "ARS" : "USD";
+    const priceAlquiler = Dinero.aPesos(Dinero.aCentavos(fd.get("price_alquiler"))) || 0;
+    const currencyAlquiler = fd.get("currency_alquiler") === "USD" ? "USD" : "ARS";
+    const esVenta = llevaVenta(operation);
 
     return {
-      title: fd.get("titulo_publico") || tituloAutomatico(type, zone),
+      title: fd.get("titulo_publico") || tituloAutomatico(type, zone, localidad),
       operation,
       type,
       zone,
-      address: ocultarDireccion ? zone || "San Salvador de Jujuy" : [calle, numero].filter(Boolean).join(" ") || zone || "San Salvador de Jujuy",
-      price: Dinero.aPesos(precioCentavos) || 0,
-      currency,
+      address: ocultarDireccion ? zone || localidad : [calle, numero].filter(Boolean).join(" ") || zone || localidad,
+      price: esVenta ? priceVenta : priceAlquiler,
+      currency: esVenta ? currencyVenta : currencyAlquiler,
+      priceVenta,
+      currencyVenta,
+      priceAlquiler,
+      currencyAlquiler,
       bedrooms: parseInt(fd.get("bedrooms"), 10) || 0,
       bathrooms: parseInt(fd.get("bathrooms"), 10) || 0,
       area: fd.get("area") || "0",
@@ -97,7 +146,7 @@ const AdminInmuebles = (() => {
   }
 
   function previewCardHTML(p) {
-    const badgeClass = p.operation === "venta" ? "badge-venta" : p.operation === "alquiler" ? "badge-alquiler" : "badge-temporal";
+    const badgeClass = operationBadgeClass(p.operation);
     const media = p.images.length
       ? `<img src="${p.images[0]}" alt="">`
       : placeholderPhotoSVG(0, typeLabel(p.type));
@@ -144,6 +193,7 @@ const AdminInmuebles = (() => {
   }
 
   function onFormChange() {
+    sincronizarCamposPrecio();
     sincronizarAmenitiesHidden();
     actualizarVistaPrevia();
   }
@@ -240,7 +290,6 @@ const AdminInmuebles = (() => {
     form.reset();
     await AdminPersonas.loadList();
 
-    const esVenta = propiedad.operacion === "venta";
     form.elements.operation.value = propiedad.operacion;
     form.elements.type.value = propiedad.tipo;
     form.elements.estado.value = propiedad.estado;
@@ -254,12 +303,15 @@ const AdminInmuebles = (() => {
     form.elements.antiguedad.value = propiedad.antiguedad || "";
     form.elements.piso.value = propiedad.piso || "";
     form.elements.departamento.value = propiedad.departamento || "";
-    form.elements.zone.value = propiedad.barrio || "Centro";
+    form.elements.zone.value = propiedad.barrio || "";
+    form.elements.localidad.value = propiedad.localidad || "San Salvador de Jujuy";
     form.elements.calle.value = propiedad.calle || "";
     form.elements.numero.value = propiedad.numero || "";
     form.elements.ocultar_direccion.checked = !!propiedad.ocultar_direccion;
-    form.elements.currency.value = esVenta ? propiedad.moneda_venta : propiedad.moneda_alquiler;
-    form.elements.price.value = Dinero.aPesos(esVenta ? propiedad.precio_venta : propiedad.precio_alquiler) || "";
+    form.elements.currency_venta.value = propiedad.moneda_venta || "USD";
+    form.elements.price_venta.value = propiedad.precio_venta != null ? Dinero.aPesos(propiedad.precio_venta) : "";
+    form.elements.currency_alquiler.value = propiedad.moneda_alquiler || "ARS";
+    form.elements.price_alquiler.value = propiedad.precio_alquiler != null ? Dinero.aPesos(propiedad.precio_alquiler) : "";
     form.elements.expensas.value = Dinero.aPesos(propiedad.expensas) || "";
     form.elements.comision_admin_pct.value = propiedad.comision_admin_pct || "";
     form.elements.publicar_web.checked = !!propiedad.publicar_web;
@@ -316,15 +368,22 @@ const AdminInmuebles = (() => {
     sincronizarAmenitiesHidden();
     const data = new FormData(form);
 
-    const operation = data.get("operation");
-    const esVenta = operation === "venta";
-    const currency = data.get("currency") === "ARS" ? "ARS" : "USD";
-    const precioCentavos = Dinero.aCentavos(data.get("price"));
+    const operation = V.unoDe(data.get("operation"), ["venta", "alquiler", "ambas", "temporal"], "venta");
+    const conVenta = llevaVenta(operation);
+    const conAlquiler = llevaAlquiler(operation);
+    const monedaVenta = data.get("currency_venta") === "ARS" ? "ARS" : "USD";
+    const monedaAlquiler = data.get("currency_alquiler") === "USD" ? "USD" : "ARS";
+    const precioVenta = conVenta ? Dinero.aCentavos(data.get("price_venta")) : null;
+    const precioAlquiler = conAlquiler ? Dinero.aCentavos(data.get("price_alquiler")) : null;
     const amenities = (data.get("amenities") || "").split(",").map((a) => a.trim()).filter(Boolean);
     const propietarios = leerPropietariosDelForm();
 
-    if (precioCentavos === null) return avisar("El precio no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
+    if (conVenta && (precioVenta === null || precioVenta < 0)) return avisar("El precio de venta no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
+    if (conAlquiler && (precioAlquiler === null || precioAlquiler < 0)) return avisar("El precio de alquiler no es un número válido. Escribilo solo con números, por ejemplo 450.000.", "error");
     if (data.get("area") && V.decimalGrande(data.get("area")) === null) return avisar("La superficie total no es un número válido.", "error");
+    if (data.get("superficie_cubierta") && V.decimalGrande(data.get("superficie_cubierta")) === null) return avisar("La superficie cubierta no es un número válido.", "error");
+    if (data.get("expensas") && Dinero.aCentavos(data.get("expensas")) === null) return avisar("Las expensas no son un número válido.", "error");
+    if (data.get("comision_admin_pct") && V.decimal(data.get("comision_admin_pct")) === null) return avisar("La comisión no es un número válido (ej: 10,5).", "error");
 
     if (propietarios.length) {
       const suma = propietarios.reduce((t, p) => t + (p.porcentaje || 0), 0);
@@ -338,8 +397,17 @@ const AdminInmuebles = (() => {
 
     try {
       let codigo = V.texto(data.get("codigo"));
-      if (!codigo && !editingId) {
-        const { data: codigoGenerado } = await supabaseClient.rpc("siguiente_codigo_propiedad");
+      if (codigo) {
+        // El código es único: si ya lo usa otro inmueble, avisamos con un
+        // mensaje claro en vez del error técnico de la base de datos.
+        let consulta = supabaseClient.from("propiedades").select("id, codigo, titulo_publico").eq("codigo", codigo);
+        if (editingId) consulta = consulta.neq("id", editingId);
+        const { data: repetidos, error: errorCodigo } = await consulta;
+        if (errorCodigo) throw errorCodigo;
+        if (repetidos && repetidos.length) throw new Error(mensajeCodigoRepetido(codigo, repetidos[0]));
+      } else if (!editingId) {
+        const { data: codigoGenerado, error: errorCodigo } = await supabaseClient.rpc("siguiente_codigo_propiedad");
+        if (errorCodigo) throw errorCodigo;
         codigo = codigoGenerado;
       }
 
@@ -349,8 +417,8 @@ const AdminInmuebles = (() => {
         estado: data.get("estado"),
         calle: V.texto(data.get("calle")),
         numero: V.texto(data.get("numero")),
-        barrio: data.get("zone"),
-        localidad: "San Salvador de Jujuy",
+        barrio: V.texto(data.get("zone")),
+        localidad: V.texto(data.get("localidad")) || "San Salvador de Jujuy",
         provincia: "Jujuy",
         dormitorios: V.entero(data.get("bedrooms")) || 0,
         banos: V.entero(data.get("bathrooms")) || 0,
@@ -362,10 +430,10 @@ const AdminInmuebles = (() => {
         piso: V.texto(data.get("piso")),
         departamento: V.texto(data.get("departamento")),
         descripcion: V.texto(data.get("description"), { max: 4000 }),
-        precio_alquiler: esVenta ? null : precioCentavos,
-        moneda_alquiler: esVenta ? "ARS" : currency,
-        precio_venta: esVenta ? precioCentavos : null,
-        moneda_venta: esVenta ? currency : "USD",
+        precio_alquiler: precioAlquiler,
+        moneda_alquiler: monedaAlquiler,
+        precio_venta: precioVenta,
+        moneda_venta: monedaVenta,
         expensas: Dinero.aCentavos(data.get("expensas")),
         comision_admin_pct: V.decimal(data.get("comision_admin_pct")),
         publicar_web: data.get("publicar_web") === "on",
@@ -377,6 +445,7 @@ const AdminInmuebles = (() => {
       };
       if (codigo) payload.codigo = codigo;
 
+      const yaExistia = !!editingId;
       let propiedadId = editingId;
       if (editingId) {
         const { error } = await supabaseClient.from("propiedades").update(payload).eq("id", editingId);
@@ -385,6 +454,11 @@ const AdminInmuebles = (() => {
         const { data: inserted, error } = await supabaseClient.from("propiedades").insert(payload).select("id").single();
         if (error) throw error;
         propiedadId = inserted.id;
+        // A partir de acá el inmueble ya existe: si falla algo después (ej. la
+        // subida de fotos) y se vuelve a tocar Guardar, se actualiza este
+        // mismo inmueble en vez de crear uno repetido.
+        editingId = propiedadId;
+        form.elements.codigo.value = codigo || "";
       }
 
       const { error: propError } = await supabaseClient.rpc("reemplazar_propietarios", {
@@ -393,15 +467,22 @@ const AdminInmuebles = (() => {
       });
       if (propError) throw propError;
 
-      const urls = await uploadNewImages(photoManager.getImages());
-      await supabaseClient.from("propiedad_foto").delete().eq("propiedad_id", propiedadId);
+      let urls;
+      try {
+        urls = await uploadNewImages(photoManager.getImages());
+      } catch (errFotos) {
+        throw new Error(`Los datos del inmueble quedaron guardados, pero no se pudieron subir las fotos (${errFotos.message || errFotos}). Volvé a tocar "Actualizar inmueble" para reintentar — no se va a duplicar.`);
+      }
+      const { error: borrarFotosError } = await supabaseClient.from("propiedad_foto").delete().eq("propiedad_id", propiedadId);
+      if (borrarFotosError) throw borrarFotosError;
       if (urls.length) {
-        await supabaseClient.from("propiedad_foto").insert(
+        const { error: fotosError } = await supabaseClient.from("propiedad_foto").insert(
           urls.map((url, i) => ({ propiedad_id: propiedadId, url, orden: i, es_portada: i === 0 }))
         );
+        if (fotosError) throw fotosError;
       }
 
-      const wasEditing = !!editingId;
+      const wasEditing = yaExistia;
       resultBox.style.display = "block";
       resultBox.innerHTML = `
         <div class="admin-card" style="border-color: var(--color-secondary); background: var(--color-bg-alt);">
@@ -417,13 +498,29 @@ const AdminInmuebles = (() => {
       resultBox.innerHTML = `
         <div class="admin-card" style="border-color: var(--color-danger);">
           <h2>❌ No se pudo guardar</h2>
-          <p>${err.message || err}</p>
+          <p>${V.escaparHtml(traducirError(err))}</p>
         </div>`;
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = editingId ? "Actualizar inmueble" : "Guardar inmueble";
     }
   });
+
+  function mensajeCodigoRepetido(codigo, otro) {
+    const nombre = otro && otro.titulo_publico ? ` ("${otro.titulo_publico}")` : "";
+    return `Ya hay otro inmueble con el código ${codigo}${nombre}. Cada inmueble tiene que tener un código distinto: dejá el campo "Código" vacío para que se genere solo. Si es la misma propiedad que ahora también está en venta o en alquiler, no la cargues de nuevo: editá ese inmueble y elegí la operación "Venta y alquiler (las dos)".`;
+  }
+
+  function traducirError(err) {
+    const msg = (err && err.message) || String(err);
+    if ((err && err.code === "23505") || /propiedades_codigo_key/.test(msg)) {
+      return mensajeCodigoRepetido(V.texto(form.elements.codigo.value) || "", null);
+    }
+    if (/row-level security|JWT|No autorizado/i.test(msg)) {
+      return "Tu sesión venció. Recargá la página, volvé a entrar al panel y tocá Guardar otra vez.";
+    }
+    return msg;
+  }
 
   /* --------------------------- Listado (Inmuebles) ---------------------- */
   async function loadList() {
@@ -443,12 +540,13 @@ const AdminInmuebles = (() => {
       return;
     }
     cacheInmuebles = data;
+    sumarBarriosSugeridos(data.map((p) => p.barrio));
 
     listBox.innerHTML = data
       .map((p) => {
-        const esVenta = p.operacion === "venta";
-        const precio = esVenta ? p.precio_venta : p.precio_alquiler;
-        const moneda = esVenta ? p.moneda_venta : p.moneda_alquiler;
+        const precios = [];
+        if (llevaVenta(p.operacion)) precios.push(`${p.moneda_venta} ${(Dinero.aPesos(p.precio_venta) || 0).toLocaleString("es-AR")}`);
+        if (llevaAlquiler(p.operacion)) precios.push(`${p.moneda_alquiler} ${(Dinero.aPesos(p.precio_alquiler) || 0).toLocaleString("es-AR")}${p.operacion === "temporal" ? "/noche" : "/mes"}`);
         const foto = (p.propiedad_foto || []).slice().sort((a, b) => a.orden - b.orden)[0];
         return `
       <div class="admin-list-row">
@@ -456,7 +554,7 @@ const AdminInmuebles = (() => {
         <div class="admin-list-info">
           <span class="admin-list-title">${p.titulo_publico || p.codigo || typeLabel(p.tipo)}</span>
           ${!p.publicar_web ? `<span class="admin-status-badge">No publicado</span>` : ""}
-          <span class="admin-list-meta" style="display:block;">${p.codigo || ""} · ${operationLabel(p.operacion)} · ${typeLabel(p.tipo)} · ${moneda} ${(Dinero.aPesos(precio) || 0).toLocaleString("es-AR")} · ${p.estado}</span>
+          <span class="admin-list-meta" style="display:block;">${p.codigo || ""} · ${operationLabel(p.operacion)} · ${typeLabel(p.tipo)} · ${precios.join(" + ")} · ${p.estado}</span>
         </div>
         <div class="admin-list-actions">
           <button type="button" class="btn btn-sm btn-dark" data-editar-inmueble="${p.id}">Editar</button>

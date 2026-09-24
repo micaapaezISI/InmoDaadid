@@ -727,6 +727,7 @@ h1, h2, h3, h4 {
 .badge-venta { background: var(--color-primary); }
 .badge-alquiler { background: var(--color-primary-dark); }
 .badge-temporal { background: #6b6b6b; }
+.badge-ambas { background: linear-gradient(90deg, var(--color-primary) 50%, var(--color-primary-dark) 50%); }
 
 .property-fav {
   position: absolute;

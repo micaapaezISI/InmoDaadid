@@ -36,10 +36,11 @@ async function propiedadesContexto(): Promise<string> {
 
   return data
     .map((p) => {
+      // Los precios se guardan en centavos.
+      const venta = `venta ${p.moneda_venta} ${((p.precio_venta ?? 0) / 100).toLocaleString("es-AR")}`;
+      const alquiler = `alquiler ${p.moneda_alquiler} ${((p.precio_alquiler ?? 0) / 100).toLocaleString("es-AR")}${p.operacion === "temporal" ? "/noche" : "/mes"}`;
       const precio =
-        p.operacion === "venta"
-          ? `${p.moneda_venta} ${p.precio_venta?.toLocaleString("es-AR")}`
-          : `${p.moneda_alquiler} ${p.precio_alquiler?.toLocaleString("es-AR")}/mes`;
+        p.operacion === "venta" ? venta : p.operacion === "ambas" ? `${venta} o ${alquiler}` : alquiler;
       return `- [${p.codigo}] ${p.titulo_publico} — ${p.operacion}, ${p.tipo}, barrio ${p.barrio}, ${p.dormitorios ?? "?"} dorm., ${p.superficie_total ?? "?"} m², ${precio}, estado: ${p.estado}`;
     })
     .join("\n");

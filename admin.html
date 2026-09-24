@@ -1002,6 +1002,7 @@
                     <select id="p-operation" name="operation" required>
                       <option value="venta">Venta</option>
                       <option value="alquiler">Alquiler</option>
+                      <option value="ambas">Venta y alquiler (las dos)</option>
                       <option value="temporal">Alquiler temporario</option>
                     </select>
                   </div>
@@ -1031,7 +1032,7 @@
                   </div>
                   <div class="field">
                     <label for="p-codigo">Código</label>
-                    <input type="text" id="p-codigo" name="codigo" placeholder="Se genera solo si lo dejás vacío">
+                    <input type="text" id="p-codigo" name="codigo" placeholder="Se genera solo si lo dejás vacío" autocomplete="off">
                   </div>
                   <div class="field">
                     <label for="p-bedrooms">Dormitorios</label>
@@ -1078,12 +1079,29 @@
                 <div class="admin-form-grid">
                   <div class="field">
                     <label for="p-zone">Barrio</label>
-                    <select id="p-zone" name="zone">
-                      <option value="Centro">Centro</option>
-                      <option value="Barrio Balcón">Barrio Balcón</option>
-                      <option value="El Ceibal">El Ceibal</option>
-                      <option value="Countries / Barrios cerrados">Countries / Barrios cerrados</option>
-                    </select>
+                    <input type="text" id="p-zone" name="zone" list="p-zone-opciones" placeholder="Ej: Centro, Los Perales, Alto Comedero" autocomplete="off">
+                    <datalist id="p-zone-opciones">
+                      <option value="Centro">
+                      <option value="Barrio Balcón">
+                      <option value="El Ceibal">
+                      <option value="Countries / Barrios cerrados">
+                    </datalist>
+                    <p class="field-help">Elegí uno de la lista o escribí cualquier otro barrio.</p>
+                  </div>
+                  <div class="field">
+                    <label for="p-localidad">Localidad</label>
+                    <input type="text" id="p-localidad" name="localidad" list="p-localidad-opciones" value="San Salvador de Jujuy" autocomplete="off">
+                    <datalist id="p-localidad-opciones">
+                      <option value="San Salvador de Jujuy">
+                      <option value="Yala">
+                      <option value="Palpalá">
+                      <option value="Perico">
+                      <option value="El Carmen">
+                      <option value="San Pedro de Jujuy">
+                      <option value="Libertador General San Martín">
+                      <option value="Tilcara">
+                      <option value="Humahuaca">
+                    </datalist>
                   </div>
                   <div class="field">
                     <label for="p-calle">Calle</label>
@@ -1099,17 +1117,29 @@
                       Ocultar dirección exacta en la web pública
                     </label>
                   </div>
-                  <div class="field">
-                    <label for="p-currency">Moneda *</label>
-                    <select id="p-currency" name="currency">
+                  <div class="field" data-precio-venta>
+                    <label for="p-currency-venta">Moneda de venta *</label>
+                    <select id="p-currency-venta" name="currency_venta">
                       <option value="USD">USD</option>
                       <option value="ARS">ARS ($)</option>
                     </select>
                   </div>
-                  <div class="field">
-                    <label for="p-price">Precio *</label>
-                    <input type="text" inputmode="decimal" id="p-price" name="price" placeholder="Ej: 85.000" required>
+                  <div class="field" data-precio-venta>
+                    <label for="p-price-venta">Precio de venta *</label>
+                    <input type="text" inputmode="decimal" id="p-price-venta" name="price_venta" placeholder="Ej: 85.000">
                     <p class="field-help">Podés escribirlo con puntos de miles (85.000) o corrido (85000).</p>
+                  </div>
+                  <div class="field" data-precio-alquiler>
+                    <label for="p-currency-alquiler">Moneda de alquiler *</label>
+                    <select id="p-currency-alquiler" name="currency_alquiler">
+                      <option value="ARS">ARS ($)</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                  <div class="field" data-precio-alquiler>
+                    <label for="p-price-alquiler" data-precio-alquiler-label>Precio de alquiler (por mes) *</label>
+                    <input type="text" inputmode="decimal" id="p-price-alquiler" name="price_alquiler" placeholder="Ej: 450.000">
+                    <p class="field-help">Podés escribirlo con puntos de miles (450.000) o corrido (450000).</p>
                   </div>
                   <div class="field">
                     <label for="p-expensas">Expensas (opcional)</label>

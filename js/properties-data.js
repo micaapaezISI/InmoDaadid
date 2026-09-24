@@ -12,7 +12,9 @@
 let PROPERTIES = [];
 
 function mapPropiedad(row) {
-  const esVenta = row.operacion === "venta";
+  // "ambas" = la misma propiedad está en venta y en alquiler: el precio
+  // principal es el de venta, y el de alquiler va aparte (priceAlquiler).
+  const esVenta = row.operacion === "venta" || row.operacion === "ambas";
   const fotos = (row.propiedad_foto || []).slice().sort((a, b) => a.orden - b.orden);
 
   return {
@@ -21,12 +23,14 @@ function mapPropiedad(row) {
     title: row.titulo_publico || `${typeLabel(row.tipo)} en ${row.barrio || row.localidad || "San Salvador de Jujuy"}`,
     operation: row.operacion,
     type: row.tipo,
-    zone: row.barrio,
+    zone: row.barrio || row.localidad || "",
     address: row.ocultar_direccion
       ? (row.barrio || row.localidad || "")
-      : [row.calle, row.numero].filter(Boolean).join(" ") || row.barrio || "",
+      : [row.calle, row.numero].filter(Boolean).join(" ") || row.barrio || row.localidad || "",
     price: Dinero.aPesos(esVenta ? row.precio_venta : row.precio_alquiler) || 0,
     currency: (esVenta ? row.moneda_venta : row.moneda_alquiler) || "USD",
+    priceAlquiler: row.operacion === "ambas" ? Dinero.aPesos(row.precio_alquiler) || 0 : null,
+    currencyAlquiler: row.operacion === "ambas" ? row.moneda_alquiler || "ARS" : null,
     bedrooms: row.dormitorios || 0,
     bathrooms: row.banos || 0,
     area: row.superficie_total || 0,
@@ -89,6 +93,24 @@ function propertyMediaHTML(p, label) {
   return placeholderPhotoSVG(p.id % PH_PALETTES.length, label);
 }
 
+function operationBadgeClass(op) {
+  return { venta: "badge-venta", alquiler: "badge-alquiler", ambas: "badge-ambas" }[op] || "badge-temporal";
+}
+
+// Una propiedad "ambas" aparece tanto al filtrar por Venta como por Alquiler.
+function matchesOperation(p, op) {
+  if (!op || op === "todas") return true;
+  if (p.operation === op) return true;
+  return p.operation === "ambas" && (op === "venta" || op === "alquiler");
+}
+
+// Precios publicados de una propiedad: uno, o dos si es venta y alquiler.
+function propertyPrices(p) {
+  const lista = [{ price: p.price, currency: p.currency }];
+  if (p.operation === "ambas" && p.priceAlquiler != null) lista.push({ price: p.priceAlquiler, currency: p.currencyAlquiler });
+  return lista;
+}
+
 function operationLabel(op) {
   return { venta: "Venta", alquiler: "Alquiler", temporal: "Temporario", ambas: "Venta / Alquiler" }[op] || op;
 }
@@ -103,7 +125,29 @@ function typeLabel(t) {
 }
 
 function formatPrice(p) {
-  const amount = p.price.toLocaleString("es-AR");
+  const monto = (price, currency) => `${currency === "USD" ? "USD" : "$"} ${(price || 0).toLocaleString("es-AR")}`;
+  if (p.operation === "ambas") {
+    const alquiler = p.priceAlquiler ? ` · Alquiler ${monto(p.priceAlquiler, p.currencyAlquiler)} / mes` : "";
+    return `${monto(p.price, p.currency)}${alquiler}`;
+  }
   const suffix = p.operation === "temporal" ? " / noche" : p.operation === "alquiler" ? " / mes" : "";
-  return `${p.currency === "USD" ? "USD" : "$"} ${amount}${suffix}`;
+  return `${monto(p.price, p.currency)}${suffix}`;
+}
+
+// Completa un <select> de barrios con los que tienen propiedades
+// publicadas (además de los que ya trae el HTML), para que un barrio
+// nuevo cargado desde el panel también se pueda filtrar.
+function fillZoneSelect(select, properties) {
+  if (!select) return;
+  const existentes = new Set(Array.from(select.options).map((o) => o.value.toLowerCase()));
+  const nuevas = [...new Set(properties.map((p) => p.zone).filter(Boolean))]
+    .filter((z) => !existentes.has(z.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, "es"));
+  nuevas.forEach((z) => {
+    const opt = document.createElement("option");
+    opt.value = z;
+    opt.textContent = z;
+    select.appendChild(opt);
+  });
+  if (nuevas.length) select.dispatchEvent(new Event("change"));
 }

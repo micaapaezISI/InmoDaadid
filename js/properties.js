@@ -34,8 +34,7 @@ function toggleFavorite(id) {
 }
 
 function renderPropertyCard(p) {
-  const badgeClass =
-    p.operation === "venta" ? "badge-venta" : p.operation === "alquiler" ? "badge-alquiler" : "badge-temporal";
+  const badgeClass = operationBadgeClass(p.operation);
   const isFav = getFavorites().has(p.id);
 
   return `
@@ -73,23 +72,31 @@ function applyFilters(params) {
   const priceMax = params.priceMax !== "" && params.priceMax != null ? V.decimalGrande(params.priceMax) : null;
 
   return PROPERTIES.filter((p) => {
-    if (params.operation && params.operation !== "todas" && p.operation !== params.operation) return false;
+    if (!matchesOperation(p, params.operation)) return false;
     if (params.type && params.type !== "todos" && p.type !== params.type) return false;
     if (params.zone && params.zone !== "todas" && p.zone !== params.zone) return false;
     if (params.bedrooms && params.bedrooms !== "todos") {
       const min = parseInt(params.bedrooms, 10);
       if (p.bedrooms < min) return false;
     }
+    // Precios candidatos: los de la operación buscada (una propiedad en venta
+    // y alquiler tiene dos precios; si se filtra por Alquiler, cuenta el de alquiler).
+    let precios = propertyPrices(p);
+    if (p.operation === "ambas" && params.operation === "venta") precios = precios.slice(0, 1);
+    if (p.operation === "ambas" && params.operation === "alquiler") precios = precios.slice(1);
+
     // Moneda: si se elige una moneda puntual, solo entran las propiedades publicadas en esa moneda.
-    if (params.currency && params.currency !== "todas" && p.currency !== params.currency) return false;
+    if (params.currency && params.currency !== "todas") precios = precios.filter((x) => x.currency === params.currency);
+    if (!precios.length) return false;
 
     // Precio: si se pusieron mínimo/máximo, se compara contra el precio publicado de cada propiedad
     // (en su propia moneda). Si "Moneda" quedó en "Todas", la comparación mezcla USD y ARS —
     // para un resultado exacto conviene elegir también la moneda.
-    if (priceMin !== null && !Number.isNaN(priceMin) && p.price < priceMin) return false;
-    if (priceMax !== null && !Number.isNaN(priceMax) && p.price > priceMax) return false;
-
-    return true;
+    return precios.some((x) => {
+      if (priceMin !== null && !Number.isNaN(priceMin) && x.price < priceMin) return false;
+      if (priceMax !== null && !Number.isNaN(priceMax) && x.price > priceMax) return false;
+      return true;
+    });
   });
 }
 
@@ -126,6 +133,7 @@ function renderGrid(list) {
 function initPropertiesPage() {
   const form = document.getElementById("filters-form");
   if (!form) return;
+  fillZoneSelect(form.elements["zone"], PROPERTIES);
 
   // Prellenar filtros con los parámetros que vengan del buscador rápido (index.html)
   const urlParams = new URLSearchParams(window.location.search);
@@ -166,6 +174,7 @@ function initPropertiesPage() {
 function initQuickSearch() {
   const form = document.getElementById("quick-search-form");
   if (!form) return;
+  fillZoneSelect(form.elements["zone"], PROPERTIES);
 
   const tabs = document.querySelectorAll("#quick-search-tabs .search-tab");
   const operationSelect = form.elements["operation"];

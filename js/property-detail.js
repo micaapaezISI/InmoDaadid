@@ -86,15 +86,14 @@ async function initPropertyDetail() {
   const images = property.images && property.images.length ? property.images : [];
   renderGallery(images, property);
 
-  const badgeClass =
-    property.operation === "venta" ? "badge-venta" : property.operation === "alquiler" ? "badge-alquiler" : "badge-temporal";
+  const badgeClass = operationBadgeClass(property.operation);
 
   document.getElementById("detail-body").innerHTML = `
     <div class="detail-header">
       <div class="detail-title">
         <span class="property-badge ${badgeClass}" style="position:static; display:inline-block; margin-bottom:10px;">${operationLabel(property.operation)}</span>
         <h1>${property.title}</h1>
-        <div class="property-location">${property.address} · ${property.zone}</div>
+        <div class="property-location">${[...new Set([property.address, property.zone].filter(Boolean))].join(" · ")}</div>
       </div>
       <div class="detail-price">
         ${formatPrice(property)}
