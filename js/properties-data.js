@@ -108,7 +108,9 @@ function propertyAreaHTML(p) {
 
 // Link directo a la ficha de una propiedad (para compartirla sola).
 function propertyShareUrl(id) {
-  return `${window.location.origin}/propiedad.html?id=${encodeURIComponent(id)}`;
+  // /p/<id>/ tiene la foto de portada en las etiquetas og: (vista previa
+  // de WhatsApp/Facebook) y redirige a la ficha — ver scripts/generar-paginas-compartir.mjs.
+  return `${window.location.origin}/p/${encodeURIComponent(id)}/`;
 }
 
 function operationBadgeClass(op) {

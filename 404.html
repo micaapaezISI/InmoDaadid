@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Página no encontrada — Patricia Daadin</title>
+<meta name="robots" content="noindex">
+<script>
+  // Link de una propiedad (/p/<id>/) cuya página para compartir todavía no
+  // se generó (se generan cada 15 minutos) o ya se borró: se manda a la
+  // ficha, que muestra la propiedad o avisa que ya no está disponible.
+  (function () {
+    var m = /^\/p\/(\d+)\/?/.exec(location.pathname);
+    if (m) location.replace("/propiedad.html?id=" + m[1]);
+  })();
+</script>
+</head>
+<body style="font-family:sans-serif; padding:60px 20px; text-align:center; color:#333;">
+  <h1 style="font-size:1.4rem;">No encontramos esta página</h1>
+  <p><a href="/propiedades.html">Ver todas las propiedades</a> · <a href="/">Ir al inicio</a></p>
+</body>
+</html>

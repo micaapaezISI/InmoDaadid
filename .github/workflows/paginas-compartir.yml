@@ -1,0 +1,61 @@
+# Genera /p/<id>/ — una página por propiedad publicada con la foto de
+# portada en las etiquetas og:, para que al compartir el link por WhatsApp
+# o Facebook se vea esa foto (ver scripts/generar-paginas-compartir.mjs).
+name: Páginas para compartir propiedades
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/generar-paginas-compartir.mjs"
+      - ".github/workflows/paginas-compartir.yml"
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: paginas-compartir
+  cancel-in-progress: false
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar sharp (para achicar portadas pesadas)
+        run: npm install --no-save --no-package-lock sharp@0.33
+
+      - name: Generar páginas
+        run: node scripts/generar-paginas-compartir.mjs
+
+      - name: Commitear si cambió algo
+        id: commit
+        run: |
+          git add -A p
+          if git diff --cached --quiet; then
+            echo "Sin cambios."
+            echo "cambio=no" >> "$GITHUB_OUTPUT"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Actualiza páginas para compartir propiedades"
+            git push
+            echo "cambio=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Un push hecho con el token de la Action puede no disparar la
+      # publicación de GitHub Pages: se la pide explícitamente.
+      - name: Publicar en GitHub Pages
+        if: steps.commit.outputs.cambio == 'si'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "No se pudo pedir la publicación; se hará en el próximo push."
