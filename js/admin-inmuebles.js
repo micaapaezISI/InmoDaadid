@@ -137,6 +137,7 @@ const AdminInmuebles = (() => {
       bedrooms: parseInt(fd.get("bedrooms"), 10) || 0,
       bathrooms: parseInt(fd.get("bathrooms"), 10) || 0,
       area: fd.get("area") || "0",
+      areaCubierta: fd.get("superficie_cubierta") || "",
       piso: fd.get("piso") || "",
       unidad: fd.get("departamento") || "",
       description: fd.get("description") || "",
@@ -164,7 +165,7 @@ const AdminInmuebles = (() => {
           <div class="property-features">
             ${p.bedrooms ? `<span>${p.bedrooms} dorm.</span>` : ""}
             ${p.bathrooms ? `<span>${p.bathrooms} baño${p.bathrooms === 1 ? "" : "s"}</span>` : ""}
-            <span>${p.area} m²</span>
+            ${propertyAreaHTML(p)}
           </div>
         </div>
       </article>`;
@@ -262,6 +263,7 @@ const AdminInmuebles = (() => {
     propietariosList.innerHTML = "";
     addPropietarioRow(null, 100);
     amenitiesOtras.value = "";
+    AdminMapa.setPunto(null);
     photoManager.reset();
     formHeading.textContent = "＋ Nuevo inmueble";
     formHelp.textContent = 'Completá estos datos para publicar un aviso nuevo. Los campos con * son obligatorios, el resto podés dejarlos en blanco si no aplican.';
@@ -308,6 +310,7 @@ const AdminInmuebles = (() => {
     form.elements.calle.value = propiedad.calle || "";
     form.elements.numero.value = propiedad.numero || "";
     form.elements.ocultar_direccion.checked = !!propiedad.ocultar_direccion;
+    AdminMapa.setPunto(propiedad.latitud != null && propiedad.longitud != null ? { lat: Number(propiedad.latitud), lng: Number(propiedad.longitud) } : null);
     form.elements.currency_venta.value = propiedad.moneda_venta || "USD";
     form.elements.price_venta.value = propiedad.precio_venta != null ? Dinero.aPesos(propiedad.precio_venta) : "";
     form.elements.currency_alquiler.value = propiedad.moneda_alquiler || "ARS";
@@ -444,6 +447,14 @@ const AdminInmuebles = (() => {
         notas: V.texto(data.get("notas"), { max: 4000 }),
       };
       if (codigo) payload.codigo = codigo;
+      // Solo se manda si hay un punto marcado o si ya tenía uno (para poder
+      // borrarlo): así, si todavía no se corrió la migración 018 en
+      // Supabase, el resto de la carga sigue funcionando igual.
+      const punto = AdminMapa.getPunto();
+      if (punto || AdminMapa.teniaPunto()) {
+        payload.latitud = punto ? punto.lat : null;
+        payload.longitud = punto ? punto.lng : null;
+      }
 
       const yaExistia = !!editingId;
       let propiedadId = editingId;
@@ -516,6 +527,9 @@ const AdminInmuebles = (() => {
     if ((err && err.code === "23505") || /propiedades_codigo_key/.test(msg)) {
       return mensajeCodigoRepetido(V.texto(form.elements.codigo.value) || "", null);
     }
+    if (/latitud|longitud/.test(msg) && /column/i.test(msg)) {
+      return "Para guardar la ubicación en el mapa falta correr la actualización 018 en Supabase (supabase/migrations/018_ubicacion_mapa.sql). Mientras tanto, tocá \"Quitar pin\" y se guarda todo lo demás.";
+    }
     if (/row-level security|JWT|No autorizado/i.test(msg)) {
       return "Tu sesión venció. Recargá la página, volvé a entrar al panel y tocá Guardar otra vez.";
     }
@@ -557,6 +571,7 @@ const AdminInmuebles = (() => {
           <span class="admin-list-meta" style="display:block;">${p.codigo || ""} · ${operationLabel(p.operacion)} · ${typeLabel(p.tipo)} · ${precios.join(" + ")} · ${p.estado}</span>
         </div>
         <div class="admin-list-actions">
+          ${p.publicar_web ? `<button type="button" class="btn btn-sm btn-dark" data-copiar-link="${p.id}" title="Copia el link de esta propiedad para mandarlo por WhatsApp, mail, etc.">Copiar link</button>` : ""}
           <button type="button" class="btn btn-sm btn-dark" data-editar-inmueble="${p.id}">Editar</button>
           <button type="button" class="admin-delete-link" data-desactivar-inmueble="${p.id}">Desactivar</button>
         </div>
@@ -564,6 +579,17 @@ const AdminInmuebles = (() => {
       })
       .join("");
 
+    listBox.querySelectorAll("[data-copiar-link]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const url = propertyShareUrl(btn.dataset.copiarLink);
+        try {
+          await navigator.clipboard.writeText(url);
+          avisar("Link copiado: " + url);
+        } catch {
+          window.prompt("Copiá este link:", url);
+        }
+      });
+    });
     listBox.querySelectorAll("[data-editar-inmueble]").forEach((btn) => {
       btn.addEventListener("click", () => startEdit(parseInt(btn.dataset.editarInmueble, 10)));
     });

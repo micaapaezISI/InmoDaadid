@@ -34,6 +34,11 @@ function mapPropiedad(row) {
     bedrooms: row.dormitorios || 0,
     bathrooms: row.banos || 0,
     area: row.superficie_total || 0,
+    areaCubierta: row.superficie_cubierta || null,
+    localidad: row.localidad || "San Salvador de Jujuy",
+    ocultarDireccion: !!row.ocultar_direccion,
+    lat: row.latitud != null ? Number(row.latitud) : null,
+    lng: row.longitud != null ? Number(row.longitud) : null,
     featured: row.featured,
     active: row.activo,
     description: row.descripcion_publica || row.descripcion || "",
@@ -91,6 +96,19 @@ function propertyMediaHTML(p, label) {
     return `<img src="${p.images[0]}" alt="${p.title}" loading="lazy">`;
   }
   return placeholderPhotoSVG(p.id % PH_PALETTES.length, label);
+}
+
+// Superficies para tarjetas: total y, si se cargó, cubierta.
+function propertyAreaHTML(p) {
+  const partes = [];
+  if (p.area && Number(p.area) > 0) partes.push(`<span>${p.area} m² tot.</span>`);
+  if (p.areaCubierta && Number(p.areaCubierta) > 0) partes.push(`<span>${p.areaCubierta} m² cub.</span>`);
+  return partes.join("");
+}
+
+// Link directo a la ficha de una propiedad (para compartirla sola).
+function propertyShareUrl(id) {
+  return `${window.location.origin}/propiedad.html?id=${encodeURIComponent(id)}`;
 }
 
 function operationBadgeClass(op) {

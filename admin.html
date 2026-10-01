@@ -8,6 +8,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="img/daadin-logo.png">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Mulish:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -118,6 +119,15 @@
         </div>
         <button type="button" id="admin-ver-guia" class="btn btn-sm btn-dark" style="margin-left:auto;">❓ ¿Cómo empiezo?</button>
         <button type="button" id="admin-logout" class="btn btn-sm btn-dark">Cerrar sesión</button>
+      </div>
+
+      <div class="admin-banner" id="admin-aviso-password" style="display:none; border-color:var(--color-danger);">
+        <span style="font-size:1.3rem;">🔑</span>
+        <div>
+          <strong>Estás usando la contraseña inicial.</strong>
+          Por seguridad, cambiala por una propia (y si querés, también tu usuario) en Configuración → Mi cuenta.
+        </div>
+        <button type="button" id="admin-ir-mi-cuenta" class="btn btn-sm btn-primary" style="margin-left:auto;">Cambiarla ahora</button>
       </div>
 
       <div class="admin-shell">
@@ -1117,6 +1127,20 @@
                       Ocultar dirección exacta en la web pública
                     </label>
                   </div>
+                  <div class="field field-full">
+                    <label for="p-mapa-link">Ubicación en el mapa</label>
+                    <p class="field-help" style="margin:0 0 8px;">Tocá el mapa para marcar dónde está la propiedad (podés arrastrar el pin), o pegá abajo el link de Google Maps. Si no marcás nada, el mapa de la web busca la dirección escrita arriba.</p>
+                    <div class="admin-map-tools">
+                      <input type="text" id="p-mapa-link" placeholder="Pegá un link de Google Maps o coordenadas (ej: -24.1858, -65.2995)" autocomplete="off">
+                      <button type="button" class="btn btn-sm btn-dark" id="p-mapa-usar-link">Usar link</button>
+                      <button type="button" class="btn btn-sm btn-dark" id="p-mapa-buscar">Buscar la dirección</button>
+                      <button type="button" class="admin-delete-link" id="p-mapa-quitar">Quitar pin</button>
+                    </div>
+                    <div id="p-mapa" class="admin-map"></div>
+                    <p class="field-help" id="p-mapa-estado">Sin ubicación marcada.</p>
+                    <input type="hidden" id="p-latitud" name="latitud">
+                    <input type="hidden" id="p-longitud" name="longitud">
+                  </div>
                   <div class="field" data-precio-venta>
                     <label for="p-currency-venta">Moneda de venta *</label>
                     <select id="p-currency-venta" name="currency_venta">
@@ -1563,6 +1587,8 @@
 <script src="js/vendor/zip-lite.js"></script>
 <script src="js/photo-manager.js"></script>
 <script src="js/admin-personas.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="js/admin-mapa.js"></script>
 <script src="js/admin-inmuebles.js"></script>
 <script src="js/admin-contratos.js"></script>
 <script src="js/admin-cobranzas.js"></script>

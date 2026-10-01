@@ -51,7 +51,7 @@ function renderPropertyCard(p) {
       <div class="property-features">
         ${p.bedrooms ? `<span>${p.bedrooms} dorm.</span>` : ""}
         ${p.bathrooms ? `<span>${p.bathrooms} baño${p.bathrooms === 1 ? "" : "s"}</span>` : ""}
-        <span>${p.area} m²</span>
+        ${propertyAreaHTML(p)}
       </div>
       <a href="propiedad.html?id=${p.id}" class="btn btn-dark btn-sm property-cta">Ver detalle</a>
     </div>

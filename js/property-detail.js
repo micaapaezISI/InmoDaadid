@@ -104,7 +104,8 @@ async function initPropertyDetail() {
     <div class="detail-features">
       ${property.bedrooms ? `<div><strong>${property.bedrooms}</strong><span>Dormitorios</span></div>` : ""}
       ${property.bathrooms ? `<div><strong>${property.bathrooms}</strong><span>Baños</span></div>` : ""}
-      <div><strong>${property.area}</strong><span>m²</span></div>
+      ${property.area ? `<div><strong>${property.area}</strong><span>m² totales</span></div>` : ""}
+      ${property.areaCubierta ? `<div><strong>${property.areaCubierta}</strong><span>m² cubiertos</span></div>` : ""}
       <div><strong>${typeLabel(property.type)}</strong><span>Tipo</span></div>
     </div>
 
@@ -124,7 +125,7 @@ async function initPropertyDetail() {
   `;
 
   const message = encodeURIComponent(
-    `Hola, vi la propiedad "${property.title}" (código ${property.id}) en la web y quiero más información.`
+    `Hola, vi la propiedad "${property.title}" (código ${property.codigo || property.id}) en la web y quiero más información.\n${propertyShareUrl(property.id)}`
   );
 
   document.getElementById("detail-sidebar").innerHTML = `
@@ -138,9 +139,12 @@ async function initPropertyDetail() {
     <div class="sidebar-actions">
       <a class="btn btn-whatsapp btn-block" href="https://wa.me/${WHATSAPP_NUMBER}?text=${message}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L4 20l1-4.6A8.5 8.5 0 1 1 21 11.5Z"/></svg> Consultar por WhatsApp</a>
       <a class="btn btn-dark btn-block" href="tel:+${WHATSAPP_NUMBER}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.8 21 3 13.2 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8Z"/></svg> Llamar ahora</a>
+      ${renderShareBox(property)}
       <a class="btn btn-outline btn-block" style="color:var(--color-primary); border-color:var(--color-border);" href="contacto.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Enviar consulta por formulario</a>
     </div>
   `;
+
+  initShareBox(property);
 
   // Propiedades relacionadas
   const related = PROPERTIES.filter((p) => p.id !== property.id && p.type === property.type).slice(0, 3);
@@ -160,13 +164,32 @@ document.addEventListener("DOMContentLoaded", initPropertyDetail);
    ni altura) — acá no hace falta repetir esa lógica.
    =========================================================================== */
 function renderMapSection(property) {
-  const parts = [...new Set([property.address, property.zone].filter(Boolean))];
-  if (parts.length === 0) return "";
+  let query;
+  let zoom;
+  let esAproximada;
 
-  const query = [...parts, "San Salvador de Jujuy", "Argentina"].join(", ");
-  const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
+  if (property.lat != null && property.lng != null) {
+    // Punto marcado en el panel. Si la dirección está oculta, se muestra
+    // redondeado (~100 m) y más alejado, para no revelar la casa exacta.
+    if (property.ocultarDireccion) {
+      query = `${property.lat.toFixed(3)},${property.lng.toFixed(3)}`;
+      zoom = 15;
+      esAproximada = true;
+    } else {
+      query = `${property.lat},${property.lng}`;
+      zoom = 17;
+      esAproximada = false;
+    }
+  } else {
+    const parts = [...new Set([property.address, property.zone, property.localidad].filter(Boolean))];
+    if (parts.length === 0) return "";
+    query = [...parts, "Jujuy", "Argentina"].join(", ");
+    zoom = 15;
+    esAproximada = property.ocultarDireccion || property.address === property.zone;
+  }
+
+  const embedSrc = `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=${zoom}&output=embed`;
   const linkHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-  const esAproximada = property.address === property.zone;
 
   return `
     <div class="detail-map">
@@ -178,6 +201,61 @@ function renderMapSection(property) {
       <a class="detail-map-link" href="${linkHref}" target="_blank" rel="noopener">Ver en Google Maps ↗</a>
     </div>
   `;
+}
+
+/* ===========================================================================
+   COMPARTIR
+   Comparte el link de ESTA propiedad (propiedad.html?id=...), no el de la
+   página general. En el celular abre el menú nativo de compartir; además
+   hay accesos directos a WhatsApp, Facebook y "copiar link".
+   =========================================================================== */
+function shareText(property) {
+  return `${property.title} — ${formatPrice(property)}`;
+}
+
+function renderShareBox(property) {
+  const url = propertyShareUrl(property.id);
+  const wa = `https://wa.me/?text=${encodeURIComponent(`${shareText(property)}\n${url}`)}`;
+  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  return `
+    <div class="share-box">
+      <span class="share-box-title">Compartir esta propiedad</span>
+      <div class="share-box-actions">
+        <button type="button" class="share-btn" data-share-native hidden>📤 Compartir</button>
+        <a class="share-btn" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="share-btn" href="${fb}" target="_blank" rel="noopener">Facebook</a>
+        <button type="button" class="share-btn" data-share-copy>🔗 Copiar link</button>
+      </div>
+      <span class="share-box-ok" data-share-ok hidden>✓ Link copiado</span>
+    </div>`;
+}
+
+function initShareBox(property) {
+  const box = document.querySelector(".share-box");
+  if (!box) return;
+  const url = propertyShareUrl(property.id);
+  const nativeBtn = box.querySelector("[data-share-native]");
+  if (navigator.share) {
+    nativeBtn.hidden = false;
+    nativeBtn.addEventListener("click", () => {
+      navigator.share({ title: property.title, text: shareText(property), url }).catch(() => {});
+    });
+  }
+  box.querySelector("[data-share-copy]").addEventListener("click", async () => {
+    const ok = box.querySelector("[data-share-ok]");
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const tmp = document.createElement("textarea");
+      tmp.value = url;
+      document.body.appendChild(tmp);
+      tmp.select();
+      try { document.execCommand("copy"); } catch {}
+      tmp.remove();
+    }
+    ok.hidden = false;
+    setTimeout(() => (ok.hidden = true), 2500);
+  });
 }
 
 /* ===========================================================================

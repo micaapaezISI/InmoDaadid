@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabName === "agenda") AdminAgenda.loadList();
     if (tabName === "configuracion") { AdminConfiguracion.loadConfig(); loadCuentaUsuario(); }
     if (tabName === "contenido") AdminContenido.loadContenido();
+    if (tabName === "nueva") AdminMapa.refrescar();
   }
 
   tabButtons.forEach((btn) => {
@@ -90,7 +91,23 @@ document.addEventListener("DOMContentLoaded", () => {
     let yaVioGuia = false;
     try { yaVioGuia = localStorage.getItem("admin_guia_vista") === "1"; } catch {}
     guiaCard.style.display = yaVioGuia ? "none" : "block";
+
+    revisarPasswordInicial();
   }
+
+  // La cuenta se crea/resetea con una contraseña inicial y la marca
+  // "cambiar_password" (ver la carga inicial de usuario en Supabase):
+  // mientras siga así, se muestra el aviso para que la cambie.
+  const avisoPassword = document.getElementById("admin-aviso-password");
+  async function revisarPasswordInicial() {
+    const { data } = await supabaseClient.auth.getUser();
+    const meta = (data && data.user && data.user.user_metadata) || {};
+    avisoPassword.style.display = meta.cambiar_password ? "flex" : "none";
+  }
+  document.getElementById("admin-ir-mi-cuenta").addEventListener("click", () => {
+    switchTab("configuracion");
+    setTimeout(() => document.getElementById("cuenta-usuario").scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+  });
 
   guiaCerrarBtn.addEventListener("click", () => {
     guiaCard.style.display = "none";
@@ -306,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const { error } = await supabaseClient.auth.updateUser({ password });
+    const { error } = await supabaseClient.auth.updateUser({ password, data: { cambiar_password: false } });
     if (error) {
       resetError.textContent = "No se pudo guardar la contraseña: " + error.message;
       resetError.style.display = "block";
@@ -386,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = cuentaPasswordForm.querySelector("button[type=submit]");
     submitBtn.disabled = true;
 
-    const { error } = await supabaseClient.auth.updateUser({ password });
+    const { error } = await supabaseClient.auth.updateUser({ password, data: { cambiar_password: false } });
 
     submitBtn.disabled = false;
 
@@ -397,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     cuentaPasswordForm.reset();
+    avisoPassword.style.display = "none";
     cuentaPasswordGuardado.style.display = "inline";
     setTimeout(() => { cuentaPasswordGuardado.style.display = "none"; }, 3000);
   });
