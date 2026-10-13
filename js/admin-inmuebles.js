@@ -136,8 +136,8 @@ const AdminInmuebles = (() => {
       currencyAlquiler,
       bedrooms: parseInt(fd.get("bedrooms"), 10) || 0,
       bathrooms: parseInt(fd.get("bathrooms"), 10) || 0,
-      area: fd.get("area") || "0",
-      areaCubierta: fd.get("superficie_cubierta") || "",
+      area: V.superficie(fd.get("area")) || 0,
+      areaCubierta: V.superficie(fd.get("superficie_cubierta")) || "",
       piso: fd.get("piso") || "",
       unidad: fd.get("departamento") || "",
       description: fd.get("description") || "",
@@ -300,8 +300,8 @@ const AdminInmuebles = (() => {
     form.elements.bathrooms.value = propiedad.banos || 0;
     form.elements.cocheras.value = propiedad.cocheras || 0;
     form.elements.ambientes.value = propiedad.ambientes || "";
-    form.elements.area.value = propiedad.superficie_total || "";
-    form.elements.superficie_cubierta.value = propiedad.superficie_cubierta || "";
+    form.elements.area.value = propiedad.superficie_total != null ? String(propiedad.superficie_total).replace(".", ",") : "";
+    form.elements.superficie_cubierta.value = propiedad.superficie_cubierta != null ? String(propiedad.superficie_cubierta).replace(".", ",") : "";
     form.elements.antiguedad.value = propiedad.antiguedad || "";
     form.elements.piso.value = propiedad.piso || "";
     form.elements.departamento.value = propiedad.departamento || "";
@@ -312,11 +312,11 @@ const AdminInmuebles = (() => {
     form.elements.ocultar_direccion.checked = !!propiedad.ocultar_direccion;
     AdminMapa.setPunto(propiedad.latitud != null && propiedad.longitud != null ? { lat: Number(propiedad.latitud), lng: Number(propiedad.longitud) } : null);
     form.elements.currency_venta.value = propiedad.moneda_venta || "USD";
-    form.elements.price_venta.value = propiedad.precio_venta != null ? Dinero.aPesos(propiedad.precio_venta) : "";
+    form.elements.price_venta.value = Dinero.paraCampo(propiedad.precio_venta);
     form.elements.currency_alquiler.value = propiedad.moneda_alquiler || "ARS";
-    form.elements.price_alquiler.value = propiedad.precio_alquiler != null ? Dinero.aPesos(propiedad.precio_alquiler) : "";
-    form.elements.expensas.value = Dinero.aPesos(propiedad.expensas) || "";
-    form.elements.comision_admin_pct.value = propiedad.comision_admin_pct || "";
+    form.elements.price_alquiler.value = Dinero.paraCampo(propiedad.precio_alquiler);
+    form.elements.expensas.value = propiedad.expensas ? Dinero.paraCampo(propiedad.expensas) : "";
+    form.elements.comision_admin_pct.value = propiedad.comision_admin_pct != null ? String(propiedad.comision_admin_pct).replace(".", ",") : "";
     form.elements.publicar_web.checked = !!propiedad.publicar_web;
     form.elements.titulo_publico.value = propiedad.titulo_publico || "";
     form.elements.description.value = propiedad.descripcion || "";
@@ -352,6 +352,7 @@ const AdminInmuebles = (() => {
         urls.push(img.url);
         continue;
       }
+      submitBtn.textContent = `Subiendo foto ${urls.length + 1} de ${images.length}…`;
       const blob = await fetch(img.url).then((r) => r.blob());
       const ext = (img.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `${folder}/${urls.length + 1}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -383,8 +384,8 @@ const AdminInmuebles = (() => {
 
     if (conVenta && (precioVenta === null || precioVenta < 0)) return avisar("El precio de venta no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
     if (conAlquiler && (precioAlquiler === null || precioAlquiler < 0)) return avisar("El precio de alquiler no es un número válido. Escribilo solo con números, por ejemplo 450.000.", "error");
-    if (data.get("area") && V.decimalGrande(data.get("area")) === null) return avisar("La superficie total no es un número válido.", "error");
-    if (data.get("superficie_cubierta") && V.decimalGrande(data.get("superficie_cubierta")) === null) return avisar("La superficie cubierta no es un número válido.", "error");
+    if (data.get("area") && V.superficie(data.get("area")) === null) return avisar("La superficie total no es un número válido.", "error");
+    if (data.get("superficie_cubierta") && V.superficie(data.get("superficie_cubierta")) === null) return avisar("La superficie cubierta no es un número válido.", "error");
     if (data.get("expensas") && Dinero.aCentavos(data.get("expensas")) === null) return avisar("Las expensas no son un número válido.", "error");
     if (data.get("comision_admin_pct") && V.decimal(data.get("comision_admin_pct")) === null) return avisar("La comisión no es un número válido (ej: 10,5).", "error");
 
@@ -399,6 +400,9 @@ const AdminInmuebles = (() => {
     submitBtn.textContent = editingId ? "Actualizando…" : "Guardando…";
 
     try {
+      const { data: sesion } = await supabaseClient.auth.getSession();
+      if (!sesion || !sesion.session) throw new Error("Tu sesión venció. Recargá la página, volvé a entrar al panel y tocá Guardar otra vez.");
+
       let codigo = V.texto(data.get("codigo"));
       if (codigo) {
         // El código es único: si ya lo usa otro inmueble, avisamos con un
@@ -427,8 +431,8 @@ const AdminInmuebles = (() => {
         banos: V.entero(data.get("bathrooms")) || 0,
         cocheras: V.entero(data.get("cocheras")) || 0,
         ambientes: V.entero(data.get("ambientes")),
-        superficie_total: V.decimalGrande(data.get("area")),
-        superficie_cubierta: V.decimalGrande(data.get("superficie_cubierta")),
+        superficie_total: V.superficie(data.get("area")),
+        superficie_cubierta: V.superficie(data.get("superficie_cubierta")),
         antiguedad: V.entero(data.get("antiguedad")),
         piso: V.texto(data.get("piso")),
         departamento: V.texto(data.get("departamento")),

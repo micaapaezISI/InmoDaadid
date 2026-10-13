@@ -48,6 +48,20 @@ const V = {
     return Number.isFinite(n) ? n : null;
   },
 
+  // Para superficies en m²: "250,5" y "250.5" son decimales; "1.200" y
+  // "1.200,5" usan el punto como miles. Con decimalGrande, "250.5" daba 2505.
+  superficie(valor) {
+    if (valor === null || valor === undefined || valor === "") return null;
+    const t = String(valor).trim().replace(/\s/g, "");
+    if (t === "") return null;
+    let limpio;
+    if (t.includes(",")) limpio = t.replace(/\./g, "").replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) limpio = t.replace(/\./g, "");
+    else limpio = t;
+    const n = Number(limpio);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  },
+
   unoDe(valor, opciones, porDefecto = null) {
     return opciones.includes(valor) ? valor : porDefecto;
   },
@@ -135,6 +149,14 @@ const Dinero = {
   aPesos(centavos) {
     if (centavos === null || centavos === undefined) return null;
     return centavos / 100;
+  },
+
+  // Para rellenar un campo de texto al editar: "85.000" / "1.234,5" — el
+  // mismo formato que aCentavos sabe volver a leer (un "85000.5" crudo se
+  // leería como 850005).
+  paraCampo(centavos) {
+    if (centavos === null || centavos === undefined) return "";
+    return (centavos / 100).toLocaleString("es-AR", { maximumFractionDigits: 2, useGrouping: true });
   },
 
   formatear(centavos, moneda = "ARS") {
