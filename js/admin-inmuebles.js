@@ -344,6 +344,34 @@ const AdminInmuebles = (() => {
   cancelEditBtn.addEventListener("click", prepararNuevo);
 
   /* -------------------------- Subida de fotos -------------------------- */
+  // Las fotos de celular pesan 4-12 MB: con datos móviles la subida tarda
+  // muchísimo o se corta. Se achican a 1920 px de lado mayor en JPG antes de
+  // subir (~300-600 KB, se ven igual en el sitio). Si el navegador no puede
+  // leer el formato (ej. HEIC en Chrome) devuelve null y se sube la original.
+  const FOTO_LADO_MAX = 1920;
+  async function achicarFoto(blob) {
+    if (!blob.type.startsWith("image/") || blob.type === "image/gif") return null;
+    try {
+      const bitmap = await createImageBitmap(blob, { imageOrientation: "from-image" });
+      const escala = Math.min(1, FOTO_LADO_MAX / Math.max(bitmap.width, bitmap.height));
+      const ancho = Math.round(bitmap.width * escala);
+      const alto = Math.round(bitmap.height * escala);
+      const canvas = document.createElement("canvas");
+      canvas.width = ancho;
+      canvas.height = alto;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff"; // PNG con transparencia: fondo blanco en vez de negro
+      ctx.fillRect(0, 0, ancho, alto);
+      ctx.drawImage(bitmap, 0, 0, ancho, alto);
+      bitmap.close();
+      const jpg = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+      // Si ya era una foto liviana y no se ganó nada, se deja la original.
+      return jpg && jpg.size < blob.size ? jpg : null;
+    } catch {
+      return null;
+    }
+  }
+
   async function uploadNewImages(images) {
     const folder = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const urls = [];
@@ -353,8 +381,10 @@ const AdminInmuebles = (() => {
         continue;
       }
       submitBtn.textContent = `Subiendo foto ${urls.length + 1} de ${images.length}…`;
-      const blob = await fetch(img.url).then((r) => r.blob());
-      const ext = (img.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const original = await fetch(img.url).then((r) => r.blob());
+      const achicada = await achicarFoto(original);
+      const blob = achicada || original;
+      const ext = achicada ? "jpg" : (img.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `${folder}/${urls.length + 1}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, blob, {
         contentType: blob.type || "image/jpeg",
