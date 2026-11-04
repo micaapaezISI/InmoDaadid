@@ -2,7 +2,7 @@
    PATRICIA DAADIN — asistente virtual (widget de chat)
    ---------------------------------------------------------------------
    Inyecta la burbuja + el panel de chat en cualquier página que cargue
-   este script. Llama a la Edge Function "asistente-bot" de Supabase,
+   este script. Llama al asistente publicado en Vercel (carpeta asistente-vercel),
    que es la única que tiene la clave de la IA — este archivo nunca
    maneja ninguna clave de IA.
    ===================================================================== */
@@ -145,13 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
     addTyping();
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/asistente-bot`, {
+      const res = await fetch("https://asistente-vercel.vercel.app/api/asistente", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, history: history.slice(0, -1) }),
       });
       const data = await res.json();
