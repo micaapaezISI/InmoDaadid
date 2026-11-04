@@ -49,13 +49,15 @@ function actualizarMetaPropiedad(property) {
     description: descripcion,
     category: typeLabel(property.type),
     ...(property.images && property.images.length ? { image: property.images } : {}),
-    offers: {
-      "@type": "Offer",
-      price: property.price,
-      priceCurrency: property.currency,
-      availability: "https://schema.org/InStock",
-      url: window.location.href,
-    },
+    ...(property.price ? {
+      offers: {
+        "@type": "Offer",
+        price: property.price,
+        priceCurrency: property.currency,
+        availability: "https://schema.org/InStock",
+        url: window.location.href,
+      },
+    } : {}),
   };
   let script = document.getElementById("property-jsonld");
   if (!script) {
@@ -109,17 +111,17 @@ async function initPropertyDetail() {
       <div><strong>${typeLabel(property.type)}</strong><span>Tipo</span></div>
     </div>
 
-    <div class="detail-desc">
+    ${property.description ? `<div class="detail-desc">
       <h2>Descripción</h2>
       <p>${property.description}</p>
-    </div>
+    </div>` : ""}
 
-    <div class="detail-amenities">
+    ${property.amenities.length ? `<div class="detail-amenities">
       <h2>Características</h2>
       <ul class="amenities-grid">
         ${property.amenities.map((a) => `<li><span class="check-ico" style="width:20px;height:20px;font-size:0.7rem;">✓</span> ${a}</li>`).join("")}
       </ul>
-    </div>
+    </div>` : ""}
 
     ${renderMapSection(property)}
   `;

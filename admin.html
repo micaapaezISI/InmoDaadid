@@ -999,7 +999,7 @@
           <section id="tab-panel-nueva" class="admin-tab-panel" style="display:none;">
             <div class="admin-card">
               <h2 class="admin-section-title" id="admin-form-heading">＋ Nuevo inmueble</h2>
-              <p class="admin-section-help" id="admin-form-help">Completá estos datos para publicar un aviso nuevo. Los campos con <strong>*</strong> son obligatorios, el resto podés dejarlos en blanco si no aplican.</p>
+              <p class="admin-section-help" id="admin-form-help">Cargá lo que tengas: con elegir la operación y el tipo de inmueble ya se puede guardar y publicar. El resto lo podés completar más adelante.</p>
             </div>
             <div class="admin-form-with-preview">
             <form id="admin-property-form">
@@ -1061,8 +1061,8 @@
                     <input type="number" id="p-ambientes" name="ambientes" min="0" step="1">
                   </div>
                   <div class="field">
-                    <label for="p-area">Superficie total (m²) *</label>
-                    <input type="text" inputmode="decimal" id="p-area" name="area" placeholder="Ej: 250" required>
+                    <label for="p-area">Superficie total (m²)</label>
+                    <input type="text" inputmode="decimal" id="p-area" name="area" placeholder="Ej: 250">
                   </div>
                   <div class="field">
                     <label for="p-area-cubierta">Superficie cubierta (m²)</label>
@@ -1142,28 +1142,28 @@
                     <input type="hidden" id="p-longitud" name="longitud">
                   </div>
                   <div class="field" data-precio-venta>
-                    <label for="p-currency-venta">Moneda de venta *</label>
+                    <label for="p-currency-venta">Moneda de venta</label>
                     <select id="p-currency-venta" name="currency_venta">
                       <option value="USD">USD</option>
                       <option value="ARS">ARS ($)</option>
                     </select>
                   </div>
                   <div class="field" data-precio-venta>
-                    <label for="p-price-venta">Precio de venta *</label>
+                    <label for="p-price-venta">Precio de venta</label>
                     <input type="text" inputmode="decimal" id="p-price-venta" name="price_venta" placeholder="Ej: 85.000">
-                    <p class="field-help">Podés escribirlo con puntos de miles (85.000) o corrido (85000).</p>
+                    <p class="field-help">Podés escribirlo con puntos de miles (85.000) o corrido (85000). Si lo dejás vacío, en la web aparece "Consultar precio".</p>
                   </div>
                   <div class="field" data-precio-alquiler>
-                    <label for="p-currency-alquiler">Moneda de alquiler *</label>
+                    <label for="p-currency-alquiler">Moneda de alquiler</label>
                     <select id="p-currency-alquiler" name="currency_alquiler">
                       <option value="ARS">ARS ($)</option>
                       <option value="USD">USD</option>
                     </select>
                   </div>
                   <div class="field" data-precio-alquiler>
-                    <label for="p-price-alquiler" data-precio-alquiler-label>Precio de alquiler (por mes) *</label>
+                    <label for="p-price-alquiler" data-precio-alquiler-label>Precio de alquiler (por mes)</label>
                     <input type="text" inputmode="decimal" id="p-price-alquiler" name="price_alquiler" placeholder="Ej: 450.000">
-                    <p class="field-help">Podés escribirlo con puntos de miles (450.000) o corrido (450000).</p>
+                    <p class="field-help">Podés escribirlo con puntos de miles (450.000) o corrido (450000). Si lo dejás vacío, en la web aparece "Consultar precio".</p>
                   </div>
                   <div class="field">
                     <label for="p-expensas">Expensas (opcional)</label>
@@ -1583,13 +1583,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-config.js?v=20261021"></script>
 <script src="js/validar.js?v=20261021"></script>
-<script src="js/properties-data.js?v=20261021"></script>
+<script src="js/properties-data.js?v=20261104"></script>
 <script src="js/vendor/zip-lite.js?v=20261021"></script>
 <script src="js/photo-manager.js?v=20261021"></script>
 <script src="js/admin-personas.js?v=20261021"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="js/admin-mapa.js?v=20261021"></script>
-<script src="js/admin-inmuebles.js?v=20261021"></script>
+<script src="js/admin-inmuebles.js?v=20261104"></script>
 <script src="js/admin-contratos.js?v=20261021"></script>
 <script src="js/admin-cobranzas.js?v=20261021"></script>
 <script src="js/admin-gastos.js?v=20261021"></script>

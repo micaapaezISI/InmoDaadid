@@ -42,8 +42,10 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const monto = (centavos, moneda) => `${moneda === "USD" ? "USD" : "$"} ${(Number(centavos || 0) / 100).toLocaleString("es-AR")}`;
 
 function precioTexto(p) {
-  const venta = monto(p.precio_venta, p.moneda_venta);
-  const alquiler = `${monto(p.precio_alquiler, p.moneda_alquiler)}${p.operacion === "temporal" ? " / noche" : " / mes"}`;
+  // El precio es opcional en el panel: sin precio no se muestra "USD 0".
+  if (p.operacion === "ambas" && !p.precio_venta && !p.precio_alquiler) return "Consultar precio";
+  const venta = p.precio_venta ? monto(p.precio_venta, p.moneda_venta) : "Consultar precio";
+  const alquiler = p.precio_alquiler ? `${monto(p.precio_alquiler, p.moneda_alquiler)}${p.operacion === "temporal" ? " / noche" : " / mes"}` : "consultar";
   if (p.operacion === "venta") return venta;
   if (p.operacion === "ambas") return `${venta} · Alquiler ${alquiler}`;
   return alquiler;

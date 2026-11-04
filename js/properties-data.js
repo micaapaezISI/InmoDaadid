@@ -145,11 +145,15 @@ function typeLabel(t) {
 }
 
 function formatPrice(p) {
-  const monto = (price, currency) => `${currency === "USD" ? "USD" : "$"} ${(price || 0).toLocaleString("es-AR")}`;
+  const monto = (price, currency) => `${currency === "USD" ? "USD" : "$"} ${price.toLocaleString("es-AR")}`;
   if (p.operation === "ambas") {
-    const alquiler = p.priceAlquiler ? ` · Alquiler ${monto(p.priceAlquiler, p.currencyAlquiler)} / mes` : "";
-    return `${monto(p.price, p.currency)}${alquiler}`;
+    if (!p.price && !p.priceAlquiler) return "Consultar precio";
+    const venta = p.price ? monto(p.price, p.currency) : "Venta: consultar";
+    const alquiler = p.priceAlquiler ? ` · Alquiler ${monto(p.priceAlquiler, p.currencyAlquiler)} / mes` : " · Alquiler: consultar";
+    return `${venta}${alquiler}`;
   }
+  // El precio es opcional en el panel: sin precio no se muestra "USD 0".
+  if (!p.price) return "Consultar precio";
   const suffix = p.operation === "temporal" ? " / noche" : p.operation === "alquiler" ? " / mes" : "";
   return `${monto(p.price, p.currency)}${suffix}`;
 }

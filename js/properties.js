@@ -92,7 +92,10 @@ function applyFilters(params) {
     // Precio: si se pusieron mínimo/máximo, se compara contra el precio publicado de cada propiedad
     // (en su propia moneda). Si "Moneda" quedó en "Todas", la comparación mezcla USD y ARS —
     // para un resultado exacto conviene elegir también la moneda.
+    // Una propiedad sin precio ("Consultar precio") no entra en una búsqueda por rango.
+    const hayRango = (priceMin !== null && !Number.isNaN(priceMin)) || (priceMax !== null && !Number.isNaN(priceMax));
     return precios.some((x) => {
+      if (hayRango && !x.price) return false;
       if (priceMin !== null && !Number.isNaN(priceMin) && x.price < priceMin) return false;
       if (priceMax !== null && !Number.isNaN(priceMax) && x.price > priceMax) return false;
       return true;

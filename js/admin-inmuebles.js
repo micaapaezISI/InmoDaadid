@@ -72,18 +72,16 @@ const AdminInmuebles = (() => {
     return operation === "alquiler" || operation === "temporal" || operation === "ambas";
   }
 
-  // Muestra solo los campos de precio que corresponden, y solo esos quedan
-  // obligatorios (un campo oculto con "required" bloquearía el guardado).
+  // Muestra solo los campos de precio que corresponden. Ninguno es obligatorio:
+  // sin precio, la web muestra "Consultar precio".
   function sincronizarCamposPrecio() {
     const operation = form.elements.operation.value;
     const venta = llevaVenta(operation);
     const alquiler = llevaAlquiler(operation);
     form.querySelectorAll("[data-precio-venta]").forEach((el) => (el.style.display = venta ? "" : "none"));
     form.querySelectorAll("[data-precio-alquiler]").forEach((el) => (el.style.display = alquiler ? "" : "none"));
-    form.elements.price_venta.required = venta;
-    form.elements.price_alquiler.required = alquiler;
     const label = form.querySelector("[data-precio-alquiler-label]");
-    if (label) label.textContent = operation === "temporal" ? "Precio de alquiler temporario (por noche) *" : "Precio de alquiler (por mes) *";
+    if (label) label.textContent = operation === "temporal" ? "Precio de alquiler temporario (por noche)" : "Precio de alquiler (por mes)";
   }
 
   // Barrios ya usados en otros inmuebles, sumados a las sugerencias del
@@ -266,7 +264,7 @@ const AdminInmuebles = (() => {
     AdminMapa.setPunto(null);
     photoManager.reset();
     formHeading.textContent = "＋ Nuevo inmueble";
-    formHelp.textContent = 'Completá estos datos para publicar un aviso nuevo. Los campos con * son obligatorios, el resto podés dejarlos en blanco si no aplican.';
+    formHelp.textContent = 'Cargá lo que tengas: con elegir la operación y el tipo de inmueble ya se puede guardar y publicar. El resto lo podés completar más adelante.';
     submitBtn.textContent = "Guardar inmueble";
     cancelEditBtn.style.display = "none";
     resultBox.style.display = "none";
@@ -407,13 +405,16 @@ const AdminInmuebles = (() => {
     const conAlquiler = llevaAlquiler(operation);
     const monedaVenta = data.get("currency_venta") === "ARS" ? "ARS" : "USD";
     const monedaAlquiler = data.get("currency_alquiler") === "USD" ? "USD" : "ARS";
-    const precioVenta = conVenta ? Dinero.aCentavos(data.get("price_venta")) : null;
-    const precioAlquiler = conAlquiler ? Dinero.aCentavos(data.get("price_alquiler")) : null;
+    const textoVenta = V.texto(data.get("price_venta"));
+    const textoAlquiler = V.texto(data.get("price_alquiler"));
+    const precioVenta = conVenta ? Dinero.aCentavos(textoVenta) : null;
+    const precioAlquiler = conAlquiler ? Dinero.aCentavos(textoAlquiler) : null;
     const amenities = (data.get("amenities") || "").split(",").map((a) => a.trim()).filter(Boolean);
     const propietarios = leerPropietariosDelForm();
 
-    if (conVenta && (precioVenta === null || precioVenta < 0)) return avisar("El precio de venta no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
-    if (conAlquiler && (precioAlquiler === null || precioAlquiler < 0)) return avisar("El precio de alquiler no es un número válido. Escribilo solo con números, por ejemplo 450.000.", "error");
+    // Los precios son opcionales: solo se avisa si se escribió algo que no es un número.
+    if (conVenta && textoVenta && (precioVenta === null || precioVenta < 0)) return avisar("El precio de venta no es un número válido. Escribilo solo con números, por ejemplo 85.000.", "error");
+    if (conAlquiler && textoAlquiler && (precioAlquiler === null || precioAlquiler < 0)) return avisar("El precio de alquiler no es un número válido. Escribilo solo con números, por ejemplo 450.000.", "error");
     if (data.get("area") && V.superficie(data.get("area")) === null) return avisar("La superficie total no es un número válido.", "error");
     if (data.get("superficie_cubierta") && V.superficie(data.get("superficie_cubierta")) === null) return avisar("La superficie cubierta no es un número válido.", "error");
     if (data.get("expensas") && Dinero.aCentavos(data.get("expensas")) === null) return avisar("Las expensas no son un número válido.", "error");
@@ -593,8 +594,8 @@ const AdminInmuebles = (() => {
     listBox.innerHTML = data
       .map((p) => {
         const precios = [];
-        if (llevaVenta(p.operacion)) precios.push(`${p.moneda_venta} ${(Dinero.aPesos(p.precio_venta) || 0).toLocaleString("es-AR")}`);
-        if (llevaAlquiler(p.operacion)) precios.push(`${p.moneda_alquiler} ${(Dinero.aPesos(p.precio_alquiler) || 0).toLocaleString("es-AR")}${p.operacion === "temporal" ? "/noche" : "/mes"}`);
+        if (llevaVenta(p.operacion)) precios.push(p.precio_venta ? `${p.moneda_venta} ${Dinero.aPesos(p.precio_venta).toLocaleString("es-AR")}` : "Venta sin precio");
+        if (llevaAlquiler(p.operacion)) precios.push(p.precio_alquiler ? `${p.moneda_alquiler} ${Dinero.aPesos(p.precio_alquiler).toLocaleString("es-AR")}${p.operacion === "temporal" ? "/noche" : "/mes"}` : "Alquiler sin precio");
         const foto = (p.propiedad_foto || []).slice().sort((a, b) => a.orden - b.orden)[0];
         return `
       <div class="admin-list-row">

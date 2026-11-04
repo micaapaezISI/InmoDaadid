@@ -37,8 +37,8 @@ async function propiedadesContexto(): Promise<string> {
   return data
     .map((p) => {
       // Los precios se guardan en centavos.
-      const venta = `venta ${p.moneda_venta} ${((p.precio_venta ?? 0) / 100).toLocaleString("es-AR")}`;
-      const alquiler = `alquiler ${p.moneda_alquiler} ${((p.precio_alquiler ?? 0) / 100).toLocaleString("es-AR")}${p.operacion === "temporal" ? "/noche" : "/mes"}`;
+      const venta = p.precio_venta ? `venta ${p.moneda_venta} ${(p.precio_venta / 100).toLocaleString("es-AR")}` : "venta: precio a consultar";
+      const alquiler = p.precio_alquiler ? `alquiler ${p.moneda_alquiler} ${(p.precio_alquiler / 100).toLocaleString("es-AR")}${p.operacion === "temporal" ? "/noche" : "/mes"}` : "alquiler: precio a consultar";
       const precio =
         p.operacion === "venta" ? venta : p.operacion === "ambas" ? `${venta} o ${alquiler}` : alquiler;
       return `- [${p.codigo}] ${p.titulo_publico} — ${p.operacion}, ${p.tipo}, barrio ${p.barrio}, ${p.dormitorios ?? "?"} dorm., ${p.superficie_total ?? "?"} m², ${precio}, estado: ${p.estado}`;
